@@ -206,7 +206,7 @@ CREATE TABLE IF NOT EXISTS `whatsapp` (
 -- ============================================================
 
 INSERT INTO `configs` (`id`, `nomepainel`, `logo`, `icon`) VALUES
-(1, 'Atlas Painel', 'https://cdn.discordapp.com/attachments/1051302877987086437/1070581060821340250/logo.png', 'https://cdn.discordapp.com/attachments/1051302877987086437/1070581061014274088/logo-mini.png');
+(1, 'Atlas CTSSH', 'https://i.ibb.co/pjTD1H3V/Chat-GPT-Image-25-de-mai-de-2026-22-25-05-removebg-preview.png', 'https://i.ibb.co/pjTD1H3V/Chat-GPT-Image-25-de-mai-de-2026-22-25-05-removebg-preview.png');
 
 INSERT INTO `accounts` (`id`, `nome`, `contato`, `login`, `token`, `mb`, `senha`, `byid`, `mainid`, `accesstoken`, `valorusuario`, `valorrevenda`) VALUES
 (1, 'admin', 'admin', 'admin', 'admin', '60', '12345', '0', '0', NULL, '0', '0');
