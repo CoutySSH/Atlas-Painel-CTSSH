@@ -245,40 +245,46 @@ install_panel() {
 
     load_config
 
-    # ── Localizar ZIP ──
-    subtitulo "[1/6] Localizando painel.zip..."
-    local zip_path=""
-    for f in "painel.zip" "/root/painel.zip" "/var/www/html/painel.zip"; do
-        [ -f "$f" ] && { zip_path="$f"; break; }
-    done
-    if [ -z "$zip_path" ]; then
-        error_exit "painel.zip não encontrado. Coloque-o em /root/ ou neste diretório."
+    # ── Clonar repositório ──
+    subtitulo "[1/7] Baixando painel do GitHub..."
+    local tmp_dir="/tmp/atlas_painel_$$"
+    rm -rf "$tmp_dir"
+    if ! git clone --depth 1 https://github.com/CoutySSH/Atlas-Painel-CTSSH "$tmp_dir" >> "$LOG_FILE" 2>&1; then
+        error_exit "Falha ao clonar repositório. Verifique conexão com GitHub."
     fi
-    ok "ZIP encontrado: $zip_path"
+    ok "Repositório clonado"
+
+    # ── Localizar pasta do painel ──
+    local origem=""
+    for d in "Atlas CTSSH" "Atlas" "Atlas Sem Key"; do
+        [ -d "$tmp_dir/$d" ] && { origem="$tmp_dir/$d"; break; }
+    done
+    if [ -z "$origem" ]; then
+        error_exit "Pasta do painel não encontrada no repositório."
+    fi
+    ok "Pasta encontrada: $d"
 
     # ── Fazer backup do html existente ──
-    subtitulo "[2/6] Backup do diretório atual..."
+    subtitulo "[2/7] Backup do diretório atual..."
     if [ -d "/var/www/html" ] && [ "$(ls -A /var/www/html 2>/dev/null)" ]; then
         backup_file "/var/www/html/atlas/conexao.php"
         local bk_html="${BACKUP_DIR}/html_backup.tar.gz"
         tar -czf "$bk_html" -C /var/www html 2>/dev/null && ok "Backup: $bk_html" || warn "Falha ao criar backup"
     fi
 
-    # ── Extrair ──
-    subtitulo "[3/6] Extraindo arquivos..."
-    if ! unzip -o "$zip_path" -d /var/www/html/ >> "$LOG_FILE" 2>&1; then
-        error_exit "Falha ao extrair $zip_path"
-    fi
+    # ── Copiar arquivos ──
+    subtitulo "[3/7] Copiando arquivos..."
+    rm -rf /var/www/html/*
+    cp -a "$origem"/. /var/www/html/
+    [ -f "$tmp_dir/banco.sql" ] && cp "$tmp_dir/banco.sql" /var/www/html/banco.sql
     rm -f /var/www/html/index.html 2>/dev/null
-    ok "Arquivos extraídos"
+    ok "Arquivos copiados"
 
     # ── Configurar banco ──
-    subtitulo "[4/6] Configurando banco de dados..."
+    subtitulo "[4/7] Configurando banco de dados..."
 
-    # Gerar senha se não existir
     [ -z "$DB_PASS" ] && DB_PASS=$(openssl rand -hex 12)
 
-    # Ler ou definir credenciais
     if [ -f "$CONEXAO_PATH" ]; then
         local v
         v=$(get_php_var "dbname" "$CONEXAO_PATH"); [ -n "$v" ] && DB_NAME="$v"
@@ -291,12 +297,10 @@ install_panel() {
     [ -z "$DB_USER" ] && DB_USER="gestorssh"
     [ -z "$DB_HOST" ] && DB_HOST="localhost"
 
-    # Verificar MariaDB
     if ! systemctl is-active --quiet mariadb; then
         systemctl start mariadb >> "$LOG_FILE" 2>&1 || error_exit "MariaDB não está rodando"
     fi
 
-    # Executar comandos MySQL
     mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;" >> "$LOG_FILE" 2>&1
     mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" >> "$LOG_FILE" 2>&1
     mysql -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" >> "$LOG_FILE" 2>&1
@@ -310,55 +314,20 @@ install_panel() {
     fi
 
     # ── Importar SQL ──
-    subtitulo "[5/6] Importando SQL..."
-    local sql_file=""
-    for f in "/var/www/html/banco.sql" "/var/www/html/atlas/banco.sql"; do
-        [ -f "$f" ] && { sql_file="$f"; break; }
-    done
-    if [ -n "$sql_file" ]; then
-        mysql "$DB_NAME" < "$sql_file" >> "$LOG_FILE" 2>&1
-        if [ $? -eq 0 ]; then
-            ok "SQL importado: $sql_file"
-        else
-            warn "Falha ao importar SQL (pode já existir). Continuando..."
-        fi
-    else
-        warn "banco.sql não encontrado. O painel pode não funcionar corretamente."
-    fi
+    subtitulo "[5/7] Importando SQL..."
 
     # ── Escrever conexao.php ──
-    mkdir -p /var/www/html/atlas
-    cat > "$CONEXAO_PATH" <<PHP_CONN
-<?php
- \$dbname = '${DB_NAME}';
- \$dbuser = '${DB_USER}';
- \$dbpass = '${DB_PASS}';
- \$dbhost = '${DB_HOST}';
- \$_SESSION['token'] = '${SESSION_TOKEN:-9P9trMXJP9w5Wv7}';
-?>
-PHP_CONN
-    ok "conexao.php atualizado"
 
     # ── Senha admin ──
-    if [ -z "$PAINEL_SENHA" ]; then
-        PAINEL_SENHA=$(openssl rand -base64 10 | tr -dc 'A-Za-z0-9' | head -c 12)
-        salvar_meta "PAINEL_SENHA" "$PAINEL_SENHA"
-    fi
-    salvar_meta "DB_NAME" "$DB_NAME"
-    salvar_meta "DB_USER" "$DB_USER"
-    salvar_meta "DB_PASS" "$DB_PASS"
-    salvar_meta "DB_HOST" "$DB_HOST"
 
     # ── Permissões ──
-    subtitulo "[6/6] Ajustando permissões..."
-    chown -R www-data:www-data /var/www/html
-    find /var/www/html -type d -exec chmod 755 {} \;
-    find /var/www/html -type f -exec chmod 644 {} \;
-    for lf in /var/www/html/lockfile.txt /var/www/html/lockfile2.txt; do
-        touch "$lf" 2>/dev/null
-    done
-    chmod -R 664 /var/www/html/lockfile*.txt 2>/dev/null
-    ok "Permissões ajustadas"
+    subtitulo "[6/7] Ajustando permissões..."
+
+    # ── Limpeza ──
+    subtitulo "[7/7] Limpando arquivos temporários..."
+    rm -rf "$tmp_dir"
+    rm -f /var/www/html/install.sh /var/www/html/install01.sh /var/www/html/README.md /var/www/html/security-audit-atlas-sem-key.md /var/www/html/telegram-bots-functions.md
+    ok "Arquivos temporários removidos"
 
     # ── Cron ──
     if command -v crontab &>/dev/null; then
@@ -607,7 +576,7 @@ show_menu() {
     local opcoes=(
         "01:Preparar Sistema (repos, deps, firewall)"
         "02:Configurar Dominio e SSL (com validacao DNS)"
-        "03:Instalar Painel Atlas (ZIP + BD + permissoes)"
+        "03:Instalar Painel Atlas (GitHub + BD + permissoes)"
         "04:Reparar Banco de Dados"
         "05:Resetar Senha do Admin"
         "06:Desinstalar Completo"
