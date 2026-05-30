@@ -27,7 +27,7 @@ chmod +x install.sh
 ### 3. Executar o menu
 
 ```bash
-sudo ./install.sh
+./install.sh
 ```
 
 ### 4. Menu principal
