@@ -1,0 +1,28 @@
+# Environment
+.env
+.env.*
+
+# Markdown (exceto README.md)
+*.md
+!README.md
+
+# Scripts
+**/cron.sh
+
+# Dependências
+vendor/
+node_modules/
+
+# Banco de configuração
+**/atlas/conexao.php
+
+# Backups e temporários
+*.sql
+!banco.sql
+*.zip
+last_update_id.txt
+atlasbackup.sql
+
+# Sistema
+.DS_Store
+Thumbs.db
