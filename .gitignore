@@ -23,6 +23,9 @@ node_modules/
 last_update_id.txt
 atlasbackup.sql
 
+# Scripts
+install01.sh
+
 # Sistema
 .DS_Store
 Thumbs.db
