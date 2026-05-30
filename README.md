@@ -6,10 +6,9 @@ Painel web Atlas para VPS — gerencia SSH, checkusers, renovacoes e muito mais.
 
 | Sistema | Versao |
 |---------|--------|
-| Ubuntu  | 18.04, 20.04, 22.04 |
-| Debian  | 10, 11, 12 |
+| Ubuntu  | 18.04, 20.04, 22.04, 24.04 |
 
-> Nao testado em CentOS, Fedora ou outras distros.
+> Testado apenas no Ubuntu. Nao testado em Debian, CentOS, Fedora ou outras distros.
 
 ## Tutorial de Instalacao
 
