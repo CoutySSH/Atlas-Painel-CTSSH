@@ -207,8 +207,10 @@ setup_ssl() {
     [ -z "$EMAIL" ] && EMAIL="admin@${DOMINIO}"
     ok "E-mail: $EMAIL"
 
+    local total=4
+
     # ── Backup e configurar Apache ──
-    subtitulo "Configurando VirtualHost..."
+    progress_bar 1 $total "Configurando VirtualHost..."
     backup_file "/etc/apache2/sites-available/painel.conf"
     backup_file "/etc/apache2/sites-available/000-default.conf"
 
@@ -234,7 +236,7 @@ VHOST
     ok "VirtualHost configurado para $DOMINIO"
 
     # ── SSL ──
-    subtitulo "Gerando SSL Let's Encrypt..."
+    progress_bar 2 $total "Gerando SSL Let's Encrypt..."
     if certbot --apache -d "$DOMINIO" --non-interactive --agree-tos --email "$EMAIL" --redirect >> "$LOG_FILE" 2>&1; then
         ok "SSL ativo para $DOMINIO"
     else
@@ -243,12 +245,14 @@ VHOST
     fi
 
     # ── Renovação automática ──
+    progress_bar 3 $total "Configurando renovação automática..."
     if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
         (crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet >> $LOG_FILE 2>&1") | crontab -
         ok "Renovação SSL automática configurada (03:00)"
     fi
 
     # ── Salvar ──
+    progress_bar 4 $total "Salvando configuração..."
     salvar_meta "DOMINIO" "$DOMINIO"
     salvar_meta "EMAIL" "$EMAIL"
 
@@ -261,9 +265,10 @@ install_panel() {
     titulo "03" "INSTALAR PAINEL ATLAS"
 
     load_config
+    local total=10
 
     # ── Clonar repositório ──
-    subtitulo "[1/7] Baixando painel do GitHub..."
+    progress_bar 1 $total "Baixando painel do GitHub..."
     local tmp_dir="/tmp/atlas_painel_$$"
     rm -rf "$tmp_dir"
     if ! git clone --depth 1 https://github.com/CoutySSH/Atlas-Painel-CTSSH "$tmp_dir" >> "$LOG_FILE" 2>&1; then
@@ -282,7 +287,7 @@ install_panel() {
     ok "Pasta encontrada: $d"
 
     # ── Fazer backup do html existente ──
-    subtitulo "[2/7] Backup do diretório atual..."
+    progress_bar 2 $total "Backup do diretório atual..."
     if [ -d "/var/www/html" ] && [ "$(ls -A /var/www/html 2>/dev/null)" ]; then
         backup_file "/var/www/html/atlas/conexao.php"
         local bk_html="${BACKUP_DIR}/html_backup.tar.gz"
@@ -290,7 +295,7 @@ install_panel() {
     fi
 
     # ── Copiar arquivos ──
-    subtitulo "[3/7] Copiando arquivos..."
+    progress_bar 3 $total "Copiando arquivos..."
     rm -rf /var/www/html/*
     cp -a "$origem"/. /var/www/html/
     [ -f "$tmp_dir/banco.sql" ] && cp "$tmp_dir/banco.sql" /var/www/html/banco.sql
@@ -298,7 +303,7 @@ install_panel() {
     ok "Arquivos copiados"
 
     # ── Configurar banco ──
-    subtitulo "[4/7] Configurando banco de dados..."
+    progress_bar 4 $total "Configurando banco de dados..."
 
     [ -z "$DB_PASS" ] && DB_PASS=$(openssl rand -hex 12)
 
@@ -337,7 +342,7 @@ install_panel() {
     ok "Credenciais salvas em $META_FILE (acesso root)"
 
     # ── Escrever conexao.php ──
-    subtitulo "[5/7] Escrevendo conexao.php..."
+    progress_bar 5 $total "Escrevendo conexao.php..."
     mkdir -p /var/www/html/atlas
     cat > "$CONEXAO_PATH" <<PHP_CONN
 <?php
@@ -351,7 +356,7 @@ PHP_CONN
     ok "conexao.php criado"
 
     # ── Importar SQL ──
-    subtitulo "[6/7] Importando SQL..."
+    progress_bar 6 $total "Importando SQL..."
     if [ -f /var/www/html/banco.sql ]; then
         mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" < /var/www/html/banco.sql >> "$LOG_FILE" 2>&1
         ok "SQL importado"
@@ -368,13 +373,14 @@ PHP_CONN
     ok "Senha do admin definida"
 
     # ── Permissões ──
-    subtitulo "[7/7] Ajustando permissões..."
+    progress_bar 7 $total "Ajustando permissões..."
     chown -R www-data:www-data /var/www/html/
     find /var/www/html -type d -exec chmod 755 {} \;
     find /var/www/html -type f -exec chmod 644 {} \;
     ok "Permissões ajustadas"
 
     # ── Proteger atlas ──
+    progress_bar 8 $total "Protegendo diretório atlas..."
     [ ! -f /var/www/html/atlas/.htaccess ] && cat > /var/www/html/atlas/.htaccess <<'HTACCESS'
 <FilesMatch "\.(php|inc|sql)$">
     Require all denied
@@ -383,11 +389,13 @@ HTACCESS
     ok "Atlas protegido via .htaccess"
 
     # ── Limpeza ──
+    progress_bar 9 $total "Limpando arquivos temporários..."
     rm -rf "$tmp_dir"
     rm -f /var/www/html/install.sh /var/www/html/install01.sh /var/www/html/README.md /var/www/html/security-audit-atlas-sem-key.md /var/www/html/telegram-bots-functions.md
     ok "Arquivos temporários removidos"
 
     # ── Cron ──
+    progress_bar 10 $total "Configurando cron..."
     if command -v crontab &>/dev/null; then
         (crontab -l 2>/dev/null | grep -v "cron_exec.php\|onlines.php\|checkpag.php") | crontab -
         (crontab -l 2>/dev/null; echo "* * * * * cd /var/www/html && php cron_exec.php >/dev/null 2>&1") | crontab -
@@ -412,13 +420,14 @@ reparar_banco() {
     titulo "04" "REPARAR BANCO DE DADOS"
 
     load_config
+    local total=4
 
     if [ -z "$DB_PASS" ]; then
         DB_PASS=$(openssl rand -hex 12)
         info "Nova senha gerada automaticamente."
     fi
 
-    # Backup do conexao.php
+    progress_bar 1 $total "Recriando conexao.php e protegendo atlas..."
     backup_file "$CONEXAO_PATH"
 
     # Recriar conexao.php
@@ -442,17 +451,20 @@ PHP_CONN
 HTACCESS
     ok "Atlas protegido via .htaccess"
 
+    progress_bar 2 $total "Configurando banco de dados..."
     mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME:-gestorssh}\`;" >> "$LOG_FILE" 2>&1
     mysql -e "ALTER USER '${DB_USER:-gestorssh}'@'localhost' IDENTIFIED BY '${DB_PASS}';" >> "$LOG_FILE" 2>&1
     mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME:-gestorssh}\`.* TO '${DB_USER:-gestorssh}'@'localhost';" >> "$LOG_FILE" 2>&1
     mysql -e "FLUSH PRIVILEGES;" >> "$LOG_FILE" 2>&1
 
+    progress_bar 3 $total "Verificando conexão..."
     if mysql -u"${DB_USER:-gestorssh}" -p"$DB_PASS" -h"${DB_HOST:-localhost}" "${DB_NAME:-gestorssh}" -e "SELECT 1;" > /dev/null 2>&1; then
         ok "Conexão com banco verificada com sucesso!"
     else
         fail_ "Falha na conexão. Verifique credenciais."
     fi
 
+    progress_bar 4 $total "Salvando credenciais..."
     salvar_meta "DB_NAME" "${DB_NAME:-gestorssh}"
     salvar_meta "DB_USER" "${DB_USER:-gestorssh}"
     salvar_meta "DB_PASS" "${DB_PASS}"
@@ -473,12 +485,17 @@ reset_admin() {
         return
     fi
 
+    local total=3
+
+    progress_bar 1 $total "Gerando nova senha..."
     local nova_senha=$(openssl rand -base64 10 | tr -dc 'A-Za-z0-9' | head -c 12)
     local hash=$(echo -n "$nova_senha" | md5sum | awk '{print $1}')
 
+    progress_bar 2 $total "Atualizando banco de dados..."
     mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" \
         -e "UPDATE accounts SET senha = '$hash' WHERE login = 'admin' LIMIT 1;" 2>/dev/null
 
+    progress_bar 3 $total "Salvando configuração..."
     if [ $? -eq 0 ]; then
         salvar_meta "PAINEL_SENHA" "$nova_senha"
         echo -e ""
@@ -503,8 +520,9 @@ desinstalar() {
     [ "$confirm" != "CONFIRMAR" ] && { info "Cancelado."; pause; return; }
 
     load_config
+    local total=6
 
-    # Backup do banco (dump SQL)
+    progress_bar 1 $total "Backup do banco de dados..."
     if mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e "SELECT 1;" > /dev/null 2>&1; then
         local dump="${BACKUP_DIR}/banco_dump.sql"
         mkdir -p "$BACKUP_DIR"
@@ -512,28 +530,28 @@ desinstalar() {
         ok "Backup do banco: $dump"
     fi
 
-    # Drop do banco e usuário
+    progress_bar 2 $total "Removendo banco de dados..."
     mysql -e "DROP DATABASE IF EXISTS \`${DB_NAME}\`;" 2>/dev/null
     mysql -e "DROP USER IF EXISTS '${DB_USER}'@'localhost';" 2>/dev/null
     mysql -e "FLUSH PRIVILEGES;" 2>/dev/null
     ok "Banco de dados removido"
 
-    # Parar serviços
+    progress_bar 3 $total "Parando serviços..."
     systemctl stop apache2 mariadb php8.3-fpm 2>/dev/null
     systemctl disable apache2 mariadb php8.3-fpm 2>/dev/null
 
-    # Remover pacotes
+    progress_bar 4 $total "Removendo pacotes..."
     apt remove --purge -y apache2 mariadb-server php8.3* certbot python3-certbot-apache 2>/dev/null
     apt autoremove --purge -y 2>/dev/null
 
-    # Remover diretórios
+    progress_bar 5 $total "Removendo diretórios..."
     rm -rf /var/www/html 2>/dev/null
     rm -rf /etc/apache2 2>/dev/null
     rm -rf /etc/letsencrypt 2>/dev/null
     rm -f /root/.atlas_meta 2>/dev/null
     rm -f /var/log/atlas_install01.log 2>/dev/null
 
-    # Remover crons
+    progress_bar 6 $total "Removendo crons..."
     crontab -r 2>/dev/null
 
     ok "Desinstalação concluída. Sistema limpo para reinstalação."
