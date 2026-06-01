@@ -49,6 +49,18 @@ fail_() { echo -e " ${VERMELHO}✘${NC} $1"; log "ERRO: $1"; }
 warn() { echo -e " ${AMARELO}⚠${NC} $1"; log "AVISO: $1"; }
 info() { echo -e " ${AZUL}ℹ${NC} $1"; }
 
+progress_bar() {
+    local current=$1 total=$2 msg="$3"
+    [[ $current -gt $total ]] && current=$total
+    local percent=$((current * 100 / total))
+    local filled=$((current * 30 / total))
+    local empty=$((30 - filled))
+    local bar
+    bar=$(printf "%${filled}s" | tr ' ' '#' ; printf "%${empty}s" | tr ' ' '.')
+    echo -ne "\r ${AZUL}[${NC}${bar}${AZUL}]${NC} ${BRANCO}${percent}%${NC} ${msg}   "
+    [[ $current -eq $total ]] && echo ""
+}
+
 error_exit() {
     fail_ "$1"
     echo -e "\n ${VERMELHO}Instalação interrompida. Log: $LOG_FILE${NC}"
@@ -84,20 +96,19 @@ prepare_system() {
     titulo "01" "PREPARANDO O SISTEMA"
 
     log "Iniciando preparação do sistema..."
+    local total=8
 
-    # ── Repositório PHP (Ondřej Surý) apenas se necessário ──
-    subtitulo "[1/4] Configurando repositórios..."
+    # ── 1/8: Repositório PHP ──
+    progress_bar 1 $total "Repositórios PHP..."
     case "$ID" in
         ubuntu)
             if ! apt-cache show php8.3 &>/dev/null; then
-                info "Adicionando repositório ondrej/php..."
                 apt install -y software-properties-common > /dev/null 2>&1
                 add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1 || warn "Falha ao adicionar PPA ondrej/php"
             fi
             ;;
         debian)
             if ! apt-cache show php8.3 &>/dev/null; then
-                info "Adicionando repositório sury/php..."
                 apt install -y apt-transport-https lsb-release ca-certificates curl > /dev/null 2>&1
                 curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/sury-php.gpg 2>/dev/null
                 echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-php.list
@@ -105,14 +116,16 @@ prepare_system() {
             ;;
     esac
 
-    # ── Atualizar pacotes ──
-    subtitulo "[2/4] Atualizando pacotes..."
-    apt update -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt update. Verifique rede/repositórios."
-    apt upgrade -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt upgrade."
-    ok "Pacotes atualizados"
+    # ── 2/8: apt update ──
+    progress_bar 2 $total "Atualizando lista de pacotes..."
+    apt update -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt update."
 
-    # ── Instalar dependências ──
-    subtitulo "[3/4] Instalando dependências..."
+    # ── 3/8: apt upgrade ──
+    progress_bar 3 $total "Atualizando pacotes instalados..."
+    apt upgrade -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt upgrade."
+
+    # ── 4/8: Instalar dependências ──
+    progress_bar 4 $total "Instalando Apache + PHP 8.3..."
     local deps=(
         apache2 mariadb-server certbot python3-certbot-apache
         curl wget unzip git openssl
@@ -124,26 +137,30 @@ prepare_system() {
     if [ $? -ne 0 ]; then
         error_exit "Falha ao instalar dependências. Verifique $LOG_FILE"
     fi
-    ok "Dependências instaladas"
 
-    # ── Configurar Apache com PHP-FPM (mais seguro/performático) ──
-    subtitulo "[4/4] Otimizando serviços..."
+    # ── 5/8: Módulos Apache ──
+    progress_bar 5 $total "Ativando módulos do Apache..."
     a2enmod rewrite ssl proxy_fcgi setenvif headers > /dev/null 2>&1
     a2enconf php8.3-fpm > /dev/null 2>&1
 
+    # ── 6/8: Habilitar serviços ──
+    progress_bar 6 $total "Habilitando serviços..."
     systemctl enable apache2 mariadb php8.3-fpm > /dev/null 2>&1
-    systemctl restart apache2 mariadb php8.3-fpm > /dev/null 2>&1
-    ok "Apache + PHP-FPM + MariaDB ativos"
 
-    # ── Firewall ──
+    # ── 7/8: Reiniciar serviços ──
+    progress_bar 7 $total "Reiniciando serviços..."
+    systemctl restart apache2 mariadb php8.3-fpm > /dev/null 2>&1
+
+    # ── 8/8: Firewall ──
+    progress_bar 8 $total "Configurando firewall..."
     if command -v ufw &>/dev/null; then
         ufw allow 22/tcp > /dev/null 2>&1
         ufw allow 80/tcp > /dev/null 2>&1
         ufw allow 443/tcp > /dev/null 2>&1
         ufw --force enable > /dev/null 2>&1
-        ok "Firewall configurado (22, 80, 443)"
     fi
 
+    echo -e " ${VERDE}✔${NC} Sistema preparado com sucesso!"
     pause
 }
 
@@ -313,18 +330,59 @@ install_panel() {
         error_exit "Falha ao configurar banco. Verifique $LOG_FILE"
     fi
 
-    # ── Importar SQL ──
-    subtitulo "[5/7] Importando SQL..."
+    salvar_meta "DB_NAME" "$DB_NAME"
+    salvar_meta "DB_USER" "$DB_USER"
+    salvar_meta "DB_PASS" "$DB_PASS"
+    salvar_meta "DB_HOST" "$DB_HOST"
+    ok "Credenciais salvas em $META_FILE (acesso root)"
 
     # ── Escrever conexao.php ──
+    subtitulo "[5/7] Escrevendo conexao.php..."
+    mkdir -p /var/www/html/atlas
+    cat > "$CONEXAO_PATH" <<PHP_CONN
+<?php
+ \$dbname = '${DB_NAME}';
+ \$dbuser = '${DB_USER}';
+ \$dbpass = '${DB_PASS}';
+ \$dbhost = '${DB_HOST}';
+ \$_SESSION['token'] = '${SESSION_TOKEN:-9P9trMXJP9w5Wv7}';
+?>
+PHP_CONN
+    ok "conexao.php criado"
+
+    # ── Importar SQL ──
+    subtitulo "[6/7] Importando SQL..."
+    if [ -f /var/www/html/banco.sql ]; then
+        mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" < /var/www/html/banco.sql >> "$LOG_FILE" 2>&1
+        ok "SQL importado"
+    else
+        warn "banco.sql não encontrado, pulando importação"
+    fi
 
     # ── Senha admin ──
+    local admin_senha=$(openssl rand -base64 10 | tr -dc 'A-Za-z0-9' | head -c 12)
+    local admin_hash=$(echo -n "$admin_senha" | md5sum | awk '{print $1}')
+    mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" \
+        -e "UPDATE accounts SET senha = '$admin_hash' WHERE login = 'admin' LIMIT 1;" 2>/dev/null
+    salvar_meta "PAINEL_SENHA" "$admin_senha"
+    ok "Senha do admin definida"
 
     # ── Permissões ──
-    subtitulo "[6/7] Ajustando permissões..."
+    subtitulo "[7/7] Ajustando permissões..."
+    chown -R www-data:www-data /var/www/html/
+    find /var/www/html -type d -exec chmod 755 {} \;
+    find /var/www/html -type f -exec chmod 644 {} \;
+    ok "Permissões ajustadas"
+
+    # ── Proteger atlas ──
+    [ ! -f /var/www/html/atlas/.htaccess ] && cat > /var/www/html/atlas/.htaccess <<'HTACCESS'
+<FilesMatch "\.(php|inc|sql)$">
+    Require all denied
+</FilesMatch>
+HTACCESS
+    ok "Atlas protegido via .htaccess"
 
     # ── Limpeza ──
-    subtitulo "[7/7] Limpando arquivos temporários..."
     rm -rf "$tmp_dir"
     rm -f /var/www/html/install.sh /var/www/html/install01.sh /var/www/html/README.md /var/www/html/security-audit-atlas-sem-key.md /var/www/html/telegram-bots-functions.md
     ok "Arquivos temporários removidos"
@@ -342,6 +400,7 @@ install_panel() {
     echo -e ""
     echo -e "${BG_VERDE:-${VERDE}}${BRANCO}${NEGRITO}╔═══════════════════════════════════════════════════════╗${NC}"
     echo -e "${BG_VERDE:-${VERDE}}${BRANCO}${NEGRITO}║        PAINEL INSTALADO COM SUCESSO!                   ║${NC}"
+    echo -e "${BG_VERDE:-${VERDE}}${BRANCO}${NEGRITO}║  ${BRANCO}Admin: admin  /  $admin_senha${NC}             ${BG_VERDE:-${VERDE}}${BRANCO}${NEGRITO}║${NC}"
     echo -e "${BG_VERDE:-${VERDE}}${BRANCO}${NEGRITO}╚═══════════════════════════════════════════════════════╝${NC}"
     echo -e ""
     pause
@@ -355,15 +414,14 @@ reparar_banco() {
     load_config
 
     if [ -z "$DB_PASS" ]; then
-        warn "Senha do banco não encontrada automaticamente."
-        read -p " Digite a senha do banco: " DB_PASS
-        [ -z "$DB_PASS" ] && error_exit "Senha obrigatória"
+        DB_PASS=$(openssl rand -hex 12)
+        info "Nova senha gerada automaticamente."
     fi
 
     # Backup do conexao.php
     backup_file "$CONEXAO_PATH"
 
-    # Recriar
+    # Recriar conexao.php
     mkdir -p /var/www/html/atlas
     cat > "$CONEXAO_PATH" <<PHP_CONN
 <?php
@@ -376,6 +434,14 @@ reparar_banco() {
 PHP_CONN
     ok "conexao.php recriado"
 
+    # Proteger diretório atlas via .htaccess
+    cat > /var/www/html/atlas/.htaccess <<'HTACCESS'
+<FilesMatch "\.(php|inc|sql)$">
+    Require all denied
+</FilesMatch>
+HTACCESS
+    ok "Atlas protegido via .htaccess"
+
     mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME:-gestorssh}\`;" >> "$LOG_FILE" 2>&1
     mysql -e "ALTER USER '${DB_USER:-gestorssh}'@'localhost' IDENTIFIED BY '${DB_PASS}';" >> "$LOG_FILE" 2>&1
     mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME:-gestorssh}\`.* TO '${DB_USER:-gestorssh}'@'localhost';" >> "$LOG_FILE" 2>&1
@@ -386,6 +452,13 @@ PHP_CONN
     else
         fail_ "Falha na conexão. Verifique credenciais."
     fi
+
+    salvar_meta "DB_NAME" "${DB_NAME:-gestorssh}"
+    salvar_meta "DB_USER" "${DB_USER:-gestorssh}"
+    salvar_meta "DB_PASS" "${DB_PASS}"
+    salvar_meta "DB_HOST" "${DB_HOST:-localhost}"
+    ok "Credenciais salvas em $META_FILE (acesso root)"
+
     pause
 }
 
@@ -429,6 +502,22 @@ desinstalar() {
     read -p " Digite CONFIRMAR para prosseguir: " confirm
     [ "$confirm" != "CONFIRMAR" ] && { info "Cancelado."; pause; return; }
 
+    load_config
+
+    # Backup do banco (dump SQL)
+    if mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e "SELECT 1;" > /dev/null 2>&1; then
+        local dump="${BACKUP_DIR}/banco_dump.sql"
+        mkdir -p "$BACKUP_DIR"
+        mysqldump -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" > "$dump" 2>/dev/null
+        ok "Backup do banco: $dump"
+    fi
+
+    # Drop do banco e usuário
+    mysql -e "DROP DATABASE IF EXISTS \`${DB_NAME}\`;" 2>/dev/null
+    mysql -e "DROP USER IF EXISTS '${DB_USER}'@'localhost';" 2>/dev/null
+    mysql -e "FLUSH PRIVILEGES;" 2>/dev/null
+    ok "Banco de dados removido"
+
     # Parar serviços
     systemctl stop apache2 mariadb php8.3-fpm 2>/dev/null
     systemctl disable apache2 mariadb php8.3-fpm 2>/dev/null
@@ -440,12 +529,14 @@ desinstalar() {
     # Remover diretórios
     rm -rf /var/www/html 2>/dev/null
     rm -rf /etc/apache2 2>/dev/null
-    rm -f /etc/letsencrypt 2>/dev/null
+    rm -rf /etc/letsencrypt 2>/dev/null
+    rm -f /root/.atlas_meta 2>/dev/null
+    rm -f /var/log/atlas_install01.log 2>/dev/null
 
     # Remover crons
     crontab -r 2>/dev/null
 
-    ok "Desinstalação concluída."
+    ok "Desinstalação concluída. Sistema limpo para reinstalação."
     pause
 }
 
@@ -523,8 +614,6 @@ load_config() {
     DB_PASS=""; DB_HOST="localhost"; SSL_STATUS="DESATIVADO"
     SESSION_TOKEN="9P9trMXJP9w5Wv7"
 
-    [ -f "$META_FILE" ] && source "$META_FILE"
-
     if [ -f "$CONEXAO_PATH" ]; then
         local v
         v=$(get_php_var "dbname" "$CONEXAO_PATH"); [ -n "$v" ] && DB_NAME="$v"
@@ -532,6 +621,8 @@ load_config() {
         v=$(get_php_var "dbpass" "$CONEXAO_PATH"); [ -n "$v" ] && DB_PASS="$v"
         v=$(get_php_var "dbhost" "$CONEXAO_PATH"); [ -n "$v" ] && DB_HOST="$v"
     fi
+
+    [ -f "$META_FILE" ] && source "$META_FILE"
 }
 
 salvar_meta() {
