@@ -145,10 +145,7 @@ ADD COLUMN IF NOT EXISTS valormensal TEXT DEFAULT NULL";
 mysqli_query($conn, $sqltoken3);  
 $sqltoken4 = "ALTER TABLE ssh_accounts
 ADD COLUMN IF NOT EXISTS valormensal TEXT DEFAULT NULL";
-mysqli_query($conn, $sqltoken4); 
-
-
-mysqli_query($conn, $sqltoken);
+mysqli_query($conn, $sqltoken4);
 
 
 date_default_timezone_set('America/Sao_Paulo');
@@ -434,19 +431,8 @@ function redirecionaroonlines() {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">Versão</h3>
-                          <p class="text-success ml-2 mb-0 font-weight-medium">4.5.6</p>
-                          <p style='color: #ffff; margin-left: 20px; margin-bottom: 1px;  font-size: 12px;'>Vencimento: <?php echo $_SESSION['datavencimentotoken']; ?></p>
-                        </div>
-                        
-                        <!-- <button type="button" class="badge rounded-pill bg-success" onclick="atualizar()">ATUALIZAR</button> -->
-                        <button type="button" class="badge rounded-pill bg-success" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="feather icon-settings"></i> Opções </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" onclick="atualizar('ultima')">Atualizar Ultima Versão</a>
-                                <a class="dropdown-item" onclick="atualizar('4.4.2')">Voltar para Versão 4.4.2</a>
-                                <a class="dropdown-item" onclick="atualizar('3.8.6')">Voltar para Versão 3.8.6</a>
-                      </div></div>
+                          </div>
+                         </div></div>
                       <div class="col-3">
                         <div class="icon icon-box-success ">
                         <i class="mdi mdi-format-vertical-align-bottom"></i>
@@ -725,7 +711,7 @@ function redirecionarrevendedores() {
                                             $categoriacompra = anti_sql($categoriacompra);
                                             $sql = "UPDATE accounts SET tokenvenda = '$codigo', tempo = '$categoriacompra' WHERE id = '$id'";
                                             $result = $conn -> query($sql);
-                                            echo "<meta http-equiv='refresh' content='0'>";
+                                            echo "<script>location.href='headeradmin.php';</script>";
                                         }
                                         if(isset($_POST['salvarcate'])){
                                             $id = $_SESSION['iduser'];
@@ -735,17 +721,15 @@ function redirecionarrevendedores() {
                                             $categoriacompra = anti_sql($categoriacompra);
                                             $sql = "UPDATE accounts SET tempo = '$categoriacompra' WHERE id = '$id'";
                                             $result = $conn -> query($sql);
-                                            echo "<meta http-equiv='refresh' content='0'>";
+                                            echo "<script>location.href='headeradmin.php';</script>";
                                         }
                                         ?>
                                 </div>
                             </div>
-                        </div>
-                        </div>
+        </div>
                 </section>
                 <!-- Divider Colors Ends -->
             </div>
-        </div>
         <?php } ?>
 
 
@@ -807,10 +791,6 @@ $sql = "SELECT * FROM servidores ";
                         </div>
                     </div>
                 </section>
-            </div>
-        </div>
-    </div></div>
-
             </div>
         </div>
     </div>
