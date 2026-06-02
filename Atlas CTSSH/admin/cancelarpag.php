@@ -1,4 +1,4 @@
-session_start();
+<?php session_start();
 include 'headeradmin2.php';
 include('../atlas/conexao.php');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);

@@ -1,4 +1,4 @@
-include('../atlas/conexao.php');
+<?php include('../atlas/conexao.php');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 
 $id = $_GET['id'];

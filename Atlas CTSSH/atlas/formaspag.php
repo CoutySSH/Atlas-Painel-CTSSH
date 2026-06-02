@@ -1,4 +1,4 @@
-error_reporting(0);
+<?php error_reporting(0);
 session_start();
 //se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
