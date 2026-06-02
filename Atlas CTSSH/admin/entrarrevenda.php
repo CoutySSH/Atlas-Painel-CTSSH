@@ -1,4 +1,4 @@
-    session_start();
+    <?php session_start();
     include_once("../atlas/conexao.php");
     $conexao = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
     $id = $_SESSION['identrarrevenda'];

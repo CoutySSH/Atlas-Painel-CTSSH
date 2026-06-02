@@ -1,5 +1,5 @@
-session_start();
-//se a sessão não existir, redireciona para o login
+<?php
+if (session_status() == PHP_SESSION_NONE) { session_start(); }
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -54,3 +54,4 @@ foreach ($result as $row) {
 
 mysqli_close($conn);
 ?>
+                       

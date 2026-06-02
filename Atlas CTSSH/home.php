@@ -1,3 +1,4 @@
+<?php
 //se voltaadmin e admin564154156 existir
 if (isset($_POST['voltaradmin']) && isset($_SESSION['admin564154156'])) {
     $sqladmin = "SELECT * FROM accounts WHERE id = '1'";

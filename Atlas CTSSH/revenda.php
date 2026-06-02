@@ -1,4 +1,4 @@
-session_start();
+<?php session_start();
 error_reporting(0);
 include_once 'atlas/conexao.php';
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);

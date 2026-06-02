@@ -1,6 +1,5 @@
-error_reporting(0);
+<?php error_reporting(0);
 session_start();
-// Verifica e atualiza a atividade da sessão
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1200)) {
     echo "<script>alert('Sessão expirada por inatividade!');</script>";
     session_unset();

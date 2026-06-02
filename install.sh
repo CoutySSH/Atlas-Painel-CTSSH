@@ -23,6 +23,13 @@ REQUIRED_DISK_MB=2048
 REQUIRED_RAM_MB=512
 SCRIPT_VER="1.0"
 
+# ─── Detectar SO ─────────────────────────────────────────────────────────────
+if [ -f /etc/os-release ]; then
+    . /etc/os-release
+elif [ -f /usr/lib/os-release ]; then
+    . /usr/lib/os-release
+fi
+
 # ─── Funções Core ───────────────────────────────────────────────────────────
 
 log() {
@@ -100,21 +107,39 @@ prepare_system() {
 
     # ── 1/8: Repositório PHP ──
     progress_bar 1 $total "Repositórios PHP..."
-    case "$ID" in
-        ubuntu)
-            if ! apt-cache show php8.3 &>/dev/null; then
-                apt install -y software-properties-common > /dev/null 2>&1
-                add-apt-repository -y ppa:ondrej/php > /dev/null 2>&1 || warn "Falha ao adicionar PPA ondrej/php"
+    if ! apt-cache show php8.3 &>/dev/null; then
+        local php_repo_added=false
+        if [ "$ID" = "ubuntu" ]; then
+            # Tenta via add-apt-repository
+            if ! command -v add-apt-repository &>/dev/null; then
+                apt install -y software-properties-common >> "$LOG_FILE" 2>&1
             fi
-            ;;
-        debian)
-            if ! apt-cache show php8.3 &>/dev/null; then
-                apt install -y apt-transport-https lsb-release ca-certificates curl > /dev/null 2>&1
-                curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/sury-php.gpg 2>/dev/null
-                echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-php.list
+            if command -v add-apt-repository &>/dev/null; then
+                add-apt-repository -y ppa:ondrej/php >> "$LOG_FILE" 2>&1 && php_repo_added=true
             fi
-            ;;
-    esac
+            # Fallback manual se add-apt-repository não funcionou
+            if [ "$php_repo_added" = false ]; then
+                info "Adicionando PPA ondrej/php manualmente..."
+                local php_repo_keyring="/usr/share/keyrings/ondrej-php.gpg"
+                apt install -y gpg ca-certificates >> "$LOG_FILE" 2>&1
+                gpg --keyserver keyserver.ubuntu.com --recv-keys 14AA40EC0831756756D7F66C4F4EA0AAE5267A6C >> "$LOG_FILE" 2>&1 || \
+                    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4F4EA0AAE5267A6C" 2>/dev/null | gpg --dearmor -o "$php_repo_keyring"
+                gpg --export 14AA40EC0831756756D7F66C4F4EA0AAE5267A6C > "$php_repo_keyring" 2>/dev/null || true
+                echo "deb [signed-by=$php_repo_keyring] http://ppa.launchpadcontent.net/ondrej/php/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ondrej-php.list
+                php_repo_added=true
+            fi
+        elif [ "$ID" = "debian" ]; then
+            apt install -y apt-transport-https lsb-release ca-certificates curl >> "$LOG_FILE" 2>&1
+            curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/sury-php.gpg >> "$LOG_FILE" 2>&1
+            echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-php.list
+            php_repo_added=true
+        fi
+        if [ "$php_repo_added" = true ]; then
+            ok "Repositório PHP configurado"
+        else
+            warn "Não foi possível configurar repositório PHP. A instalação pode falhar."
+        fi
+    fi
 
     # ── 2/8: apt update ──
     progress_bar 2 $total "Atualizando lista de pacotes..."
@@ -131,7 +156,6 @@ prepare_system() {
         curl wget unzip git openssl
         php8.3 php8.3-mysql php8.3-curl php8.3-zip php8.3-xml
         php8.3-mbstring php8.3-cli php8.3-common php8.3-fpm php-ssh2
-        libapache2-mod-php8.3
     )
     DEBIAN_FRONTEND=noninteractive apt install -y "${deps[@]}" >> "$LOG_FILE" 2>&1
     if [ $? -ne 0 ]; then
@@ -140,7 +164,8 @@ prepare_system() {
 
     # ── 5/8: Módulos Apache ──
     progress_bar 5 $total "Ativando módulos do Apache..."
-    a2enmod rewrite ssl proxy_fcgi setenvif headers > /dev/null 2>&1
+    a2dismod -f mpm_prefork > /dev/null 2>&1 || true
+    a2enmod rewrite ssl proxy_fcgi setenvif headers mpm_event > /dev/null 2>&1
     a2enconf php8.3-fpm > /dev/null 2>&1
 
     # ── 6/8: Habilitar serviços ──
@@ -150,14 +175,23 @@ prepare_system() {
     # ── 7/8: Reiniciar serviços ──
     progress_bar 7 $total "Reiniciando serviços..."
     systemctl restart apache2 mariadb php8.3-fpm > /dev/null 2>&1
+    sleep 2
 
     # ── 8/8: Firewall ──
     progress_bar 8 $total "Configurando firewall..."
     if command -v ufw &>/dev/null; then
-        ufw allow 22/tcp > /dev/null 2>&1
-        ufw allow 80/tcp > /dev/null 2>&1
-        ufw allow 443/tcp > /dev/null 2>&1
-        ufw --force enable > /dev/null 2>&1
+        ufw allow 22/tcp >> "$LOG_FILE" 2>&1
+        ufw allow 80/tcp >> "$LOG_FILE" 2>&1
+        ufw allow 443/tcp >> "$LOG_FILE" 2>&1
+        ufw --force enable >> "$LOG_FILE" 2>&1
+    fi
+    # Fallback: liberar portas via iptables se estiverem bloqueadas
+    if ! iptables -C INPUT -p tcp --dport 80 -m state --state NEW -j ACCEPT 2>/dev/null; then
+        apt install -y iptables-persistent >> "$LOG_FILE" 2>&1
+        iptables -I INPUT 5 -p tcp --dport 80 -m state --state NEW -j ACCEPT
+        iptables -I INPUT 6 -p tcp --dport 443 -m state --state NEW -j ACCEPT
+        netfilter-persistent save >> "$LOG_FILE" 2>&1
+        ok "Portas 80/443 liberadas no iptables"
     fi
 
     echo -e " ${VERDE}✔${NC} Sistema preparado com sucesso!"
@@ -219,6 +253,7 @@ setup_ssl() {
     cat > /etc/apache2/sites-available/painel.conf <<VHOST
 <VirtualHost *:80>
     ServerName $DOMINIO
+    ServerAlias www.$DOMINIO
     DocumentRoot /var/www/html
     <Directory /var/www/html>
         Options -Indexes +FollowSymLinks
@@ -230,18 +265,50 @@ setup_ssl() {
 </VirtualHost>
 VHOST
 
-    a2dissite 000-default.conf > /dev/null 2>&1
+    a2dissite 000-default.conf > /dev/null 2>&1 || true
     a2ensite painel.conf > /dev/null 2>&1
-    systemctl reload apache2 > /dev/null 2>&1
+    apachectl configtest >> "$LOG_FILE" 2>&1 || warn "Config Apache com avisos. Verifique $LOG_FILE"
+    systemctl reload apache2 > /dev/null 2>&1 || systemctl restart apache2 > /dev/null 2>&1
     ok "VirtualHost configurado para $DOMINIO"
 
     # ── SSL ──
     progress_bar 2 $total "Gerando SSL Let's Encrypt..."
-    if certbot --apache -d "$DOMINIO" --non-interactive --agree-tos --email "$EMAIL" --redirect >> "$LOG_FILE" 2>&1; then
+    certbot --apache -d "$DOMINIO" --non-interactive --agree-tos --email "$EMAIL" --redirect >> "$LOG_FILE" 2>&1
+    local certbot_status=$?
+    if [ $certbot_status -eq 0 ] && [ -d "/etc/letsencrypt/live/$DOMINIO" ]; then
         ok "SSL ativo para $DOMINIO"
     else
-        warn "Certbot falhou. Log: $LOG_FILE"
-        warn "Continuando sem SSL. Use certbot manualmente depois."
+        warn "Certbot falhou (status: $certbot_status). Log: $LOG_FILE"
+        warn "Tentando novamente com método standalone..."
+        systemctl stop apache2 > /dev/null 2>&1
+        if certbot certonly --standalone -d "$DOMINIO" --non-interactive --agree-tos --email "$EMAIL" >> "$LOG_FILE" 2>&1; then
+            cat > /etc/apache2/sites-available/painel-le-ssl.conf <<SSLVHOST
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+    ServerName $DOMINIO
+    DocumentRoot /var/www/html
+    <Directory /var/www/html>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+    ErrorLog \${APACHE_LOG_DIR}/painel_error.log
+    CustomLog \${APACHE_LOG_DIR}/painel_access.log combined
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/$DOMINIO/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/$DOMINIO/privkey.pem
+</VirtualHost>
+</IfModule>
+SSLVHOST
+            a2enmod ssl > /dev/null 2>&1
+            a2ensite painel-le-ssl.conf > /dev/null 2>&1
+            sed -i "s|</VirtualHost>|RewriteEngine On\n    RewriteCond %{HTTPS} off\n    RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]\n</VirtualHost>|" /etc/apache2/sites-available/painel.conf
+            a2enmod rewrite > /dev/null 2>&1
+            ok "SSL configurado manualmente via método standalone"
+        else
+            warn "Falha também no método standalone. Painel funcionará apenas em HTTP."
+        fi
+        systemctl start apache2 > /dev/null 2>&1
     fi
 
     # ── Renovação automática ──
@@ -265,7 +332,19 @@ install_panel() {
     titulo "03" "INSTALAR PAINEL ATLAS"
 
     load_config
-    local total=10
+    local total=11
+
+    # ── Pré-requisitos ──
+    if ! systemctl is-active --quiet apache2; then
+        error_exit "Apache2 não está rodando. Execute a opção 01 primeiro."
+    fi
+    if ! systemctl is-active --quiet mariadb; then
+        systemctl start mariadb >> "$LOG_FILE" 2>&1 || error_exit "MariaDB não inicia. Verifique: journalctl -xeu mariadb"
+        sleep 2
+    fi
+    if ! command -v php8.3 &>/dev/null && ! command -v php &>/dev/null; then
+        error_exit "PHP não encontrado. Execute a opção 01 primeiro."
+    fi
 
     # ── Clonar repositório ──
     progress_bar 1 $total "Baixando painel do GitHub..."
@@ -323,10 +402,25 @@ install_panel() {
         systemctl start mariadb >> "$LOG_FILE" 2>&1 || error_exit "MariaDB não está rodando"
     fi
 
-    mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\`;" >> "$LOG_FILE" 2>&1
+    # Testa se root consegue conectar (via unix_socket em Debian/Ubuntu)
+    if ! mysql -e "SELECT 1;" >> "$LOG_FILE" 2>&1; then
+        warn "Conexão root falhou. Tentando definir senha root..."
+        mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '${DB_PASS}'; FLUSH PRIVILEGES;" >> "$LOG_FILE" 2>&1 || \
+            error_exit "Não foi possível autenticar no MariaDB. Execute: mysql_secure_installation"
+        # Persiste a senha para uso futuro
+        local mysql_cnf="/root/.my.cnf"
+        cat > "$mysql_cnf" <<MYCNF
+[client]
+user=root
+password=${DB_PASS}
+MYCNF
+        chmod 600 "$mysql_cnf"
+    fi
+
+    mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >> "$LOG_FILE" 2>&1
     mysql -e "CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" >> "$LOG_FILE" 2>&1
     mysql -e "ALTER USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';" >> "$LOG_FILE" 2>&1
-    mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';" >> "$LOG_FILE" 2>&1
+    mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost' WITH GRANT OPTION;" >> "$LOG_FILE" 2>&1
     mysql -e "FLUSH PRIVILEGES;" >> "$LOG_FILE" 2>&1
 
     if mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e "SELECT 1;" > /dev/null 2>&1; then
@@ -344,15 +438,17 @@ install_panel() {
     # ── Escrever conexao.php ──
     progress_bar 5 $total "Escrevendo conexao.php..."
     mkdir -p /var/www/html/atlas
-    cat > "$CONEXAO_PATH" <<PHP_CONN
-<?php
- \$dbname = '${DB_NAME}';
- \$dbuser = '${DB_USER}';
- \$dbpass = '${DB_PASS}';
- \$dbhost = '${DB_HOST}';
- \$_SESSION['token'] = '${SESSION_TOKEN:-9P9trMXJP9w5Wv7}';
-?>
-PHP_CONN
+    {
+        printf '<?php\n'
+        printf " \$dbname = '%s';\n" "${DB_NAME}"
+        printf " \$dbuser = '%s';\n" "${DB_USER}"
+        printf " \$dbpass = '%s';\n" "${DB_PASS}"
+        printf " \$dbhost = '%s';\n" "${DB_HOST}"
+        printf " \$_SESSION['token'] = '%s';\n" "${SESSION_TOKEN:-9P9trMXJP9w5Wv7}"
+        printf '?>\n'
+    } > "$CONEXAO_PATH"
+    chmod 640 "$CONEXAO_PATH"
+    chown www-data:www-data "$CONEXAO_PATH" 2>/dev/null || true
     ok "conexao.php criado"
 
     # ── Importar SQL ──
@@ -365,43 +461,119 @@ PHP_CONN
     fi
 
     # ── Senha admin ──
-    local admin_senha=$(openssl rand -base64 10 | tr -dc 'A-Za-z0-9' | head -c 12)
-    local admin_hash=$(echo -n "$admin_senha" | md5sum | awk '{print $1}')
-    mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" \
-        -e "UPDATE accounts SET senha = '$admin_hash' WHERE login = 'admin' LIMIT 1;" 2>/dev/null
-    salvar_meta "PAINEL_SENHA" "$admin_senha"
-    ok "Senha do admin definida"
+    progress_bar 7 $total "Configurando senha do admin..."
+    local admin_senha=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 14)
+    [ ${#admin_senha} -lt 8 ] && admin_senha=$(openssl rand -hex 8)
+    local admin_hash="$admin_senha"
+
+    # Detectar automaticamente a tabela e colunas de usuários
+    local user_table="" login_col="" pass_col=""
+    for t in accounts usuarios users admin admins administradores; do
+        local exists=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}' AND table_name='${t}';" 2>/dev/null)
+        if [ "$exists" = "1" ]; then
+            user_table="$t"
+            for lc in login usuario username user nome email; do
+                local c=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+                    "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${DB_NAME}' AND table_name='${t}' AND column_name='${lc}';" 2>/dev/null)
+                [ "$c" = "1" ] && login_col="$lc" && break
+            done
+            for pc in senha password passwd pass pwd hash; do
+                local c=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+                    "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${DB_NAME}' AND table_name='${t}' AND column_name='${pc}';" 2>/dev/null)
+                [ "$c" = "1" ] && pass_col="$pc" && break
+            done
+            [ -n "$login_col" ] && [ -n "$pass_col" ] && break
+        fi
+    done
+
+    if [ -z "$user_table" ] || [ -z "$login_col" ] || [ -z "$pass_col" ]; then
+        warn "Estrutura do banco não detectada. Tentando método alternativo via PHP..."
+        # Fallback: usa PHP do próprio painel para setar a senha
+        if [ -f /var/www/html/index.php ] || [ -f /var/www/html/pages/login.php ]; then
+            cat > /tmp/atlas_setpass.php <<'PHPSET'
+<?php
+$found = false;
+$dir = new RecursiveDirectoryIterator('/var/www/html', RecursiveDirectoryIterator::SKIP_DOTS);
+foreach (new RecursiveIteratorIterator($dir) as $f) {
+    if (preg_match('/\.(php)$/', $f)) {
+        $c = file_get_contents($f);
+        if (preg_match('/SELECT.*FROM\s+`?(\w+)`?.*WHERE.*login.*=.*\?|FROM\s+`?(\w+)`?.*WHERE.*usuario/is', $c, $m)) {
+            $tbl = !empty($m[1]) ? $m[1] : $m[2];
+            echo "TABELA: $tbl\n";
+            $found = true;
+        }
+    }
+}
+?>
+PHPSET
+            warn "Estrutura não padronizada. Verifique manualmente em /var/www/html"
+        fi
+        salvar_meta "PAINEL_SENHA" "$admin_senha"
+        ok "Senha gerada (verifique estrutura manualmente): $admin_senha"
+    else
+        # Garante que existe um usuário admin
+        local admin_exists=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+            "SELECT COUNT(*) FROM \`${user_table}\` WHERE \`${login_col}\`='admin';" 2>/dev/null)
+        if [ "$admin_exists" = "0" ]; then
+            # Tenta inserir um admin padrão
+            mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e \
+                "INSERT INTO \`${user_table}\` (\`${login_col}\`, \`${pass_col}\`) VALUES ('admin', '${admin_hash}');" >> "$LOG_FILE" 2>&1
+            ok "Usuário admin criado"
+        else
+            mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e \
+                "UPDATE \`${user_table}\` SET \`${pass_col}\` = '${admin_hash}' WHERE \`${login_col}\` = 'admin' LIMIT 1;" >> "$LOG_FILE" 2>&1
+            ok "Senha do admin atualizada"
+        fi
+        salvar_meta "PAINEL_SENHA" "$admin_senha"
+        ok "Estrutura detectada: ${user_table}.${login_col} / ${user_table}.${pass_col}"
+    fi
 
     # ── Permissões ──
-    progress_bar 7 $total "Ajustando permissões..."
+    progress_bar 8 $total "Ajustando permissões..."
     chown -R www-data:www-data /var/www/html/
     find /var/www/html -type d -exec chmod 755 {} \;
     find /var/www/html -type f -exec chmod 644 {} \;
     ok "Permissões ajustadas"
 
     # ── Proteger atlas ──
-    progress_bar 8 $total "Protegendo diretório atlas..."
-    [ ! -f /var/www/html/atlas/.htaccess ] && cat > /var/www/html/atlas/.htaccess <<'HTACCESS'
-<FilesMatch "\.(php|inc|sql)$">
+    progress_bar 9 $total "Protegendo diretório atlas..."
+    cat > /var/www/html/atlas/.htaccess <<'HTACCESS'
+<FilesMatch "\.(inc|sql|log|md)$">
     Require all denied
 </FilesMatch>
 HTACCESS
     ok "Atlas protegido via .htaccess"
 
     # ── Limpeza ──
-    progress_bar 9 $total "Limpando arquivos temporários..."
+    progress_bar 10 $total "Limpando arquivos temporários..."
     rm -rf "$tmp_dir"
     rm -f /var/www/html/install.sh /var/www/html/install01.sh /var/www/html/README.md /var/www/html/security-audit-atlas-sem-key.md /var/www/html/telegram-bots-functions.md
     ok "Arquivos temporários removidos"
 
     # ── Cron ──
-    progress_bar 10 $total "Configurando cron..."
+    progress_bar 11 $total "Configurando cron..."
     if command -v crontab &>/dev/null; then
         (crontab -l 2>/dev/null | grep -v "cron_exec.php\|onlines.php\|checkpag.php") | crontab -
         (crontab -l 2>/dev/null; echo "* * * * * cd /var/www/html && php cron_exec.php >/dev/null 2>&1") | crontab -
         mysql -e "ALTER TABLE configs ADD COLUMN IF NOT EXISTS cron_ativo INT(1) NOT NULL DEFAULT 1;" 2>/dev/null
         mysql -e "UPDATE configs SET cron_ativo = 1 WHERE id = 1;" 2>/dev/null
         ok "Cron configurado (1 min)"
+    fi
+
+    # ── Recarregar Apache ──
+    systemctl reload apache2 > /dev/null 2>&1 || systemctl restart apache2 > /dev/null 2>&1
+    ok "Apache recarregado"
+
+    # ── Teste final ──
+    if [ -n "$DOMINIO" ] && [ "$DOMINIO" != "Não configurado" ]; then
+        local test_url="https://$DOMINIO"
+        local http_code=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$test_url" 2>/dev/null)
+        if [ "$http_code" = "200" ] || [ "$http_code" = "302" ] || [ "$http_code" = "301" ]; then
+            ok "Painel acessível em $test_url (HTTP $http_code)"
+        else
+            warn "Painel pode não estar acessível (HTTP $http_code). Verifique manualmente."
+        fi
     fi
 
     # ── Resumo ──
@@ -415,6 +587,128 @@ HTACCESS
 }
 
 # ─── Utilitários ───────────────────────────────────────────────────────────
+
+limpar_sistema() {
+    titulo "00" "LIMPAR SISTEMA COMPLETAMENTE"
+
+    echo -e ""
+    warn "${VERMELHO}ATENÇÃO: Isso removerá TUDO relacionado ao painel.${NC}"
+    warn "${VERMELHO}Apache, MariaDB, PHP 8.3, SSL, banco, arquivos.${NC}"
+    echo -e ""
+    read -p " Digite CONFIRMAR para prosseguir: " confirm
+    [ "$confirm" != "CONFIRMAR" ] && { info "Cancelado."; pause; return; }
+
+    local total=10
+
+    # ── 1/10: Backup do banco ──
+    progress_bar 1 $total "Backup do banco de dados..."
+    load_config
+    if [ -n "$DB_PASS" ] && mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e "SELECT 1;" > /dev/null 2>&1; then
+        local dump="${BACKUP_DIR}/banco_dump_pre_limpeza.sql"
+        mkdir -p "$BACKUP_DIR"
+        mysqldump -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" > "$dump" 2>/dev/null
+        ok "Backup salvo em: $dump"
+    else
+        info "Banco não configurado, pulando backup"
+    fi
+
+    # ── 2/10: Parar serviços ──
+    progress_bar 2 $total "Parando serviços..."
+    systemctl stop apache2 2>/dev/null
+    systemctl stop mariadb 2>/dev/null
+    systemctl stop php8.3-fpm 2>/dev/null
+    ok "Serviços parados"
+
+    # ── 3/10: Desabilitar serviços ──
+    progress_bar 3 $total "Desabilitando serviços..."
+    systemctl disable apache2 2>/dev/null
+    systemctl disable mariadb 2>/dev/null
+    systemctl disable php8.3-fpm 2>/dev/null
+    ok "Serviços desabilitados"
+
+    # ── 4/10: Remover pacotes ──
+    progress_bar 4 $total "Removendo pacotes..."
+    DEBIAN_FRONTEND=noninteractive apt remove --purge -y \
+        apache2* mariadb-server* mariadb-client* mariadb-common* \
+        php8.3* php-* libapache2-mod-php* \
+        certbot* python3-certbot* python3-certbot-apache \
+        > /dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt autoremove --purge -y > /dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt autoclean -y > /dev/null 2>&1
+    DEBIAN_FRONTEND=noninteractive apt clean -y > /dev/null 2>&1
+    ok "Pacotes removidos"
+
+    # ── 5/10: Remover arquivos e configs ──
+    progress_bar 5 $total "Removendo arquivos e configurações..."
+    rm -rf /var/www/html
+    rm -rf /etc/apache2
+    rm -rf /etc/mysql /etc/my.cnf /etc/my.cnf.d
+    rm -rf /etc/letsencrypt
+    rm -rf /etc/php /etc/php8.3
+    rm -f /root/.my.cnf
+    rm -f /root/.atlas_meta
+    rm -f /var/log/atlas_install01.log
+    rm -rf /tmp/atlas_painel_*
+    rm -rf /var/log/mysql /var/lib/mysql
+    ok "Arquivos removidos"
+
+    # ── 6/10: Limpar repositórios adicionados ──
+    progress_bar 6 $total "Limpando repositórios..."
+    rm -f /etc/apt/sources.list.d/ondrej-php.list
+    rm -f /etc/apt/sources.list.d/sury-php.list
+    rm -f /usr/share/keyrings/ondrej-php.gpg
+    rm -f /usr/share/keyrings/sury-php.gpg
+    rm -f /etc/apt/sources.list.d/apache2.list
+    rm -f /etc/apt/sources.list.d/certbot.list
+    ok "Repositórios limpos"
+
+    # ── 7/10: Limpar crontabs ──
+    progress_bar 7 $total "Limpando crontabs..."
+    crontab -r 2>/dev/null
+    ok "Crontabs limpos"
+
+    # ── 8/10: Resetar firewall ──
+    progress_bar 8 $total "Resetando firewall..."
+    if command -v ufw &>/dev/null; then
+        ufw --force reset > /dev/null 2>&1
+        ufw --force disable > /dev/null 2>&1
+    fi
+    iptables -F 2>/dev/null
+    iptables -X 2>/dev/null
+    netfilter-persistent flush 2>/dev/null
+    ok "Firewall resetado"
+
+    # ── 9/10: Limpar processos residuais ──
+    progress_bar 9 $total "Limpando processos..."
+    pkill -9 -f apache2 2>/dev/null
+    pkill -9 -f mysql 2>/dev/null
+    pkill -9 -f mariadb 2>/dev/null
+    pkill -9 -f php-fpm 2>/dev/null
+    pkill -9 -f certbot 2>/dev/null
+    sleep 1
+    ok "Processos limpos"
+
+    # ── 10/10: Atualizar apt ──
+    progress_bar 10 $total "Atualizando listas de pacotes..."
+    apt update -y > /dev/null 2>&1
+    ok "Sistema limpo e pronto para nova instalação"
+
+    echo -e ""
+    echo -e "${VERDE}${NEGRITO}╔═══════════════════════════════════════════════════════╗${NC}"
+    echo -e "${VERDE}${NEGRITO}║   SISTEMA 100% LIMPO - PRONTO PARA REINSTALAÇÃO       ║${NC}"
+    echo -e "${VERDE}${NEGRITO}║   Execute a opção 01 para começar do zero.           ║${NC}"
+    echo -e "${VERDE}${NEGRITO}╚═══════════════════════════════════════════════════════╝${NC}"
+    echo -e ""
+
+    read -p " Reiniciar o sistema agora? (s/N): " reboot_now
+    if [ "$reboot_now" = "s" ] || [ "$reboot_now" = "S" ]; then
+        info "Reiniciando em 5 segundos..."
+        sleep 5
+        reboot
+    fi
+
+    pause
+}
 
 reparar_banco() {
     titulo "04" "REPARAR BANCO DE DADOS"
@@ -432,29 +726,30 @@ reparar_banco() {
 
     # Recriar conexao.php
     mkdir -p /var/www/html/atlas
-    cat > "$CONEXAO_PATH" <<PHP_CONN
-<?php
- \$dbname = '${DB_NAME:-gestorssh}';
- \$dbuser = '${DB_USER:-gestorssh}';
- \$dbpass = '${DB_PASS}';
- \$dbhost = '${DB_HOST:-localhost}';
- \$_SESSION['token'] = '${SESSION_TOKEN:-9P9trMXJP9w5Wv7}';
-?>
-PHP_CONN
+    {
+        printf '<?php\n'
+        printf " \$dbname = '%s';\n" "${DB_NAME:-gestorssh}"
+        printf " \$dbuser = '%s';\n" "${DB_USER:-gestorssh}"
+        printf " \$dbpass = '%s';\n" "${DB_PASS}"
+        printf " \$dbhost = '%s';\n" "${DB_HOST:-localhost}"
+        printf " \$_SESSION['token'] = '%s';\n" "${SESSION_TOKEN:-9P9trMXJP9w5Wv7}"
+        printf '?>\n'
+    } > "$CONEXAO_PATH"
+    chmod 640 "$CONEXAO_PATH"
     ok "conexao.php recriado"
 
     # Proteger diretório atlas via .htaccess
     cat > /var/www/html/atlas/.htaccess <<'HTACCESS'
-<FilesMatch "\.(php|inc|sql)$">
+<FilesMatch "\.(inc|sql|log|md)$">
     Require all denied
 </FilesMatch>
 HTACCESS
     ok "Atlas protegido via .htaccess"
 
     progress_bar 2 $total "Configurando banco de dados..."
-    mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME:-gestorssh}\`;" >> "$LOG_FILE" 2>&1
+    mysql -e "CREATE DATABASE IF NOT EXISTS \`${DB_NAME:-gestorssh}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;" >> "$LOG_FILE" 2>&1
     mysql -e "ALTER USER '${DB_USER:-gestorssh}'@'localhost' IDENTIFIED BY '${DB_PASS}';" >> "$LOG_FILE" 2>&1
-    mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME:-gestorssh}\`.* TO '${DB_USER:-gestorssh}'@'localhost';" >> "$LOG_FILE" 2>&1
+    mysql -e "GRANT ALL PRIVILEGES ON \`${DB_NAME:-gestorssh}\`.* TO '${DB_USER:-gestorssh}'@'localhost' WITH GRANT OPTION;" >> "$LOG_FILE" 2>&1
     mysql -e "FLUSH PRIVILEGES;" >> "$LOG_FILE" 2>&1
 
     progress_bar 3 $total "Verificando conexão..."
@@ -488,23 +783,58 @@ reset_admin() {
     local total=3
 
     progress_bar 1 $total "Gerando nova senha..."
-    local nova_senha=$(openssl rand -base64 10 | tr -dc 'A-Za-z0-9' | head -c 12)
-    local hash=$(echo -n "$nova_senha" | md5sum | awk '{print $1}')
+    local nova_senha=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 14)
+    [ ${#nova_senha} -lt 8 ] && nova_senha=$(openssl rand -hex 8)
+    local hash="$nova_senha"
 
     progress_bar 2 $total "Atualizando banco de dados..."
+    # Detectar estrutura automaticamente
+    local user_table="" login_col="" pass_col=""
+    for t in accounts usuarios users admin admins administradores; do
+        local exists=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}' AND table_name='${t}';" 2>/dev/null)
+        if [ "$exists" = "1" ]; then
+            user_table="$t"
+            for lc in login usuario username user nome email; do
+                local c=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+                    "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${DB_NAME}' AND table_name='${t}' AND column_name='${lc}';" 2>/dev/null)
+                [ "$c" = "1" ] && login_col="$lc" && break
+            done
+            for pc in senha password passwd pass pwd hash; do
+                local c=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+                    "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema='${DB_NAME}' AND table_name='${t}' AND column_name='${pc}';" 2>/dev/null)
+                [ "$c" = "1" ] && pass_col="$pc" && break
+            done
+            [ -n "$login_col" ] && [ -n "$pass_col" ] && break
+        fi
+    done
+
+    if [ -z "$user_table" ] || [ -z "$login_col" ] || [ -z "$pass_col" ]; then
+        fail_ "Estrutura do banco não reconhecida. Não foi possível detectar tabela de usuários."
+        pause
+        return
+    fi
+
+    local update_status
     mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" \
-        -e "UPDATE accounts SET senha = '$hash' WHERE login = 'admin' LIMIT 1;" 2>/dev/null
+        -e "UPDATE \`${user_table}\` SET \`${pass_col}\` = '${hash}' WHERE \`${login_col}\` = 'admin' LIMIT 1;" >> "$LOG_FILE" 2>&1
+    update_status=$?
+
+    # Verificação real: testa se a senha bate com o que está no banco
+    local stored_hash=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
+        "SELECT \`${pass_col}\` FROM \`${user_table}\` WHERE \`${login_col}\` = 'admin' LIMIT 1;" 2>/dev/null)
 
     progress_bar 3 $total "Salvando configuração..."
-    if [ $? -eq 0 ]; then
+    if [ $update_status -eq 0 ] && [ "$stored_hash" = "$hash" ]; then
         salvar_meta "PAINEL_SENHA" "$nova_senha"
         echo -e ""
-        ok "Senha do admin redefinida!"
-        echo -e "   ${BRANCO}Login:${NC} admin"
-        echo -e "   ${BRANCO}Senha:${NC} ${VERDE}${nova_senha}${NC}"
+        ok "Senha do admin redefinida com sucesso!"
+        echo -e "   ${BRANCO}Tabela:${NC}  ${CIANO}${user_table}${NC}"
+        echo -e "   ${BRANCO}Login:${NC}   admin"
+        echo -e "   ${BRANCO}Senha:${NC}   ${VERDE}${nova_senha}${NC}"
         echo -e ""
     else
-        fail_ "Falha ao alterar senha. Verifique o banco."
+        fail_ "Falha ao alterar senha. Verifique $LOG_FILE"
     fi
     pause
 }
@@ -622,7 +952,7 @@ status_sistema() {
 get_php_var() {
     local var_name="$1"; local file="$2"
     if [ -f "$file" ]; then
-        grep -E "\$$var_name\s*=" "$file" | head -n1 | sed "s/.*'\(.*\)'.*/\1/" | tr -d " ;\r\n"
+        php -r "\$$var_name=''; include '$file'; echo \$$var_name;" 2>/dev/null
     fi
 }
 
@@ -671,7 +1001,7 @@ show_menu() {
     systemctl is-active --quiet mariadb  2>/dev/null && mariadb_icon="${VERDE}ATIVO${NC}" || mariadb_icon="${VERMELHO}INATIVO${NC}"
     local php_ok=0
     systemctl is-active --quiet php8.3-fpm 2>/dev/null && php_ok=1
-    apachectl -M 2>/dev/null | grep -q php_module && php_ok=1
+    apachectl -M 2>/dev/null | grep -qE "proxy_fcgi|php_module" && php_ok=1
     [ "$php_ok" -eq 1 ] && php_icon="${VERDE}ATIVO${NC}" || php_icon="${VERMELHO}INATIVO${NC}"
     if [ "$DOMINIO" != "Nao configurado" ] && [ -d "/etc/letsencrypt/live/$DOMINIO" ]; then
         ssl_icon="${VERDE}ATIVO${NC}"
@@ -683,6 +1013,7 @@ show_menu() {
     echo -e "${AZUL}+----------------------------------------------------------------+${NC}"
 
     local opcoes=(
+        "00:Limpar Sistema (reinstalacao do zero)"
         "01:Preparar Sistema (repos, deps, firewall)"
         "02:Configurar Dominio e SSL (com validacao DNS)"
         "03:Instalar Painel Atlas (GitHub + BD + permissoes)"
@@ -690,7 +1021,7 @@ show_menu() {
         "05:Resetar Senha do Admin"
         "06:Desinstalar Completo"
         "07:Status do Sistema"
-        "00:Sair"
+        "99:Sair"
     )
     for item in "${opcoes[@]}"; do
         local num="${item%%:*}"
@@ -707,6 +1038,7 @@ while true; do
     show_menu
     echo -e -n " ${BRANCO}Selecione uma opção:${NC} "; read OPCAO
     case $OPCAO in
+        0|00)             limpar_sistema  ;;
         1|01)             prepare_system  ;;
         2|02)             setup_ssl       ;;
         3|03)             install_panel   ;;
@@ -714,7 +1046,7 @@ while true; do
         5|05)             reset_admin     ;;
         6|06)             desinstalar     ;;
          7|07)             status_sistema  ;;
-        0|00)
+        99)
             echo -e "\n${VERDE} Saindo...${NC}\n"
             exit 0
             ;;

@@ -1,5 +1,5 @@
-error_reporting(0);
-session_start();
+<?php error_reporting(0);
+if (session_status() == PHP_SESSION_NONE) { session_start(); }
 include('conexao.php');
 include('header2.php');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
@@ -36,12 +36,6 @@ if ($validade < $hoje) {
     unset($_POST['senhafin']);
     unset($_POST['validadefin']);
 }
-}
-if (!file_exists('../admin/suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once 'suspenderrev.php';
-  
 }
 if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
   if (function_exists('security')) {
