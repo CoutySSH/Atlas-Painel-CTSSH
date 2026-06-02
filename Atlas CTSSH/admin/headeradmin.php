@@ -431,8 +431,10 @@ function redirecionaroonlines() {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          </div>
-                         </div></div>
+                          <h3 class="mb-0">Versão</h3>
+                          <p class="text-success ml-2 mb-0 font-weight-medium">4.5.6</p>
+                        </div>
+                      </div>
                       <div class="col-3">
                         <div class="icon icon-box-success ">
                         <i class="mdi mdi-format-vertical-align-bottom"></i>
