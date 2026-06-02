@@ -947,6 +947,237 @@ status_sistema() {
     pause
 }
 
+# ─── Reinstalar Painel (mantém banco/conexao) ──────────────────────────────
+
+reinstalar_painel() {
+    titulo "08" "REINSTALAR PAINEL (MANTÉM BANCO)"
+
+    echo -e ""
+    warn "Isso vai SUBSTITUIR todos os arquivos do painel."
+    warn "O conexao.php e o banco de dados serão PRESERVADOS."
+    echo -e ""
+    read -p " Continuar? (s/N): " confirma
+    [ "$confirma" != "s" ] && [ "$confirma" != "S" ] && { info "Cancelado."; pause; return; }
+
+    load_config
+    local total=8
+
+    if ! systemctl is-active --quiet apache2; then
+        error_exit "Apache2 não está rodando. Execute a opção 01 primeiro."
+    fi
+
+    # ── 1/8: Backup do conexao.php ──
+    progress_bar 1 $total "Backup do conexao.php..."
+    local bk_conexao="/root/conexao_backup_$(date +%Y%m%d_%H%M%S).php"
+    if [ -f "$CONEXAO_PATH" ]; then
+        cp "$CONEXAO_PATH" "$bk_conexao"
+        ok "Backup salvo em $bk_conexao"
+    else
+        warn "conexao.php não existe — banco precisará ser reconfigurado"
+    fi
+
+    # ── 2/8: Clone do repo ──
+    progress_bar 2 $total "Baixando painel do GitHub..."
+    local tmp_dir="/tmp/atlas_painel_$$"
+    rm -rf "$tmp_dir"
+    if ! git clone --depth 1 https://github.com/CoutySSH/Atlas-Painel-CTSSH "$tmp_dir" >> "$LOG_FILE" 2>&1; then
+        error_exit "Falha ao clonar repositório."
+    fi
+    ok "Repositório clonado"
+
+    local origem=""
+    for d in "Atlas CTSSH" "Atlas" "Atlas Sem Key"; do
+        [ -d "$tmp_dir/$d" ] && { origem="$tmp_dir/$d"; break; }
+    done
+    [ -z "$origem" ] && error_exit "Pasta do painel não encontrada no repositório."
+
+    # ── 3/8: Backup do HTML ──
+    progress_bar 3 $total "Backup do diretório atual..."
+    if [ -d "/var/www/html" ] && [ "$(ls -A /var/www/html 2>/dev/null)" ]; then
+        local bk_html="${BACKUP_DIR}/html_pre_reinstall.tar.gz"
+        tar -czf "$bk_html" -C /var/www html 2>/dev/null && ok "Backup: $bk_html" || warn "Falha no backup"
+    fi
+
+    # ── 4/8: Remover arquivos antigos (preservar atlas/) ──
+    progress_bar 4 $total "Removendo arquivos antigos..."
+    cd /var/www/html
+    shopt -s dotglob 2>/dev/null
+    for item in *; do
+        [ "$item" = "atlas" ] && continue
+        rm -rf "$item"
+    done
+    shopt -u dotglob 2>/dev/null
+    ok "Arquivos antigos removidos (atlas/ preservado)"
+
+    # ── 5/8: Copiar novos arquivos ──
+    progress_bar 5 $total "Copiando novos arquivos..."
+    cp -a "$origem"/. /var/www/html/
+    [ -f "$tmp_dir/banco.sql" ] && cp "$tmp_dir/banco.sql" /var/www/html/banco.sql
+    rm -f /var/www/html/index.html 2>/dev/null
+    ok "Arquivos copiados"
+
+    # ── 6/8: Restaurar conexao.php e proteger atlas ──
+    progress_bar 6 $total "Restaurando conexao.php..."
+    mkdir -p /var/www/html/atlas
+    if [ -f "$bk_conexao" ]; then
+        cp "$bk_conexao" "$CONEXAO_PATH"
+        chmod 640 "$CONEXAO_PATH"
+        chown www-data:www-data "$CONEXAO_PATH" 2>/dev/null
+        ok "conexao.php restaurado (banco preservado)"
+    fi
+
+    cat > /var/www/html/atlas/.htaccess <<'HTACCESS'
+<FilesMatch "\.(inc|sql|log|md)$">
+    Require all denied
+</FilesMatch>
+HTACCESS
+    ok "Atlas protegido via .htaccess"
+
+    # ── 7/8: Auto-fix arquivos PHP sem tag ──
+    progress_bar 7 $total "Corrigindo arquivos PHP..."
+    local fix_count=0
+    while IFS= read -r f; do
+        [ -z "$f" ] && continue
+        local first
+        first=$(head -c 50 "$f" | tr -d '[:space:]' | head -c 30)
+        if echo "$first" | grep -qE '^\$|^(session_|error_|if|for|while|function|echo|require|include|header|mysqli_|sql|mysql_|use |namespace|class |[a-z_]+\(|[a-z_]+->)'; then
+            sed -i '1i <?php' "$f"
+            fix_count=$((fix_count + 1))
+        fi
+    done < <(find /var/www/html -name "*.php" -exec grep -L '<?php' {} + 2>/dev/null)
+    ok "$fix_count arquivos PHP corrigidos"
+
+    # Limpeza
+    rm -rf "$tmp_dir"
+    rm -f /var/www/html/install.sh /var/www/html/install01.sh /var/www/html/README.md
+    rm -f /var/www/html/security-audit-atlas-sem-key.md /var/www/html/telegram-bots-functions.md
+
+    # Permissões
+    chown -R www-data:www-data /var/www/html/
+    find /var/www/html -type d -exec chmod 755 {} \;
+    find /var/www/html -type f -exec chmod 644 {} \;
+    ok "Permissões ajustadas"
+
+    # ── 8/8: Recarregar Apache ──
+    progress_bar 8 $total "Recarregando Apache..."
+    systemctl reload apache2 > /dev/null 2>&1 || systemctl restart apache2 > /dev/null 2>&1
+    ok "Apache recarregado"
+
+    # Teste final
+    if [ -n "$DOMINIO" ] && [ "$DOMINIO" != "Não configurado" ]; then
+        local test_url="https://$DOMINIO"
+        local http_code=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$test_url" 2>/dev/null)
+        if [ "$http_code" = "200" ] || [ "$http_code" = "302" ] || [ "$http_code" = "301" ]; then
+            ok "Painel acessível em $test_url (HTTP $http_code)"
+        else
+            warn "Painel pode não estar acessível (HTTP $http_code)"
+        fi
+    fi
+
+    echo -e ""
+    echo -e "${VERDE}${NEGRITO}╔═══════════════════════════════════════════════════════╗${NC}"
+    echo -e "${VERDE}${NEGRITO}║   PAINEL REINSTALADO COM SUCESSO!                      ║${NC}"
+    echo -e "${VERDE}${NEGRITO}║   Banco de dados e credenciais preservados.            ║${NC}"
+    echo -e "${VERDE}${NEGRITO}╚═══════════════════════════════════════════════════════╝${NC}"
+    echo -e ""
+    pause
+}
+
+# ─── Reiniciar Serviços ────────────────────────────────────────────────────
+
+reiniciar_servicos() {
+    titulo "09" "REINICIAR SERVIÇOS"
+
+    load_config
+    local servicos=("apache2" "mariadb" "php8.3-fpm")
+    local total=5
+
+    # ── 1/5: Status atual ──
+    progress_bar 1 $total "Verificando status atual..."
+    echo -e ""
+    for svc in "${servicos[@]}"; do
+        if systemctl is-active --quiet "$svc" 2>/dev/null; then
+            echo -e "   ${CIANO}$svc${NC}: ${VERDE}ATIVO${NC}"
+        else
+            echo -e "   ${CIANO}$svc${NC}: ${VERMELHO}INATIVO${NC}"
+        fi
+    done
+
+    # ── 2/5: Parar serviços ──
+    progress_bar 2 $total "Parando serviços..."
+    for svc in "${servicos[@]}"; do
+        systemctl stop "$svc" >> "$LOG_FILE" 2>&1
+    done
+    sleep 1
+    ok "Serviços parados"
+
+    # ── 3/5: Iniciar serviços ──
+    progress_bar 3 $total "Iniciando serviços..."
+    for svc in "${servicos[@]}"; do
+        systemctl start "$svc" >> "$LOG_FILE" 2>&1
+    done
+    sleep 2
+    ok "Serviços iniciados"
+
+    # ── 4/5: Habilitar inicialização automática ──
+    progress_bar 4 $total "Verificando inicialização automática..."
+    for svc in "${servicos[@]}"; do
+        systemctl enable "$svc" > /dev/null 2>&1
+    done
+    ok "Inicialização automática configurada"
+
+    # ── 5/5: Status final + testes ──
+    progress_bar 5 $total "Verificando status final..."
+    echo -e ""
+    local algum_falhou=0
+    for svc in "${servicos[@]}"; do
+        if systemctl is-active --quiet "$svc" 2>/dev/null; then
+            echo -e "   ${CIANO}$svc${NC}: ${VERDE}✓ ATIVO${NC}"
+        else
+            echo -e "   ${CIANO}$svc${NC}: ${VERMELHO}✗ FALHOU${NC}"
+            echo "      $(systemctl status $svc --no-pager 2>&1 | grep -i 'active\|failed' | head -1)"
+            algum_falhou=1
+        fi
+    done
+
+    # Teste de banco
+    if [ -n "$DB_PASS" ]; then
+        echo -e ""
+        if mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e "SELECT 1;" > /dev/null 2>&1; then
+            ok "Conexão com banco OK"
+        else
+            warn "Falha na conexão com banco"
+            algum_falhou=1
+        fi
+    fi
+
+    # Teste HTTP
+    if [ -n "$DOMINIO" ] && [ "$DOMINIO" != "Não configurado" ]; then
+        local test_url="https://$DOMINIO"
+        local http_code=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 10 "$test_url" 2>/dev/null)
+        if [ "$http_code" = "200" ] || [ "$http_code" = "302" ] || [ "$http_code" = "301" ]; then
+            ok "Painel respondendo em $test_url (HTTP $http_code)"
+        else
+            warn "Painel retornou HTTP $http_code"
+            algum_falhou=1
+        fi
+    fi
+
+    echo -e ""
+    if [ $algum_falhou -eq 0 ]; then
+        echo -e "${VERDE}${NEGRITO}╔═══════════════════════════════════════════════════════╗${NC}"
+        echo -e "${VERDE}${NEGRITO}║        TODOS OS SERVIÇOS FORAM REINICIADOS!            ║${NC}"
+        echo -e "${VERDE}${NEGRITO}╚═══════════════════════════════════════════════════════╝${NC}"
+    else
+        echo -e "${AMARELO}${NEGRITO}╔═══════════════════════════════════════════════════════╗${NC}"
+        echo -e "${AMARELO}${NEGRITO}║     SERVIÇOS REINICIADOS COM ALGUNS AVISOS             ║${NC}"
+        echo -e "${AMARELO}${NEGRITO}║     Verifique o log: $LOG_FILE${NC}"
+        echo -e "${AMARELO}${NEGRITO}╚═══════════════════════════════════════════════════════╝${NC}"
+    fi
+    echo -e ""
+    pause
+}
+
 # ─── Helpers (carregar/salvar config) ──────────────────────────────────────
 
 get_php_var() {
@@ -1021,6 +1252,8 @@ show_menu() {
         "05:Resetar Senha do Admin"
         "06:Desinstalar Completo"
         "07:Status do Sistema"
+        "08:Reinstalar Painel (atualiza arquivos, mantem banco)"
+        "09:Reiniciar Servicos (Apache/MariaDB/PHP-FPM)"
         "99:Sair"
     )
     for item in "${opcoes[@]}"; do
@@ -1046,6 +1279,8 @@ while true; do
         5|05)             reset_admin     ;;
         6|06)             desinstalar     ;;
          7|07)             status_sistema  ;;
+         8|08)             reinstalar_painel  ;;
+         9|09)             reiniciar_servicos ;;
         99)
             echo -e "\n${VERDE} Saindo...${NC}\n"
             exit 0
