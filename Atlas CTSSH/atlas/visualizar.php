@@ -11,23 +11,7 @@ if ($result -> num_rows > 0){
         
     }
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once '../admin/suspenderrev.php';
-  
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-  if (function_exists('security')) {
-      security();
-  } else {
-      echo "<script>alert('Token Inválido!');</script>";
-      echo "<script>location.href='../index.php';</script>";
-
-      $_SESSION['token_invalido_'] = true;
-      exit;
-  }
-}
+include_once '../admin/suspenderrev.php';
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {
@@ -76,7 +60,7 @@ if ($result2 -> num_rows > 0){
 
 if (window.innerWidth < 678) {
 
-    document.write('<div class="alert alert-warning" role="alert"> <strong>Atenção!</strong> Mova para lado para Fazer Alguma Ação! </div>');
+    document.write('<div class="alert alert-warning" role="alert"> <strong>AtenÃ§Ã£o!</strong> Mova para lado para Fazer Alguma AÃ§Ã£o! </div>');
     window.setTimeout(function() {
         $(".alert").fadeTo(500, 0).slideUp(500, function(){
             $(this).remove(); 
@@ -251,10 +235,10 @@ if (window.innerWidth < 678) {
 
         /* traduzir somente */
         "language": {
-            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "lengthMenu": "Mostrar _MENU_ registros por pÃ¡gina",
             "zeroRecords": "Nenhum registro encontrado",
-            "info": "Mostrando página _PAGE_ de _PAGES_",
-            "infoEmpty": "Nenhum registro disponível",
+            "info": "Mostrando pÃ¡gina _PAGE_ de _PAGES_",
+            "infoEmpty": "Nenhum registro disponÃ­vel",
             "infoFiltered": "(filtrado de _MAX_ registros no total)",
             "search": "Pesquisar:",
             "paginate": {

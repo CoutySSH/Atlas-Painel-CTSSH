@@ -7,23 +7,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
     
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once '../admin/suspenderrev.php';
-  
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-  if (function_exists('security')) {
-      security();
-  } else {
-      echo "<script>alert('Token Inválido!');</script>";
-      echo "<script>location.href='../index.php';</script>";
-
-      $_SESSION['token_invalido_'] = true;
-      exit;
-  }
-}
+include_once '../admin/suspenderrev.php';
 $sql = "SELECT * FROM atribuidos WHERE userid = '$_SESSION[iduser]'";
     $result = $conn->query($sql);
 if ($result->num_rows > 0) {
@@ -88,8 +72,8 @@ if ($result->num_rows > 0){
   }
 }
 if ($_SESSION['accesstoken'] == '') {
-  echo '<script>sweetAlert("Oops...", "O Revendedor não possui uma conta cadastrada!", "error");</script>';
-  //redireciona para a pagina de login após 3 segundos
+  echo '<script>sweetAlert("Oops...", "O Revendedor nÃ£o possui uma conta cadastrada!", "error");</script>';
+  //redireciona para a pagina de login apÃ³s 3 segundos
   echo '<script>setTimeout(function(){ window.location.href = "../home.php"; }, 3000);</script>';
 }
 
@@ -129,10 +113,10 @@ if ($result_min->num_rows > 0){
                             <div class="card invoice-print-area">
                                 <div class="card-content">
                                     <div class="card-body pb-0 mx-25">
-                                    <h4 class="card-title">Olá <?php echo $_SESSION['login']?> </h4>
+                                    <h4 class="card-title">OlÃ¡ <?php echo $_SESSION['login']?> </h4>
                     <center>
                         <div>
-                    <button type="button" class="btn btn-outline-warning btn-fw">Seu Limite é <?php echo $_SESSION['limite']?></button>
+                    <button type="button" class="btn btn-outline-warning btn-fw">Seu Limite Ã© <?php echo $_SESSION['limite']?></button>
                     </div>
                     <br>
                     <p class="card-description" style="font-size: 25px" > Quantos Deseja Adicionar</p>

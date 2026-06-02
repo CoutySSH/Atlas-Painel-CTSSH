@@ -1,4 +1,4 @@
-//error_reporting(0);
+<?php error_reporting(0);
 include('../atlas/conexao.php');
 //ini_set('display_errors',1); ini_set('display_startup_erros',1); error_reporting(E_ALL);//force php to show any error message
 

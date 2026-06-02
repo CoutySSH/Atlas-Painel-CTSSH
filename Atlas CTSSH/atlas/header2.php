@@ -3,9 +3,9 @@
 //time zone
 error_reporting(0);
 session_start();
-// Verifica e atualiza a atividade da sessão
+// Verifica e atualiza a atividade da sessÃ£o
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1200)) {
-    echo "<script>alert('Sessão expirada por inatividade!');</script>";
+    echo "<script>alert('SessÃ£o expirada por inatividade!');</script>";
     session_unset();
     session_destroy(); 
     echo "<script>setTimeout(function(){ window.location.href='../index.php'; }, 500);</script>";
@@ -16,23 +16,7 @@ $_SESSION['last_activity'] = time();
 
 date_default_timezone_set('America/Sao_Paulo');
 
-if (!file_exists('../admin/suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once '../admin/suspenderrev.php';
-  
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-  if (function_exists('security')) {
-      security();
-  } else {
-      echo "<script>alert('Token Inválido!');</script>";
-      echo "<script>location.href='../index.php';</script>";
-
-      $_SESSION['token_invalido_'] = true;
-      exit;
-  }
-}
+include_once '../admin/suspenderrev.php';
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="pt-br" data-textdirection="ltr">
@@ -140,7 +124,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
   width: 100vw;
   height: 100vh;
   backdrop-filter: blur(5px); /* Ajuste o valor para controlar a intensidade do desfoque */
-  z-index: -1; /* Coloque o elemento abaixo do conteúdo do body */
+  z-index: -1; /* Coloque o elemento abaixo do conteÃºdo do body */
 }
 
 
@@ -212,7 +196,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
     </svg>
 <svg class="snurra" width="200" height="200" viewBox="0 0 200 200">
       <defs>
-        <linearGradient id="linjärGradient">
+        <linearGradient id="linjÃ¤rGradient">
           <stop class="stopp1" offset="0" />
           <stop class="stopp2" offset="1" />
         </linearGradient>
@@ -223,7 +207,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
           x1="40"
           gradientUnits="userSpaceOnUse"
           id="gradient"
-          xlink:href="#linjärGradient"
+          xlink:href="#linjÃ¤rGradient"
         />
       </defs>
       <path
@@ -275,7 +259,7 @@ if (isset($_POST['voltaradmin']) && isset($_SESSION['admin564154156'])) {
     $sqladmin = "SELECT * FROM accounts WHERE id = '1'";
     $resultadmin = $conn->query($sqladmin);
     $rowadmin = $resultadmin->fetch_assoc();
-       //destrói as sessões existentes
+       //destrÃ³i as sessÃµes existentes
        $_SESSION['login'] = $rowadmin['login'];
        $_SESSION['senha'] = $rowadmin['senha'];
        $_SESSION['iduser'] = $rowadmin['id']; 
@@ -392,7 +376,7 @@ if (isset($_POST['voltaradmin']) && isset($_SESSION['admin564154156'])) {
                 </li>
                 <li class=" nav-item"><a href="logs.php"><i class="menu-livicon" data-icon="priority-low"></i><span class="menu-title">Logs</span></a>
                 </li>
-                <li class=" navigation-header"><span>Configurações</span>
+                <li class=" navigation-header"><span>ConfiguraÃ§Ãµes</span>
                 <li class=" nav-item"><a href="editconta.php"><i class="menu-livicon" data-icon="wrench"></i><span class="menu-title">Conta</span></a>
                 </li>
                 <li class=" nav-item"><a href="../logout.php"><i class="menu-livicon" data-icon="morph-login2"></i><span class="menu-title" data-i18n="Form Validation">Sair</span></a>
@@ -437,10 +421,10 @@ setInterval(() => {
     method: 'POST',
   })
     .then(response => {
-      // Tratar a resposta, se necessário
+      // Tratar a resposta, se necessÃ¡rio
     })
     .catch(error => {
-      // Tratar o erro, se necessário
+      // Tratar o erro, se necessÃ¡rio
     });
 }, 10000); // 10000 milissegundos = 10 segundos
 </script>
@@ -453,7 +437,7 @@ setInterval(() => {
                 $textopersonali = $row["textoedit"];
         }
     
-    // Recupere o conteúdo da variável $tradutor e converta-o para um array em PHP
+    // Recupere o conteÃºdo da variÃ¡vel $tradutor e converta-o para um array em PHP
     $tradutor = $textopersonali;
     $linhas = explode("\n", $tradutor);
     $substituicoes = array();
@@ -468,7 +452,7 @@ setInterval(() => {
     ?>
 <script>
 window.addEventListener('DOMContentLoaded', function() {
-        // Define as substituições desejadas
+        // Define as substituiÃ§Ãµes desejadas
         var substituicoes = <?php echo json_encode($substituicoes); ?>;
 
         // Recursivamente percorre os elementos e substitui o texto dentro deles
@@ -484,13 +468,13 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Obtém o elemento pai dos elementos onde deseja aplicar as substituições
+        // ObtÃ©m o elemento pai dos elementos onde deseja aplicar as substituiÃ§Ãµes
         var paiElemento = document.getElementById('inicialeditor').parentNode;
 
-        // Percorre os elementos dentro do pai e realiza as substituições
+        // Percorre os elementos dentro do pai e realiza as substituiÃ§Ãµes
         percorrerElementos(paiElemento);
 });
-// Função para esconder o loading
+// FunÃ§Ã£o para esconder o loading
 function esconderLoading() {
   var loadingElement = document.getElementById('start');
   if (loadingElement) {
@@ -506,7 +490,7 @@ function esconderbudd() {
 }
 
 window.addEventListener('load', esconderbudd);
-// Associar a função ao evento load do objeto window
+// Associar a funÃ§Ã£o ao evento load do objeto window
 window.addEventListener('load', esconderLoading);
 </script>
 </body>

@@ -24,23 +24,7 @@ $sqlvezesuso = "SELECT * FROM cupons";
             }
         }
     }
-    if (!file_exists('../admin/suspenderrev.php')) {
-        exit ("<script>alert('Token Invalido!');</script>");
-      }else{
-        include_once '../admin/suspenderrev.php';
-        
-      }
-      if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-        if (function_exists('security')) {
-            security();
-        } else {
-            echo "<script>alert('Token Inválido!');</script>";
-            echo "<script>location.href='../index.php';</script>";
-
-            $_SESSION['token_invalido_'] = true;
-            exit;
-        }
-      }
+    include_once '../admin/suspenderrev.php';
 date_default_timezone_set('America/Sao_Paulo');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 $sql4 = "SELECT * FROM accounts WHERE id = '$_SESSION[byid]'";
@@ -68,7 +52,7 @@ if ($_SESSION['byid'] == 1){
 }
 if ($_SESSION['typecont'] == 'Credito'){
 if ($_SESSION['limite'] < $_POST['addquantidade']) {
-    echo '<script>alert("Seu Revendedor não tem Creditos suficiente!")</script>';
+    echo '<script>alert("Seu Revendedor nÃ£o tem Creditos suficiente!")</script>';
     echo '<script>window.location.href = "adicionar.php";</script>';
     exit();
 }
@@ -159,7 +143,7 @@ MercadoPago\SDK::setAccessToken($access_token);
 
 $payment = new MercadoPago\Payment();
  $payment->transaction_amount = $valoradd;
- $payment->description = "Adição de $addquantidade Logins - Usuario: $_SESSION[login]";
+ $payment->description = "AdiÃ§Ã£o de $addquantidade Logins - Usuario: $_SESSION[login]";
  $payment->payment_method_id = "pix";
  $payment->date_of_expiration = $formatted_date;
 
@@ -173,7 +157,7 @@ $payment = new MercadoPago\Payment();
      ),
     "address"=>  array(
         "zip_code" => "06233200",
-        "street_name" => "Av. das Nações Unidas",
+        "street_name" => "Av. das NaÃ§Ãµes Unidas",
         "street_number" => "3003",
         "neighborhood" => "Bonfim",
         "city" => "Osasco",
@@ -206,14 +190,14 @@ $data = array(
   'payer_email' => $_SESSION['email'],
   'payer_name' => $_SESSION['nome'],    
   'payer_cpf_cnpj' => '74293930043', // cpf ou cnpj
-  'payer_phone' => '1140638785', // fixou ou móvel
+  'payer_phone' => '1140638785', // fixou ou mÃ³vel
   'notification_url' => 'https://mysite.com/notification/paghiper/',
   'shipping_methods' => 'PAC',
   'number_ntfiscal' => $idpedido,
   'fixed_description' => true,
   'days_due_date' => '1', // dias para vencimento do Pix
   'items' => array(
-      array ('description' => "Adição de $addquantidade Logins - Usuario: $_SESSION[login]",
+      array ('description' => "AdiÃ§Ã£o de $addquantidade Logins - Usuario: $_SESSION[login]",
       'quantity' => '1',
 'item_id' => '1',
 'price_cents' => $valor_em_centavos),
@@ -221,7 +205,7 @@ $data = array(
 );
 $data_post = json_encode( $data );
 $url = "https://pix.paghiper.com/invoice/create/";
-$mediaType = "application/json"; // formato da requisição
+$mediaType = "application/json"; // formato da requisiÃ§Ã£o
 $charSet = "UTF-8";
 $headers = array();
 $headers[] = "Accept: ".$mediaType;
@@ -250,7 +234,7 @@ echo $result;
 endif;
 }
 
-$texto = 'Adição de '.$_SESSION['addquantidade'].' Logins - ' . $_SESSION['login'];
+$texto = 'AdiÃ§Ã£o de '.$_SESSION['addquantidade'].' Logins - ' . $_SESSION['login'];
 
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -271,7 +255,7 @@ if ($result2->num_rows > 0) {
             "Content-Type: application/json"
         );
         $payment_id = $row['idpagamento'];
-        // Define as opções da requisição cURL
+        // Define as opÃ§Ãµes da requisiÃ§Ã£o cURL
         $options = array(
             CURLOPT_URL => "https://api.mercadopago.com/v1/payments/" . $payment_id,
             CURLOPT_CUSTOMREQUEST => "PUT",
@@ -280,16 +264,16 @@ if ($result2->num_rows > 0) {
             CURLOPT_RETURNTRANSFER => true
         );
         
-        // Inicializa a sessão cURL
+        // Inicializa a sessÃ£o cURL
         $curl = curl_init();
         
-        // Define as opções da sessão cURL
+        // Define as opÃ§Ãµes da sessÃ£o cURL
         curl_setopt_array($curl, $options);
         
-        // Executa a requisição cURL e armazena a resposta
+        // Executa a requisiÃ§Ã£o cURL e armazena a resposta
         $response = curl_exec($curl);
         
-        // Fecha a sessão cURL
+        // Fecha a sessÃ£o cURL
         curl_close($curl);
         $sql3 = "DELETE FROM pagamentos WHERE idpagamento = '$row[idpagamento]'";
         $result3 = $conn->query($sql3);

@@ -1,5 +1,5 @@
 <?php
-if (isset($_POST['username']) || ($_POST['deviceid'] )) 
+if (isset($_POST['username']) || isset($_POST['deviceid'] )) 
 {
 
 require_once ('../atlas/conexao.php');
@@ -59,6 +59,7 @@ WHERE
 ='".$username."'
 ");
 
+$query2 = null;
 if($query1->num_rows > 0)
 {
 $row = $query1->fetch_assoc();

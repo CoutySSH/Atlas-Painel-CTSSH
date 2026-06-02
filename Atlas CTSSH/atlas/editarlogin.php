@@ -5,12 +5,12 @@ if (!isset($_SESSION)){
 session_start();
 
 }
-set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
+set_time_limit(0); // Limite de tempo de execuÃ§Ã£o: 2h. Deixe 0 (zero) para sem limite
+ignore_user_abort(true); // Continua a execuÃ§Ã£o mesmo que o usuÃ¡rio cancele o download
 set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
     include ('Net/SSH2.php');
 
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -24,23 +24,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
     
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {
@@ -78,7 +62,7 @@ if (!empty($_GET['id'])) {
  if ($_SESSION['byidusereditar'] == $_SESSION['iduser']) {
     
 }else{
-    echo "<script>sweetAlert('Oops...', 'Você não tem permissão para editar este usuário!', 'error').then(function(){window.location.href='../home.php'});</script>";
+    echo "<script>sweetAlert('Oops...', 'VocÃª nÃ£o tem permissÃ£o para editar este usuÃ¡rio!', 'error').then(function(){window.location.href='../home.php'});</script>";
     unset($_POST['criaruser']);
     unset($_POST['usuariofin']);
     unset($_POST['senhafin']);
@@ -169,14 +153,14 @@ $_SESSION['tipodeconta'] = $row['tipo'];
 if ($tipo == 'Credito') {
 $tipo = 'Restam '.$_SESSION['limite'].' Creditos';
 }else{
-$tipo = 'Seu limite usado é de '.$limiteusado.' Logins de '.$_SESSION['limite'].'';
+$tipo = 'Seu limite usado Ã© de '.$limiteusado.' Logins de '.$_SESSION['limite'].'';
 }
 ?>
 
           <div class="app-content content">
         <div class="content-overlay"></div>
         <div class="content-wrapper">
-        <p class="text-primary">Aqui Você Editar o Login do Cliente.</p>
+        <p class="text-primary">Aqui VocÃª Editar o Login do Cliente.</p>
             <div class="content-header row">
             </div>
             <div class="content-body">
@@ -187,7 +171,7 @@ $tipo = 'Seu limite usado é de '.$limiteusado.' Logins de '.$_SESSION['limite']
                         <div class="col-md-6 col-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <h4 class="card-title">Editar Usuário</h4>
+                                    <h4 class="card-title">Editar UsuÃ¡rio</h4>
                                 </div>
                                 
                                 <div class="card-content">

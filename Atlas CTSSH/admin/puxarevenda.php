@@ -8,7 +8,7 @@ session_start();
 
 }
 
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -22,23 +22,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
     
 }
-if (!file_exists('suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-}else{
-    include_once 'suspenderrev.php';
-    
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-}
+include_once 'suspenderrev.php';
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {

@@ -3,7 +3,7 @@
 <?php 
 error_reporting(0);
 session_start();
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -44,23 +44,7 @@ if ($result->num_rows > 0) {
 }
 
 
-if (!file_exists('suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-}else{
-    include_once 'suspenderrev.php';
-    
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-}
+include_once 'suspenderrev.php';
 
 ?>
 <div class="app-content content">
@@ -128,7 +112,7 @@ function anti_sql($input)
     return $seg;
 }
 
-              //ao clicar no botão mudar ele ira executar o codigo abaixo
+              //ao clicar no botÃ£o mudar ele ira executar o codigo abaixo
                 if(isset($_POST['mudar'])){
                     $senhaup = $_POST['senhaup'];
                     $limitetest = $_POST['limitetest'];
@@ -141,7 +125,7 @@ function anti_sql($input)
                     $idtelegram = anti_sql($idtelegram);
                         $sql = "UPDATE accounts SET senha='$senhaup', mb='$limitetest', token='$bottoken', idtelegram='$idtelegram' WHERE id='$id'";
                         if (mysqli_query($conn, $sql)) {
-                            echo "<script>swal('Sucesso!', 'Acesse seu Bot e de o Comando /start Para começar receber os backups!', 'success').then((value) => {window.location.href = 'home.php';});</script>";
+                            echo "<script>swal('Sucesso!', 'Acesse seu Bot e de o Comando /start Para comeÃ§ar receber os backups!', 'success').then((value) => {window.location.href = 'home.php';});</script>";
                         } else {
                             echo "Error updating record: " . mysqli_error($conn);
                         }

@@ -3,7 +3,7 @@
 <?php 
 error_reporting(0);
 session_start();
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -18,23 +18,7 @@ if (!$conn) {
 
 $id = $_SESSION['iduser'];
 include_once 'header2.php';
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 
 //verifica se a coluna idtelegram existe se nao cria
 $sql = "SELECT idtelegram FROM accounts WHERE id = '$id'";

@@ -1,4 +1,4 @@
-ignore_user_abort(true);
+<?php ignore_user_abort(true);
 set_time_limit(0);
 session_start();
 

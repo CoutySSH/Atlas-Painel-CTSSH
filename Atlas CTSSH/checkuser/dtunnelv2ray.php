@@ -1,4 +1,4 @@
-require_once('../atlas/conexao.php');
+<?php require_once('../atlas/conexao.php');
 
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
@@ -37,12 +37,12 @@ function anti_sql($input)
 
 $user = $_REQUEST['user'];
 $user = anti_sql($user);
-$deviceId = anti_sql($deviceId);
 
 $uuid = explode('?', explode('/', $user)[2])[0];
 $deviceId = explode('=', explode('/', $user)[2])[1];
+$deviceId = anti_sql($deviceId);
 if (empty($uuid) || empty($deviceId)) {
-    echo json_decode(array('error' => 'Invalid request'));
+    echo json_encode(array('error' => 'Invalid request'));
     exit;
 }
 $uuid = $mysqli->real_escape_string($uuid);

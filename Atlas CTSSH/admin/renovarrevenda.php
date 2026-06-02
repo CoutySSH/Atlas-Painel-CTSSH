@@ -7,7 +7,7 @@ session_start();
 
 }
 
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -22,23 +22,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
     
 }
-if (!file_exists('suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-}else{
-    include_once 'suspenderrev.php';
-    
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-}
+include_once 'suspenderrev.php';
 date_default_timezone_set('America/Sao_Paulo');
 function anti_sql($input)
 {
@@ -70,7 +54,7 @@ $expira = date('Y-m-d H:i:s', strtotime("+30 days", strtotime($expira)));
 $sql = "UPDATE atribuidos SET expira = '$expira' WHERE userid = '$id'";
 $result = mysqli_query($conn, $sql);
 
-echo '<script>sweetAlert("Sucesso!", "Renovação realizada com sucesso!", "success").then(function() {
+echo '<script>sweetAlert("Sucesso!", "RenovaÃ§Ã£o realizada com sucesso!", "success").then(function() {
     window.location.href = "listarrevendedores.php";
 });</script>';
 

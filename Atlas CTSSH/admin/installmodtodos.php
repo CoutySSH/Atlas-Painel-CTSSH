@@ -7,7 +7,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
 
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 
-// Verifica se o usuário está autenticado
+// Verifica se o usuÃ¡rio estÃ¡ autenticado
 if (!isset($_SESSION['login']) || !isset($_SESSION['senha'])) {
     session_destroy();
     unset($_SESSION['login']);
@@ -20,26 +20,10 @@ use React\EventLoop\Factory;
 
 if ($_SESSION['login'] !== 'admin') {
     //header('Location: index.php');
-    echo 'Você não tem permissão para acessar essa página';
+    echo 'VocÃª nÃ£o tem permissÃ£o para acessar essa pÃ¡gina';
     exit;
 }
-if (!file_exists('suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-}else{
-    include_once 'suspenderrev.php';
-    
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-}
+include_once 'suspenderrev.php';
 include('headeradmin2.php');
 include('Net/SSH2.php');
 
@@ -53,15 +37,15 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import cgi
 import subprocess
 
-# Senha de autenticação
+# Senha de autenticaÃ§Ã£o
 senha_autenticacao = '$senha'
 
-# Classe de manipulador de solicitações
+# Classe de manipulador de solicitaÃ§Ãµes
 class MyRequestHandler(BaseHTTPRequestHandler):
     def do_POST(self):
-        # Verifica se a senha de autenticação está presente no cabeçalho da requisição
+        # Verifica se a senha de autenticaÃ§Ã£o estÃ¡ presente no cabeÃ§alho da requisiÃ§Ã£o
         if 'Senha' in self.headers and self.headers['Senha'] == senha_autenticacao:
-            # Analisa os dados da solicitação POST
+            # Analisa os dados da solicitaÃ§Ã£o POST
             form = cgi.FieldStorage(
                 fp=self.rfile,
                 headers=self.headers,
@@ -69,7 +53,7 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             )
             comando = form.getvalue('comando')
 
-            # Executa o comando e captura a saída
+            # Executa o comando e captura a saÃ­da
             try:
                 resultado = subprocess.check_output(comando, shell=True, stderr=subprocess.STDOUT)
             except subprocess.CalledProcessError as e:
@@ -81,13 +65,13 @@ class MyRequestHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(resultado)
         else:
-            # Senha de autenticação inválida
+            # Senha de autenticaÃ§Ã£o invÃ¡lida
             self.send_response(401)
             self.send_header('Content-type', 'text/plain')
             self.end_headers()
-            self.wfile.write('Não autorizado!'.encode())
+            self.wfile.write('NÃ£o autorizado!'.encode())
 
-# Configurações do servidor
+# ConfiguraÃ§Ãµes do servidor
 host = '0.0.0.0'
 port = 6969
 
@@ -146,7 +130,7 @@ $loop = Factory::create();
   if ($sucess) {
       echo '<script>sweetAlert("Sucesso!", "Modulos instalados com sucesso!", "success").then((value) => { window.location.href = "servidores.php"; });</script>';
     } else {
-        echo '<script>sweetAlert("Erro!", "Não foi possível instalar os modulos!", "error").then((value) => { window.location.href = "servidores.php"; });</script>';
+        echo '<script>sweetAlert("Erro!", "NÃ£o foi possÃ­vel instalar os modulos!", "error").then((value) => { window.location.href = "servidores.php"; });</script>';
         }
   $loop->run();
 

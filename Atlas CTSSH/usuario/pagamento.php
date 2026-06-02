@@ -1,4 +1,4 @@
-error_reporting(0);
+<?php error_reporting(0);
 session_start();
 ignore_user_abort(true);
 set_time_limit(0);

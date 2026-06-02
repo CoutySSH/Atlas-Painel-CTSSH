@@ -1,4 +1,4 @@
-error_reporting(0);
+<?php error_reporting(0);
 session_start();
 include('../atlas/conexao.php');
 //gerador de senha

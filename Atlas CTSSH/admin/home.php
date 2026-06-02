@@ -1,7 +1,7 @@
 <?php error_reporting(0);
 session_start();
 if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 1200)) {
-    echo "<script>alert('Sessão expirada por inatividade!');</script>";
+    echo "<script>alert('SessÃ£o expirada por inatividade!');</script>";
     session_unset();
     session_destroy(); 
     echo "<script>setTimeout(function(){ window.location.href='../index.php'; }, 500);</script>";
@@ -11,23 +11,7 @@ if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 
 $_SESSION['last_activity'] = time();
 
 $_SESSION['last_activity'] = time();
-if (!file_exists('suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-}else{
-    include_once 'suspenderrev.php';
-    
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-}
+include_once 'suspenderrev.php';
 
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();

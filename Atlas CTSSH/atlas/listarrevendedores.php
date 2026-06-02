@@ -22,7 +22,7 @@ $hoje = date('Y-m-d H:i:s');
 if ($_SESSION['tipodeconta'] == 'Credito') {
 }else{
 if ($validade < $hoje) {
-    echo "<script>alert('Sua conta está vencida')</script>";
+    echo "<script>alert('Sua conta estÃ¡ vencida')</script>";
     echo "<script>window.location.href = '../home.php'</script>";
     unset($_POST['criaruser']);
     unset($_POST['usuariofin']);
@@ -31,23 +31,7 @@ if ($validade < $hoje) {
 }
 }
 $hoje = date('dmY');
-if (!file_exists('../admin/suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once '../admin/suspenderrev.php';
-  
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-  if (function_exists('security')) {
-      security();
-  } else {
-      echo "<script>alert('Token Inválido!');</script>";
-      echo "<script>location.href='../index.php';</script>";
-
-      $_SESSION['token_invalido_'] = true;
-      exit;
-  }
-}
+include_once '../admin/suspenderrev.php';
 ?>
 <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
@@ -67,7 +51,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
     /* se a tela for maior */
     if (window.innerWidth < 678) {
       document.getElementById("widgets-Statistics").style.display = "none";
-      alert("A tela está muito pequena para exibir os gráficos, por favor, aumente a tela!");
+      alert("A tela estÃ¡ muito pequena para exibir os grÃ¡ficos, por favor, aumente a tela!");
     }
     $(document).ready(function(){
 });
@@ -101,7 +85,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
 
 if (window.innerWidth < 678) {
 
-    document.write('<div class="alert alert-warning" role="alert"> <strong>Atenção!</strong> Mova para lado para Fazer Alguma Ação! </div>');
+    document.write('<div class="alert alert-warning" role="alert"> <strong>AtenÃ§Ã£o!</strong> Mova para lado para Fazer Alguma AÃ§Ã£o! </div>');
     window.setTimeout(function() {
         $(".alert").fadeTo(500, 0).slideUp(500, function(){
             $(this).remove(); 
@@ -127,7 +111,7 @@ if (window.innerWidth < 678) {
                                                     <th> Validade </th>
                                                     <th> Limite </th>
                                                     <th> Status </th>
-                                                    <th> Acões </th>
+                                                    <th> AcÃµes </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -321,7 +305,7 @@ if (window.innerWidth < 678) {
                             
                             <div class='btn-group'>
                               <button type='button' class='btn btn-primary dropdown-toggle dropdown-toggle-split' id='dropdownMenuReference' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' data-reference='parent'>
-                                <span class='sr-only'>Toggle Dropdown</span>Acões
+                                <span class='sr-only'>Toggle Dropdown</span>AcÃµes
                               </button>
                               <style>
                               .dropdown-item:hover{
@@ -362,7 +346,7 @@ if (window.innerWidth < 678) {
     function renovar(id) {
                               swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -374,7 +358,7 @@ if (window.innerWidth < 678) {
                                   });
                                   window.location.href = 'renovarrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
@@ -382,7 +366,7 @@ if (window.innerWidth < 678) {
         /* confirma */
         swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -394,14 +378,14 @@ if (window.innerWidth < 678) {
                                   });
                                   window.location.href = 'reativarrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
     function suspender(id) {
                               swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -413,7 +397,7 @@ if (window.innerWidth < 678) {
                                   });
                                   window.location.href = 'suspenderrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
@@ -421,7 +405,7 @@ function deletar(id) {
         /* confirma */
         swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -433,7 +417,7 @@ function deletar(id) {
                                   });
                                   window.location.href = 'excluirrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
@@ -442,7 +426,7 @@ function deletar(id) {
     function reativar(id){
                               swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -454,7 +438,7 @@ function deletar(id) {
                                   });
                                   window.location.href = 'reativarrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
@@ -481,10 +465,10 @@ function deletar(id) {
 
         /* traduzir somente */
         "language": {
-            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "lengthMenu": "Mostrar _MENU_ registros por pÃ¡gina",
             "zeroRecords": "Nenhum registro encontrado",
-            "info": "Mostrando página _PAGE_ de _PAGES_",
-            "infoEmpty": "Nenhum registro disponível",
+            "info": "Mostrando pÃ¡gina _PAGE_ de _PAGES_",
+            "infoEmpty": "Nenhum registro disponÃ­vel",
             "infoFiltered": "(filtrado de _MAX_ registros no total)",
             "search": "Pesquisar:",
             "paginate": {

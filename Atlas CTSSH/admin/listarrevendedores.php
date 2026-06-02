@@ -1,4 +1,4 @@
-    error_reporting(0);
+ <?php    error_reporting(0);
 session_start();
 include('../atlas/conexao.php');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
@@ -8,23 +8,7 @@ include('headeradmin2.php');
   $result = $conn -> query($sql);
           $sql2 = "SELECT * FROM atribuidos where byid = '".$_SESSION['iduser']."' ";
           $result2 = $conn -> query($sql2);
-          if (!file_exists('suspenderrev.php')) {
-            exit ("<script>alert('Token Invalido!');</script>");
-        }else{
-            include_once 'suspenderrev.php';
-            
-        }
-        if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-            if (function_exists('security')) {
-                security();
-            } else {
-                echo "<script>alert('Token Inválido!');</script>";
-                echo "<script>location.href='../index.php';</script>";
-
-                $_SESSION['token_invalido_'] = true;
-                exit;
-            }
-        }
+          include_once 'suspenderrev.php';
 date_default_timezone_set('America/Sao_Paulo');
 $hoje = date('dmY');
 ?>
@@ -46,7 +30,7 @@ $hoje = date('dmY');
     /* se a tela for maior */
     if (window.innerWidth < 678) {
       document.getElementById("widgets-Statistics").style.display = "none";
-      alert("A tela está muito pequena para exibir os gráficos, por favor, aumente a tela!");
+      alert("A tela estÃ¡ muito pequena para exibir os grÃ¡ficos, por favor, aumente a tela!");
     }
     $(document).ready(function(){
 });
@@ -80,7 +64,7 @@ $hoje = date('dmY');
 
 if (window.innerWidth < 678) {
 
-    document.write('<div class="alert alert-warning" role="alert"> <strong>Atenção!</strong> Mova para lado para Fazer Alguma Ação! </div>');
+    document.write('<div class="alert alert-warning" role="alert"> <strong>AtenÃ§Ã£o!</strong> Mova para lado para Fazer Alguma AÃ§Ã£o! </div>');
     window.setTimeout(function() {
         $(".alert").fadeTo(500, 0).slideUp(500, function(){
             $(this).remove(); 
@@ -106,7 +90,7 @@ if (window.innerWidth < 678) {
                                                     <th> Limite </th>
                                                     <th> Validade </th>
                                                     <th> Status </th>
-                                                    <th> Acões </th>
+                                                    <th> AcÃµes </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -300,7 +284,7 @@ if (window.innerWidth < 678) {
                             
                             <div class='btn-group'>
                               <button type='button' class='btn btn-primary dropdown-toggle dropdown-toggle-split' id='dropdownMenuReference' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false' data-reference='parent'>
-                                <span class='sr-only'>Toggle Dropdown</span>Acões
+                                <span class='sr-only'>Toggle Dropdown</span>AcÃµes
                               </button>
                               <style>
                               .dropdown-item:hover{
@@ -351,7 +335,7 @@ if (window.innerWidth < 678) {
     function renovar(id) {
                               swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -364,14 +348,14 @@ if (window.innerWidth < 678) {
                                   });
                                   window.location.href = 'renovarrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
     function reativar(id) {
       swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -383,14 +367,14 @@ if (window.innerWidth < 678) {
                                   });
                                   window.location.href = 'reativarrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
     function suspender(id) {
       swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -402,14 +386,14 @@ if (window.innerWidth < 678) {
                                   });
                                   window.location.href = 'suspenderrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
 function deletar(id) {
   swal({
                                 title: 'Tem certeza?',
-                                text: 'Você não poderá reverter isso!',
+                                text: 'VocÃª nÃ£o poderÃ¡ reverter isso!',
                                 icon: 'warning',
                                 buttons: true,
                                 dangerMode: true,
@@ -421,7 +405,7 @@ function deletar(id) {
                                   });
                                   window.location.href = 'excluirrevenda.php?id='+id;
                                 } else {
-                                  swal('Seu Revendedor está seguro!');
+                                  swal('Seu Revendedor estÃ¡ seguro!');
                                 }
                               });
                             }
@@ -451,10 +435,10 @@ function deletar(id) {
 
         /* traduzir somente */
         "language": {
-            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "lengthMenu": "Mostrar _MENU_ registros por pÃ¡gina",
             "zeroRecords": "Nenhum registro encontrado",
-            "info": "Mostrando página _PAGE_ de _PAGES_",
-            "infoEmpty": "Nenhum registro disponível",
+            "info": "Mostrando pÃ¡gina _PAGE_ de _PAGES_",
+            "infoEmpty": "Nenhum registro disponÃ­vel",
             "infoFiltered": "(filtrado de _MAX_ registros no total)",
             "search": "Pesquisar:",
             "paginate": {
@@ -492,7 +476,7 @@ function deletar(id) {
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                <button type="button" class="btn btn-primary">Salvar mudanças</button>
+                <button type="button" class="btn btn-primary">Salvar mudanÃ§as</button>
             </div>
         </div>
     </div>

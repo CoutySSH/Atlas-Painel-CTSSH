@@ -2,8 +2,8 @@
 error_reporting(0);
 session_start();
 //gerador de senha
-set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
+set_time_limit(0); // Limite de tempo de execuÃ§Ã£o: 2h. Deixe 0 (zero) para sem limite
+ignore_user_abort(true); // Continua a execuÃ§Ã£o mesmo que o usuÃ¡rio cancele o download
 set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
     include ('Net/SSH2.php');
     include('../vendor/event/autoload.php');
@@ -15,24 +15,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
          
      }
      include('headeradmin2.php');
-     if (!file_exists('suspenderrev.php')) {
-        exit ("<script>alert('Token Invalido!');</script>");
-    }else{
-        include_once 'suspenderrev.php';
-        
-    }
-    unset($_SESSION['whatsapp']);
-    if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-        if (function_exists('security')) {
-            security();
-        } else {
-            echo "<script>alert('Token Inválido!');</script>";
-            echo "<script>location.href='../index.php';</script>";
-
-            $_SESSION['token_invalido_'] = true;
-            exit;
-        }
-    }
+     include_once 'suspenderrev.php';
     if (isset($_SESSION['mensagem_enviada'])) {
         unset($_SESSION['mensagem_enviada']);
       }
@@ -85,26 +68,26 @@ function anti_sql($input)
                     $_SESSION['validadefin'] = $validadefin;
                     $_SESSION['limitefin'] = $limitefin;
                     if ($usuariofin == "") {
-                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário não pode ser vazio!');window.location.href='criarteste.php';</script>";
+                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio nÃ£o pode ser vazio!');window.location.href='criarteste.php';</script>";
                       die();
                     }
                      if ($senhafin == "") {
-                       echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha não pode ser vazia!');window.location.href='criarteste.php';</script>";
+                       echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha nÃ£o pode ser vazia!');window.location.href='criarteste.php';</script>";
                        die();
                      }
                      //se login ou senha tiver caracteres especiais
                      if (preg_match('/[^a-z0-9]/i', $usuariofin)) {
-                       echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário não pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
+                       echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio nÃ£o pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
                        die();
                      }
                      if (preg_match('/[^a-z0-9]/i', $senhafin)) {
-                       echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha não pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
+                       echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha nÃ£o pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
                        die();
                      }
                     $sql = "SELECT * FROM ssh_accounts WHERE login = '$usuariofin'";
                 $result = $conn->query($sql);
                 if ($result->num_rows > 0) {
-                  echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário já existe!');window.location.href='criarteste.php';</script>";
+                  echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio jÃ¡ existe!');window.location.href='criarteste.php';</script>";
                   die();
                 }
                 $sql4 = "SELECT * FROM servidores WHERE subid = '$categoria'";
@@ -171,7 +154,7 @@ function anti_sql($input)
                 }
 
                 if (!$sucess) {
-                    echo "<script>alert('Erro ao criar usuário!');window.location.href='criarusuario.php';</script>";
+                    echo "<script>alert('Erro ao criar usuÃ¡rio!');window.location.href='criarusuario.php';</script>";
                     die();
                 }
                      if ($sucess == true) {
@@ -205,7 +188,7 @@ function anti_sql($input)
 <div class="app-content content">
         <div class="content-overlay"></div>
         <div class="content-wrapper">
-        <p class="text-primary">Aqui você pode criar um teste para seu cliente.</p>
+        <p class="text-primary">Aqui vocÃª pode criar um teste para seu cliente.</p>
             <div class="content-header row">
             </div>
             <div class="content-body">
@@ -272,7 +255,7 @@ function anti_sql($input)
                                                         </div>
                                                         <div class="col-md-8 form-group">
                                                             <select class="form-control select2-size-sm" name="v2ray" id="v2ray">
-                                                                <option value="nao">Não</option>
+                                                                <option value="nao">NÃ£o</option>
                                                                 <option value="sim">Sim</option>
                                                             </select>
                                                         </div>

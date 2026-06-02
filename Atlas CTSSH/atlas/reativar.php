@@ -20,23 +20,7 @@ if (!$conn) {
 }
 include('../vendor/event/autoload.php');
 use React\EventLoop\Factory;
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {
@@ -66,7 +50,7 @@ if (!empty($_GET['id'])) {
 }
 if ($byid == $_SESSION['iduser']) {
 }else{
-    echo "<script>sweetAlert('Oops...', 'Você não tem permissão para editar este usuário!', 'error').then(function(){window.location.href='../home.php'});</script>";
+    echo "<script>sweetAlert('Oops...', 'VocÃª nÃ£o tem permissÃ£o para editar este usuÃ¡rio!', 'error').then(function(){window.location.href='../home.php'});</script>";
     unset($_POST['criaruser']);
     unset($_POST['usuariofin']);
     unset($_POST['senhafin']);
@@ -90,8 +74,8 @@ if ($validade < 1) {
 $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
 $result = mysqli_query($conn, $sql2);
           
-          set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-          ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
+          set_time_limit(0); // Limite de tempo de execuÃ§Ã£o: 2h. Deixe 0 (zero) para sem limite
+          ignore_user_abort(true); // Continua a execuÃ§Ã£o mesmo que o usuÃ¡rio cancele o download
           $loop = Factory::create();
         $servidores_com_erro = [];
         $sucess = false;       

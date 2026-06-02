@@ -1,8 +1,8 @@
 <?php
 error_reporting(0);
 session_start();
-set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
+set_time_limit(0); // Limite de tempo de execuÃ§Ã£o: 2h. Deixe 0 (zero) para sem limite
+ignore_user_abort(true); // Continua a execuÃ§Ã£o mesmo que o usuÃ¡rio cancele o download
 set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
     include ('Net/SSH2.php');
     include('../vendor/event/autoload.php');
@@ -16,23 +16,7 @@ set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
      if (isset($_SESSION['mensagem_enviada'])) {
         unset($_SESSION['mensagem_enviada']);
       }
-      if (!file_exists('../admin/suspenderrev.php')) {
-        exit ("<script>alert('Token Invalido!');</script>");
-      }else{
-        include_once '../admin/suspenderrev.php';
-        
-      }
-      if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-        if (function_exists('security')) {
-            security();
-        } else {
-            echo "<script>alert('Token Inválido!');</script>";
-            echo "<script>location.href='../index.php';</script>";
-
-            $_SESSION['token_invalido_'] = true;
-            exit;
-        }
-      }
+      include_once '../admin/suspenderrev.php';
 $sql = "SELECT limite FROM atribuidos WHERE userid = '$_SESSION[iduser]'";
 $result = $conn->prepare($sql);
 $result->execute();
@@ -78,7 +62,7 @@ $_SESSION['limite'] = $row['limite'];
 if ($tipo == 'Credito') {
 $tipo = '<code>Restam '.$_SESSION['limite'].' Creditos</code>';
 }else{
-$tipo = '<code>Seu limite usado é de '.$limiteusado.' Logins de '.$_SESSION['limite'].'</code>';
+$tipo = '<code>Seu limite usado Ã© de '.$limiteusado.' Logins de '.$_SESSION['limite'].'</code>';
 }
 function generateUUID() {
     $uuid = sprintf(
@@ -96,7 +80,7 @@ $hoje = date('Y-m-d H:i:s');
 if ($_SESSION['tipodeconta'] == 'Credito') {
 }else{
 if ($validade < $hoje) {
-    echo "<script>alert('Sua conta está vencida')</script>";
+    echo "<script>alert('Sua conta estÃ¡ vencida')</script>";
     echo "<script>window.location.href = '../home.php'</script>";
     unset($_POST['criaruser']);
     unset($_POST['usuariofin']);
@@ -143,7 +127,7 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                 if ($_SESSION['tipodeconta'] == 'Credito'){
                 }else{
                   if ($_POST['limitefin'] > $_SESSION['restante']) {
-                    echo "<script language='javascript' type='text/javascript'>alert('Ops.. Você não tem limite suficiente!');window.location.href='../home.php';</script>";
+                    echo "<script language='javascript' type='text/javascript'>alert('Ops.. VocÃª nÃ£o tem limite suficiente!');window.location.href='../home.php';</script>";
                     die();
                   }
                 }
@@ -151,24 +135,24 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                    $usuariofin = $_POST['usuariofin'];
                    $senhafin = $_POST['senhafin'];
                    if ($usuariofin == "") {
-                     echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário não pode ser vazio!');window.location.href='criarusuario.php';</script>";
+                     echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio nÃ£o pode ser vazio!');window.location.href='criarusuario.php';</script>";
                      die();
                    }
                     if ($senhafin == "") {
-                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha não pode ser vazia!');window.location.href='criarusuario.php';</script>";
+                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha nÃ£o pode ser vazia!');window.location.href='criarusuario.php';</script>";
                       die();
                     }
                     //se login ou senha tiver caracteres especiais
                     if (preg_match('/[^a-z0-9]/i', $usuariofin)) {
-                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário não pode conter caracteres especiais!');window.location.href='criarusuario.php';</script>";
+                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio nÃ£o pode conter caracteres especiais!');window.location.href='criarusuario.php';</script>";
                       die();
                     }
                     if (preg_match('/[^a-z0-9]/i', $senhafin)) {
-                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha não pode conter caracteres especiais!');window.location.href='criarusuario.php';</script>";
+                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha nÃ£o pode conter caracteres especiais!');window.location.href='criarusuario.php';</script>";
                       die();
                     }
                     if ($_POST['limitefin'] > $_SESSION['limite']) {
-                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Você não tem limite suficiente!');window.location.href='criarusuario.php';</script>";
+                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. VocÃª nÃ£o tem limite suficiente!');window.location.href='criarusuario.php';</script>";
                       die();
                     }
                     $validadefin = $_SESSION['validadefin'];
@@ -179,7 +163,7 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                    $sql = "SELECT * FROM ssh_accounts WHERE login = '$usuariofin'";
                    $result = $conn->query($sql);
                    if ($result->num_rows > 0) {
-                     echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário já existe!');window.location.href='criarusuario.php';</script>";
+                     echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio jÃ¡ existe!');window.location.href='criarusuario.php';</script>";
                      die();
                    }
                    //anti sql
@@ -244,7 +228,7 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                 
                 
                 if (!$sucess) {
-                    echo "<script>alert('Erro ao criar usuário!');window.location.href='criarusuario.php';</script>";
+                    echo "<script>alert('Erro ao criar usuÃ¡rio!');window.location.href='criarusuario.php';</script>";
                     die();
                 }
                   if ($sucess == true) {
@@ -261,7 +245,7 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                     $data = strtotime("+".$validadefin." days", $data);
                     $data = date('Y-m-d H:i:s', $data);
                     $validadefin = $data;
-                //dias restantes para data de expiração
+                //dias restantes para data de expiraÃ§Ã£o
              //anti sql
                 $usuariofin = anti_sql($usuariofin);
                 $senhafin = anti_sql($senhafin);
@@ -295,7 +279,7 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
     <div class="app-content content">
         <div class="content-overlay"></div>
         <div class="content-wrapper">
-        <p class="text-primary">Aqui você pode criar um usuário para seus clientes.</p>
+        <p class="text-primary">Aqui vocÃª pode criar um usuÃ¡rio para seus clientes.</p>
             <div class="content-header row">
             </div>
             <div class="content-body">
@@ -306,7 +290,7 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                         <div class="col-md-6 col-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <h4 class="card-title">Criar Usuário</h4>
+                                    <h4 class="card-title">Criar UsuÃ¡rio</h4>
                                 </div>
                                 <div class="card-content">
                                     <div class="card-body">
@@ -348,7 +332,7 @@ $sql2 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                                                         </div>
                                                         <div class="col-md-8 form-group">
                                                             <select class="form-control select2-size-sm" name="v2ray" id="v2ray">
-                                                                <option value="nao">Não</option>
+                                                                <option value="nao">NÃ£o</option>
                                                                 <option value="sim">Sim</option>
                                                             </select>
                                                         </div>

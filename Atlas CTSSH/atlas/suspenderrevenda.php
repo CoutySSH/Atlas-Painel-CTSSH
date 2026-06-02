@@ -7,7 +7,7 @@ if (!isset($_SESSION)){
 session_start();
 
 }
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -21,23 +21,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
     
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {
@@ -69,7 +53,7 @@ if ($result->num_rows > 0) {
 }
 if ($byid == $_SESSION['iduser']) {
 }else{
-    echo "<script>sweetAlert('Oops...', 'Você não tem permissão para editar este usuário!', 'error').then(function(){window.location.href='../home.php'});</script>";
+    echo "<script>sweetAlert('Oops...', 'VocÃª nÃ£o tem permissÃ£o para editar este usuÃ¡rio!', 'error').then(function(){window.location.href='../home.php'});</script>";
     unset($_POST['criaruser']);
     unset($_POST['usuariofin']);
     unset($_POST['senhafin']);
@@ -80,8 +64,8 @@ if ($byid == $_SESSION['iduser']) {
 $contas = null;
 $ssh_accounts = null;
 
-set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
+set_time_limit(0); // Limite de tempo de execuÃ§Ã£o: 2h. Deixe 0 (zero) para sem limite
+ignore_user_abort(true); // Continua a execuÃ§Ã£o mesmo que o usuÃ¡rio cancele o download
 set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
     include ('Net/SSH2.php');
 //consulta todos logins 

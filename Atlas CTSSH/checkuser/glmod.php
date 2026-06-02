@@ -1,4 +1,4 @@
-require_once ('../atlas/conexao.php');
+<?php require_once ('../atlas/conexao.php');
 
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");

@@ -1,4 +1,4 @@
-error_reporting(0);
+<?php error_reporting(0);
 session_start();
 include_once("../atlas/conexao.php");
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
@@ -43,23 +43,7 @@ if ($result->num_rows > 0) {
         $_SESSION['acesstokenpaghiper'] = $row['acesstokenpaghiper'];
     }
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 
               if (isset($_POST['cupom'])) {
                 isset($_POST['cupom']);
@@ -78,7 +62,7 @@ if (!file_exists('../admin/suspenderrev.php')) {
    
 //se nao existir o tokenacess
 if($_SESSION['tokenaccess'] == "" && $_SESSION['acesstokenpaghiper'] == ""){
-    echo "<script>alert('Revendedor não Cadrastado!');</script>";
+    echo "<script>alert('Revendedor nÃ£o Cadrastado!');</script>";
     echo "<script>window.location.href = '../renovar.php';</script>";
     exit;
 }
@@ -117,13 +101,13 @@ $result = mysqli_query($conn, $sql);
                   $_SESSION['limitedono'] = 10000000000;
               }
               if ($_SESSION['limitedono'] < $_SESSION['limite']) {
-                  echo "<script>alert('Revendedor não Tem Limite!');</script>";
+                  echo "<script>alert('Revendedor nÃ£o Tem Limite!');</script>";
                   echo "<script>window.location.href = '../renovar.php';</script>";
                   exit;
                 
               }
               $_SESSION['valor'] = $_SESSION['valorusuario'] * $_SESSION['limite'];
-              //echo "<script>alert('O Valor é de R$ $_SESSION[valorusuario]');</script>";
+              //echo "<script>alert('O Valor Ã© de R$ $_SESSION[valorusuario]');</script>";
               //se valor mensal nao for nulo se nao for 0
               if ($valormensal != "" && $valormensal != 0) {
                   $_SESSION['valor'] = $valormensal;  
@@ -158,7 +142,7 @@ $result = mysqli_query($conn, $sql);
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
     <meta name="author" content="Thomas">
-    <title><?php echo $nomepainel; ?> - Renovação</title>
+    <title><?php echo $nomepainel; ?> - RenovaÃ§Ã£o</title>
     <link rel="apple-touch-icon" href="<?php echo $icon; ?>">
     <link rel="shortcut icon" type="image/x-icon" href="<?php echo $icon; ?>">
     <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500,600%7CIBM+Plex+Sans:300,400,500,600,700" rel="stylesheet">
@@ -212,7 +196,7 @@ $result = mysqli_query($conn, $sql);
                   <h1 class="price-toggle text-primary price-yearly mb-0" style="text-align: center;"><?php echo $_SESSION['valor']?> R$ Mensal </h1>
               </div>
               <center>
-              <p>Renove seu plano para continuar usando nossos serviços.</p>
+              <p>Renove seu plano para continuar usando nossos serviÃ§os.</p>
               </center>
               <hr>
 
@@ -221,13 +205,13 @@ $result = mysqli_query($conn, $sql);
                   <span class="badge badge-center w-px-20 h-px-20 rounded-pill bg-label-primary me-2">
                     <i class="bx bx-check bx-xs"></i>
                   </span>
-                  O Seu Limite é <?php echo $_SESSION['limite']?>
+                  O Seu Limite Ã© <?php echo $_SESSION['limite']?>
                 </li>
                 <li class="mb-2">
                   <span class="badge badge-center w-px-20 h-px-20 rounded-pill bg-label-primary me-2">
                     <i class="bx bx-check bx-xs"></i>
                   </span>
-                  O Seu Vencimento é <?php echo $_SESSION['vencimento']?>
+                  O Seu Vencimento Ã© <?php echo $_SESSION['vencimento']?>
                 </li>
                 <center>
                 <p>Tem um Cupom?</p>

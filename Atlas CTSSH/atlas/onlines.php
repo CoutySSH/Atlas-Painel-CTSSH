@@ -20,7 +20,7 @@ $hoje = date('Y-m-d H:i:s');
 if ($_SESSION['tipodeconta'] == 'Credito') {
 }else{
 if ($validade < $hoje) {
-    echo "<script>alert('Sua conta está vencida')</script>";
+    echo "<script>alert('Sua conta estÃ¡ vencida')</script>";
     echo "<script>window.location.href = '../home.php'</script>";
     unset($_POST['criaruser']);
     unset($_POST['usuariofin']);
@@ -28,23 +28,7 @@ if ($validade < $hoje) {
     unset($_POST['validadefin']);
 }
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 ?>
 <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
 <script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
@@ -67,7 +51,7 @@ if (!file_exists('../admin/suspenderrev.php')) {
 
 if (window.innerWidth < 678) {
 
-    document.write('<div class="alert alert-warning" role="alert"> <strong>Atenção!</strong> Mova para lado para Fazer Alguma Ação! </div>');
+    document.write('<div class="alert alert-warning" role="alert"> <strong>AtenÃ§Ã£o!</strong> Mova para lado para Fazer Alguma AÃ§Ã£o! </div>');
     window.setTimeout(function() {
         $(".alert").fadeTo(500, 0).slideUp(500, function(){
             $(this).remove(); 
@@ -120,7 +104,7 @@ if (window.innerWidth < 678) {
                                                         if ($deviceativo == "1") {
                                                             $deviceativo = "Sim";
                                                         }else{
-                                                            $deviceativo = "Não";
+                                                            $deviceativo = "NÃ£o";
                                                         }
                                                         if ($deviceid == "") {
                                                             $deviceid = "Nenhum";
@@ -148,7 +132,7 @@ if (window.innerWidth < 678) {
                                                         <td><div class="btn-group mb-1">
                                                         <div class="dropdown">
                                                             <button class="btn btn-primary dropdown-toggle mr-1" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                Ações
+                                                                AÃ§Ãµes
                                                             </button>
                                                             <div class="dropdown-menu">
                                                                 <a class="dropdown-item" href="editarlogin.php?id='.$id.'">Editar</a>
@@ -171,14 +155,14 @@ if (window.innerWidth < 678) {
     /* confirma */
     swal({
     title: "Tem certeza?",
-    text: "Você deseja limpar o Device ID do usuário?",
+    text: "VocÃª deseja limpar o Device ID do usuÃ¡rio?",
     icon: "warning",
     buttons: true,
     dangerMode: true,
     })
   .then((willDelete) => {
     if (willDelete) {
-      /* faz uma requisiçao com ajax */
+      /* faz uma requisiÃ§ao com ajax */
         $.ajax({
             url: 'deviceid.php?id='+$id,
             type: 'GET',
@@ -201,7 +185,7 @@ if (window.innerWidth < 678) {
         /* confirma */
         swal({
         title: "Tem certeza?",
-        text: "Você deseja renovar os dias do usuário?",
+        text: "VocÃª deseja renovar os dias do usuÃ¡rio?",
         icon: "warning",
         buttons: true,
         dangerMode: true,
@@ -231,7 +215,7 @@ if (window.innerWidth < 678) {
         /* confirma */
         swal({
         title: "Tem certeza?",
-        text: "Você deseja reativar o usuário?",
+        text: "VocÃª deseja reativar o usuÃ¡rio?",
         icon: "warning",
         buttons: true,
         dangerMode: true,
@@ -244,11 +228,11 @@ if (window.innerWidth < 678) {
                 success: function(data){
                     if (data == 'reativado com sucesso') {
                         /* ao clicar atualiza pagina */
-                        swal("Sucesso!", "Usuário reativado com sucesso!", "success").then(function() {
+                        swal("Sucesso!", "UsuÃ¡rio reativado com sucesso!", "success").then(function() {
                             location.reload();
                         });
                     }else{
-                        swal("Erro!", "Erro ao reativar usuário!", "error");
+                        swal("Erro!", "Erro ao reativar usuÃ¡rio!", "error");
                     }
                 }
             });
@@ -261,7 +245,7 @@ if (window.innerWidth < 678) {
         /* confirma */
         swal({
         title: "Tem certeza?",
-        text: "Você deseja suspender o usuário?",
+        text: "VocÃª deseja suspender o usuÃ¡rio?",
         icon: "warning",
         buttons: true,
         dangerMode: true,
@@ -274,16 +258,16 @@ if (window.innerWidth < 678) {
                 success: function(data){
                     if (data == 'erro no servidor') {
                         /* ao clicar atualiza pagina */
-                        swal("Erro!", "Erro no servidor, verifique se o servidor está online ou se a senha está correta!", "error");
+                        swal("Erro!", "Erro no servidor, verifique se o servidor estÃ¡ online ou se a senha estÃ¡ correta!", "error");
                     }else{
 
                     if (data == 'suspenso com sucesso') {
                         /* ao clicar atualiza pagina */
-                        swal("Sucesso!", "Usuário suspenso com sucesso!", "success").then(function() {
+                        swal("Sucesso!", "UsuÃ¡rio suspenso com sucesso!", "success").then(function() {
                             location.reload();
                         });
                     }else{
-                        swal("Erro!", "Erro ao suspender usuário!", "error");
+                        swal("Erro!", "Erro ao suspender usuÃ¡rio!", "error");
                     }
                 }
                 }
@@ -297,7 +281,7 @@ function excluir($id) {
         /* confirma */
         swal({
         title: "Tem certeza?",
-        text: "Você deseja excluir o usuário?",
+        text: "VocÃª deseja excluir o usuÃ¡rio?",
         icon: "warning",
         buttons: true,
         dangerMode: true,
@@ -310,11 +294,11 @@ function excluir($id) {
                 success: function(data){
                     if (data == 'excluido') {
                         /* ao clicar atualiza pagina */
-                        swal("Sucesso!", "Usuário excluido com sucesso!", "success").then(function() {
+                        swal("Sucesso!", "UsuÃ¡rio excluido com sucesso!", "success").then(function() {
                             location.reload();
                         });
                     }else{
-                        swal("Erro!", "Erro ao excluir usuário!", "error");
+                        swal("Erro!", "Erro ao excluir usuÃ¡rio!", "error");
                     }
                 }
             });
@@ -344,10 +328,10 @@ function excluir($id) {
 
         /* traduzir somente */
         "language": {
-            "lengthMenu": "Mostrar _MENU_ registros por página",
+            "lengthMenu": "Mostrar _MENU_ registros por pÃ¡gina",
             "zeroRecords": "Nenhum registro encontrado",
-            "info": "Mostrando página _PAGE_ de _PAGES_",
-            "infoEmpty": "Nenhum registro disponível",
+            "info": "Mostrando pÃ¡gina _PAGE_ de _PAGES_",
+            "infoEmpty": "Nenhum registro disponÃ­vel",
             "infoFiltered": "(filtrado de _MAX_ registros no total)",
             "search": "Pesquisar:",
             "paginate": {

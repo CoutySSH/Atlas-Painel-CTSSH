@@ -1,4 +1,4 @@
-session_start();
+<?php session_start();
 error_reporting(0);
 date_default_timezone_set('America/Sao_Paulo');
 require_once '../vendor/pix/autoload.php';

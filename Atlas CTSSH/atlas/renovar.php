@@ -11,29 +11,13 @@ require_once '../vendor/pix/autoload.php';
 /* if ($_SESSION['qr_code_base64'] != null) {
     echo ("<script>window.location = 'pagamento.php';</script>");
 } */
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 ?>
 
 <?php
 
-set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
+set_time_limit(0); // Limite de tempo de execuÃ§Ã£o: 2h. Deixe 0 (zero) para sem limite
+ignore_user_abort(true); // Continua a execuÃ§Ã£o mesmo que o usuÃ¡rio cancele o download
 
      
      include('conexao.php');
@@ -100,7 +84,7 @@ $valor = $_SESSION['valor'];
     setInterval(atualizarTempoRestante, 1000);
 </script>
                                                     <div class="bg-alert modal-header">
-                                                        <h5 style="text-align: center;">N° Pedido: <?= $_SESSION['payment_id']?></h5>
+                                                        <h5 style="text-align: center;">NÂ° Pedido: <?= $_SESSION['payment_id']?></h5>
                                                         <h5 class="modal-title" id="exampleModalScrollableTitle"></h5>
                                                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                                             <i class="bx bx-x"></i>
@@ -110,10 +94,10 @@ $valor = $_SESSION['valor'];
                                                     <div class="alert alert-alert" role="alert" style="text-align: center; font-size: 18px;">
                                                        <div class="divider divider-success">
                                                             
-                                                        <strong class="divider-text" style="font-size: 20px;">INFORMAÇÕES</strong>
+                                                        <strong class="divider-text" style="font-size: 20px;">INFORMAÃ‡Ã•ES</strong>
                                                         </div>
                                                         <p>Valor a Pagar: <?= $valor ?> R$</p>
-                                                        <p>Após Efetuar o Pagamento Aguarde o Pagamento ser Concluido</p>
+                                                        <p>ApÃ³s Efetuar o Pagamento Aguarde o Pagamento ser Concluido</p>
                                                         
 
                                                         <img style="width: 160px;" class="qr_code" src="data:image/png;base64,<?= $_SESSION['qr_code_base64']?>">

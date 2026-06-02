@@ -3,8 +3,8 @@
 error_reporting(0);
 session_start();
 //gerador de senha
-set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
+set_time_limit(0); // Limite de tempo de execuÃ§Ã£o: 2h. Deixe 0 (zero) para sem limite
+ignore_user_abort(true); // Continua a execuÃ§Ã£o mesmo que o usuÃ¡rio cancele o download
 set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
 include ('Net/SSH2.php');
      include('conexao.php');
@@ -42,23 +42,7 @@ function generateUUID() {
     );
     return $uuid;
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 
 $sql3 = "SELECT * FROM atribuidos WHERE byid = '$_SESSION[iduser]'";
 $sql3 = $conn->prepare($sql3);
@@ -89,7 +73,7 @@ $_SESSION['restante'] = $restante;
         if ($tipo == 'Credito') {
         $tipo = '<code>Restam '.$_SESSION['limite'].' Creditos</code>';
         }else{
-        $tipo = '<code>Seu limite usado é de '.$limiteusado.' Logins de '.$_SESSION['limite'].'</code>';
+        $tipo = '<code>Seu limite usado Ã© de '.$limiteusado.' Logins de '.$_SESSION['limite'].'</code>';
         }
 
         date_default_timezone_set('America/Sao_Paulo');
@@ -97,7 +81,7 @@ $_SESSION['restante'] = $restante;
         if ($_SESSION['tipodeconta'] == 'Credito') {
         }else{
         if ($validade < $hoje) {
-            echo "<script>alert('Sua conta está vencida')</script>";
+            echo "<script>alert('Sua conta estÃ¡ vencida')</script>";
             echo "<script>window.location.href = '../home.php'</script>";
             unset($_POST['criaruser']);
             unset($_POST['usuariofin']);
@@ -154,27 +138,27 @@ $_SESSION['restante'] = $restante;
                     $notas = anti_sql($notas);
 
                  if ($validadefin > $testelimite) {
-                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Você não pode criar um teste com mais de $testelimite Minutos!');window.location.href='criarteste.php';</script>";
+                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. VocÃª nÃ£o pode criar um teste com mais de $testelimite Minutos!');window.location.href='criarteste.php';</script>";
                    die();
                  }
                  if ($usuariofin == "") {
-                  echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário não pode ser vazio!');window.location.href='criarteste.php';</script>";
+                  echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio nÃ£o pode ser vazio!');window.location.href='criarteste.php';</script>";
                   die();
                 }
                  if ($senhafin == "") {
-                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha não pode ser vazia!');window.location.href='criarteste.php';</script>";
+                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha nÃ£o pode ser vazia!');window.location.href='criarteste.php';</script>";
                    die();
                  }
                  if (preg_match('/[^a-z0-9]/i', $usuariofin)) {
-                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário não pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
+                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio nÃ£o pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
                    die();
                  }
                  if (preg_match('/[^a-z0-9]/i', $senhafin)) {
-                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha não pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
+                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Senha nÃ£o pode conter caracteres especiais!');window.location.href='criarteste.php';</script>";
                    die();
                  }
                  if ($_POST['limitefin'] > $_SESSION['limite']) {
-                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Você não tem limite suficiente!');window.location.href='criarteste.php';</script>";
+                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. VocÃª nÃ£o tem limite suficiente!');window.location.href='criarteste.php';</script>";
                    die();
                  }
                  $limitefin = $_POST['limitefin'];
@@ -196,7 +180,7 @@ $_SESSION['restante'] = $restante;
                   if ($_SESSION['tipodeconta'] == 'Credito'){
                   }else{
                     if ($_POST['limitefin'] > $_SESSION['restante']) {
-                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. Você não tem limite suficiente!');window.location.href='criarteste.php';</script>";
+                      echo "<script language='javascript' type='text/javascript'>alert('Ops.. VocÃª nÃ£o tem limite suficiente!');window.location.href='criarteste.php';</script>";
                       die();
                     }
                   }
@@ -204,14 +188,14 @@ $_SESSION['restante'] = $restante;
                  $sql = "SELECT * FROM ssh_accounts WHERE login = '$usuariofin'";
                  $result = $conn->query($sql);
                  if ($result->num_rows > 0) {
-                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. Usuário já existe!');window.location.href='criarteste.php';</script>";
+                   echo "<script language='javascript' type='text/javascript'>alert('Ops.. UsuÃ¡rio jÃ¡ existe!');window.location.href='criarteste.php';</script>";
                    die();
                  }
 
                  $sql4 = "SELECT * FROM servidores WHERE subid = '$categoria'";
                    $result4 = $conn -> query($sql4);
                    $rows = mysqli_fetch_all($result4, MYSQLI_ASSOC);
-                   //dias restantes para data de expiração
+                   //dias restantes para data de expiraÃ§Ã£o
                    $loop = Factory::create();
                    $servidores_com_erro = [];
                    define('SCRIPT_PATH', './atlasteste.sh');
@@ -272,7 +256,7 @@ $_SESSION['restante'] = $restante;
                        $loop->run();
                    }
                 if (!$sucess) {
-                    echo "<script>alert('Erro ao criar usuário!');window.location.href='criarusuario.php';</script>";
+                    echo "<script>alert('Erro ao criar usuÃ¡rio!');window.location.href='criarusuario.php';</script>";
                     die();
                 }
                   if ($sucess == true) {
@@ -303,7 +287,7 @@ $_SESSION['restante'] = $restante;
 <div class="app-content content">
         <div class="content-overlay"></div>
         <div class="content-wrapper">
-        <p class="text-primary">Aqui você pode criar um teste para seu cliente.</p>
+        <p class="text-primary">Aqui vocÃª pode criar um teste para seu cliente.</p>
             <div class="content-header row">
             </div>
             <div class="content-body">
@@ -352,7 +336,7 @@ $_SESSION['restante'] = $restante;
                                                         </div>
                                                         <div class="col-md-8 form-group">
                                                             <select class="form-control select2-size-sm" name="v2ray" id="v2ray">
-                                                                <option value="nao">Não</option>
+                                                                <option value="nao">NÃ£o</option>
                                                                 <option value="sim">Sim</option>
                                                             </select>
                                                         </div>

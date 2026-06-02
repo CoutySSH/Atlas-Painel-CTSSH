@@ -6,7 +6,7 @@ if (!isset($_SESSION)){
 session_start();
 
 }
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -24,23 +24,7 @@ if ($_SESSION['login'] == 'admin') {
   exit();
 }
 
-if (!file_exists('suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-}else{
-    include_once 'suspenderrev.php';
-    
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-}
+include_once 'suspenderrev.php';
 include('headeradmin2.php');
 
 function anti_sql($input)
@@ -79,7 +63,7 @@ if (!empty($_GET['id'])) {
 <div class="app-content content">
         <div class="content-overlay"></div>
         <div class="content-wrapper">
-        <p class="text-primary">Aqui você pode editar o Servidor.</p>
+        <p class="text-primary">Aqui vocÃª pode editar o Servidor.</p>
             <div class="content-header row">
             </div>
             <div class="content-body">
@@ -156,7 +140,7 @@ if (!empty($_GET['id'])) {
                                                     </div>
                                                     <div class="custom-control custom-checkbox">
                                                         <input type="checkbox" class="custom-control-input" id="customCheck1" name="confirma" value="6">
-                                                        <label class="custom-control-label" for="customCheck1">Confirmar Edição</label>
+                                                        <label class="custom-control-label" for="customCheck1">Confirmar EdiÃ§Ã£o</label>
                                                     </div>
 
                                                     <div class="col-12 col-md-8 offset-md-4 form-group">
@@ -200,7 +184,7 @@ if (!empty($_GET['id'])) {
                                 echo "<script>swal('Erro!', 'Erro ao Editar Servidor!', 'error').then((value) => {window.location.href = 'servidores.php';});</script>";
                             }
                         } else {
-                            echo "<script>swal('Erro!', 'Você não confirmou a edição!', 'error').then((value) => {window.location.href = 'servidores.php';});</script>";
+                            echo "<script>swal('Erro!', 'VocÃª nÃ£o confirmou a ediÃ§Ã£o!', 'error').then((value) => {window.location.href = 'servidores.php';});</script>";
                         }
                     }
 

@@ -34,23 +34,7 @@
           $row1 = mysqli_fetch_assoc($result1);
           $chaveapiatual = $row1['sessao'];
           $tokenapiatual = $row1['token'];
-          if (!file_exists('../admin/suspenderrev.php')) {
-            exit ("<script>alert('Token Invalido!');</script>");
-          }else{
-            include_once '../admin/suspenderrev.php';
-            
-          }
-          if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-            if (function_exists('security')) {
-                security();
-            } else {
-                echo "<script>alert('Token Inválido!');</script>";
-                echo "<script>location.href='../index.php';</script>";
-
-                $_SESSION['token_invalido_'] = true;
-                exit;
-            }
-          }
+          include_once '../admin/suspenderrev.php';
     ?>
     <!-- plugins:css -->
     <!-- endinject -->
@@ -89,7 +73,7 @@
 </div>
 
 <script>
-    // Exibe o spinner de carregamento quando a página é carregada
+    // Exibe o spinner de carregamento quando a pÃ¡gina Ã© carregada
     window.addEventListener('load', function () {
         document.getElementById('carregando').innerHTML = 'Carregando...';
     });
@@ -102,7 +86,7 @@
                             <div class="card-content">
                                 <div class="card-body card-dashboard">
                                     <p class="card-text">Para adiquirir a chave e o token API, acesse o site <a href="https://painelwhats.atlaspainel.com.br" target="_blank">https://painelwhats.atlaspainel.com.br</a></p>
-                                    <p class="card-text">Não Somos Responsaveis por qualquer tipo de bloqueio, banimento ou qualquer outro tipo de punição que o whatsapp venha a aplicar em sua conta.</p>
+                                    <p class="card-text">NÃ£o Somos Responsaveis por qualquer tipo de bloqueio, banimento ou qualquer outro tipo de puniÃ§Ã£o que o whatsapp venha a aplicar em sua conta.</p>
                                     <h6 >Chave API</h6>
                                     <input class="form-control" type="text" name="chaveapi" id="chaveapi" value="<?php echo $chaveapiatual; ?>" >
                                     <br>
@@ -140,18 +124,18 @@
 $result = mysqli_query($conn, $sql);
 
 if (mysqli_num_rows($result) > 0) {
-    echo "<script>swal('Token API Já Existe!','','error').then((value) => {window.location.href = 'crtlwhatsapp.php';});;</script>";
+    echo "<script>swal('Token API JÃ¡ Existe!','','error').then((value) => {window.location.href = 'crtlwhatsapp.php';});;</script>";
 } else {
     $sqlbusca = "SELECT * FROM whatsapp WHERE byid = '$byid'";
     $resultbusca = mysqli_query($conn, $sqlbusca);
     
     if (mysqli_num_rows($resultbusca) > 0) {
-        // Se já existe um registro com o mesmo byid, atualize-o
+        // Se jÃ¡ existe um registro com o mesmo byid, atualize-o
         $sqlsave2 = "UPDATE whatsapp SET token = '$tokenapi', sessao = '$chaveapi' WHERE byid = '$byid'";
         mysqli_query($conn, $sqlsave2);
         echo "<script>swal('Token API Atualizado com Sucesso','','success').then((value) => {window.location.href = 'crtlwhatsapp.php';});;</script>";
     } else {
-        // Se não existe um registro com o mesmo byid, insira um novo
+        // Se nÃ£o existe um registro com o mesmo byid, insira um novo
         $sqlsave = "INSERT INTO whatsapp (token, sessao, byid) VALUES ('$tokenapi', '$chaveapi', '$byid')";
         $message = 'Novo registro inserido com sucesso';
         mysqli_query($conn, $sqlsave);
@@ -173,7 +157,7 @@ if (mysqli_num_rows($result) > 0) {
     
     swal("Sucesso!", `Whatsapp ${action}!`, "success").then(() => {
       $.ajax({
-        url: 'crtlwhatsapp.php', // Nome do arquivo PHP que contém a lógica de ativar/desativar
+        url: 'crtlwhatsapp.php', // Nome do arquivo PHP que contÃ©m a lÃ³gica de ativar/desativar
         type: 'POST',
         data: { action: action },
         success: function(response) {
@@ -194,7 +178,7 @@ if (mysqli_num_rows($result) > 0) {
 
 if (window.innerWidth < 678) {
 
-    document.write('<div class="alert alert-warning" role="alert"> <strong>Atenção!</strong> Mova para lado para Fazer Alguma Ação! </div>');
+    document.write('<div class="alert alert-warning" role="alert"> <strong>AtenÃ§Ã£o!</strong> Mova para lado para Fazer Alguma AÃ§Ã£o! </div>');
     window.setTimeout(function() {
         $(".alert").fadeTo(500, 0).slideUp(500, function(){
             $(this).remove(); 
@@ -219,7 +203,7 @@ if (window.innerWidth < 678) {
                                                 <thead>
                                                     <tr>
                                                     <th>Mensagem</th>
-                                                    <th>Função</th>
+                                                    <th>FunÃ§Ã£o</th>
                                                     <th>Ativo</th>
                                                     <th>Editar</th>
                                                     </tr>
@@ -252,21 +236,21 @@ if (window.innerWidth < 678) {
     <hr>
     <script>
 $(document).ready(function() {
-    // Captura o evento de clique no botão de edição
+    // Captura o evento de clique no botÃ£o de ediÃ§Ã£o
     $('.edit-btn').click(function() {
-        // Obtém o ID da mensagem
+        // ObtÃ©m o ID da mensagem
         
         var id = $(this).data('id');
-        // Atualiza o valor do campo oculto no formulário
+        // Atualiza o valor do campo oculto no formulÃ¡rio
         $('#edit_id').val(id);
 
-        // Faça uma requisição AJAX para obter os detalhes da mensagem usando o ID
+        // FaÃ§a uma requisiÃ§Ã£o AJAX para obter os detalhes da mensagem usando o ID
         $.ajax({
             url: 'crtlwhatsapp.php', // Arquivo PHP para obter os detalhes da mensagem
             type: 'POST',
             data: { id: id },
             success: function(response) {
-                // Atualize os campos do formulário no modal com os detalhes da mensagem
+                // Atualize os campos do formulÃ¡rio no modal com os detalhes da mensagem
                 var mensagem = response.mensagem;
                 var funcao = response.funcao;
                 var ativo = response.ativo;
@@ -290,14 +274,14 @@ $(document).ready(function() {
         }
     }
 
-    // Chamar a função inicialmente
+    // Chamar a funÃ§Ã£o inicialmente
     exibirOcultarHora();
 
-    // Chamar a função sempre que a opção for alterada
+    // Chamar a funÃ§Ã£o sempre que a opÃ§Ã£o for alterada
     document.getElementById("edit_funcao").addEventListener("change", exibirOcultarHora);
             },
             error: function() {
-                // Exiba uma mensagem de erro, se necessário
+                // Exiba uma mensagem de erro, se necessÃ¡rio
             }
         });
     });
@@ -319,12 +303,12 @@ $(document).ready(function() {
                         <textarea class="form-control" name="edit_mensagem" rows="10" id="edit_mensagem"></textarea>
                     </div>
                     <div class="form-group">
-    <label for="edit_funcao">Selecione a Função:</label>
+    <label for="edit_funcao">Selecione a FunÃ§Ã£o:</label>
     <select class="form-control select2-size-sm" name="edit_funcao" id="edit_funcao">
-        <option value="criarusuario">Quando Criar Usuário</option>
+        <option value="criarusuario">Quando Criar UsuÃ¡rio</option>
         <option value="criarteste">Quando Criar Teste</option>
         <option value="criarrevenda">Quando Criar Revenda</option>
-        <option value="contaexpirada">Quando Usuário Expirar</option>
+        <option value="contaexpirada">Quando UsuÃ¡rio Expirar</option>
         <option value="revendaexpirada">Quando Revenda Expirar</option>
     </select>
 </div>
@@ -347,7 +331,7 @@ $(document).ready(function() {
                     <button type="submit" class="btn mb-1 btn-danger btn-lg btn-block" name="deletar">Apagar</button>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                        <button type="submit" class="btn btn-primary" name="editar">Salvar Alterações</button>
+                        <button type="submit" class="btn btn-primary" name="editar">Salvar AlteraÃ§Ãµes</button>
 
                     </div>
                 </form>
@@ -363,7 +347,7 @@ if (isset($_POST['editar'])) {
     $ativo = anti_sql($_POST['edit_ativo']);
     $hora = anti_sql($_POST['edit_hora']);
     
-  // Definir a codificação para utf8mb4
+  // Definir a codificaÃ§Ã£o para utf8mb4
   mysqli_set_charset($conn, "utf8mb4");
 
   $sql = "UPDATE mensagens SET mensagem='$mensagem', funcao='$funcao', ativo='$ativo', hora='$hora', byid='$_SESSION[iduser]' WHERE id='$id'";
@@ -445,15 +429,15 @@ if (isset($_POST['deletar'])) {
                                               <label>Mensagem:</label>
                                       <textarea class="form-control" name="mensagem" rows="10" id="mensagemTextArea">Exemplo: Teste Criado com Sucesso!
                                       Seu teste expira em {expira}!
-                                      Seu login é {login} e sua senha é {senha}!
+                                      Seu login Ã© {login} e sua senha Ã© {senha}!
                                       </textarea>
                                       <br>
                                       <div class="form-group">
-                                        <label>Selecione a Função</label>
+                                        <label>Selecione a FunÃ§Ã£o</label>
                                       </div>
                                       <div class="form-group">
                                         <select class="form-control select2-size-sm" name="funcao" id="funcaoSelect">
-                                          <option value="criarusuario">Quando Criar Usuário</option>
+                                          <option value="criarusuario">Quando Criar UsuÃ¡rio</option>
                                           <option value="criarteste">Quando Criar Teste</option>
                                           <option value="criarrevenda">Quando Criar Revenda</option>
                                           <option value="contaexpirada" >Quando Usuario Expirar</option>
@@ -466,53 +450,53 @@ if (isset($_POST['deletar'])) {
                                           </div>
 
                                       <script>
-                                        // Obtém o elemento do <textarea> e do <select>
+                                        // ObtÃ©m o elemento do <textarea> e do <select>
                                         const mensagemTextArea = document.getElementById('mensagemTextArea');
                                         const funcaoSelect = document.getElementById('funcaoSelect');
                                         const horaAdd = document.getElementById('hora-add');
 
 
-                                        // Mapeia as opções selecionadas para seus respectivos textos
+                                        // Mapeia as opÃ§Ãµes selecionadas para seus respectivos textos
                                         const mensagens = {
-                                          criarusuario: '🎉 Usuario Criado 🎉 <br><br>\n\n' +
-                                          '🔎 Usuario: {usuario} <br>\n' +
-                                          '🔑 Senha: {senha} <br>\n' +
-                                          '🎯 Validade: {validade} <br>\n' +
-                                          '🕟 Limite: {limite} <br><br>\n\n' +
-                                          '🌍Link de Renovação: https://{dominio}/renovar.php <br>\n' +
-                                          'Esse link 👆 servirá para você fazer as suas renovações',
-                                          criarteste: '🎉 Teste Criado 🎉 <br><br>\n\n' +
-                                          '🔎 Usuario: {usuario} <br>\n' +
-                                          '🔑 Senha: {senha} <br>\n' +
-                                          '🎯 Validade: {validade} Minutos <br>\n' +
-                                          '🕟 Limite: {limite} <br><br>\n\n' +
-                                          '🌍Link de Renovação: https://{dominio}/renovar.php\n' +
-                                          'Esse link 👆 servirá para você fazer as suas renovações',
-                                          criarrevenda: '🎉 Revenda Criada 🎉 <br><br>\n\n' +
-                                          '🔎 Revenda: {usuario}\n' +
-                                          '🔑 Senha: {senha}\n' +
-                                          '🎯 Validade: {validade}\n' +
-                                          '🕟 Limite: {limite} <br><br>\n\n' +
-                                          '💥 Obrigado por usar nossos serviços!\n' +
-                                          '🌍Link do Painel: https://{dominio}/\n' +
-                                          'Esse link 👆 servirá para você acessar o painel de revenda',
-                                          contaexpirada: '😩 Sua conta esta prestes a vencer 😩 <br><br>\n\n' +
-                                          '🔎 Usuario: {usuario}\n' +
-                                          '🔑 Senha: {senha}\n' +
-                                          '🎯 Validade: {validade}\n' +
-                                          '🕟 Limite: {limite} <br><br>\n\n' +
-                                          '🌍Link de Renovação: https://{dominio}/renovar.php\n' +
-                                          'Esse link 👆 servirá para você fazer as suas renovações',
-                                          revendaexpirada: '😩 Sua conta esta prestes a vencer 😩 <br><br>\n\n' +
-                                          '🔎 Revenda: {usuario}\n' +
-                                          '🔑 Senha: {senha}\n' +
-                                          '🎯 Validade: {validade}\n' +
-                                          '🕟 Limite: {limite} <br><br>\n\n' +
-                                          '💥 Acesse o Painel para Renovar sua Revenda'
+                                          criarusuario: 'ðŸŽ‰ Usuario Criado ðŸŽ‰ <br><br>\n\n' +
+                                          'ðŸ”Ž Usuario: {usuario} <br>\n' +
+                                          'ðŸ”‘ Senha: {senha} <br>\n' +
+                                          'ðŸŽ¯ Validade: {validade} <br>\n' +
+                                          'ðŸ•Ÿ Limite: {limite} <br><br>\n\n' +
+                                          'ðŸŒLink de RenovaÃ§Ã£o: https://{dominio}/renovar.php <br>\n' +
+                                          'Esse link ðŸ‘† servirÃ¡ para vocÃª fazer as suas renovaÃ§Ãµes',
+                                          criarteste: 'ðŸŽ‰ Teste Criado ðŸŽ‰ <br><br>\n\n' +
+                                          'ðŸ”Ž Usuario: {usuario} <br>\n' +
+                                          'ðŸ”‘ Senha: {senha} <br>\n' +
+                                          'ðŸŽ¯ Validade: {validade} Minutos <br>\n' +
+                                          'ðŸ•Ÿ Limite: {limite} <br><br>\n\n' +
+                                          'ðŸŒLink de RenovaÃ§Ã£o: https://{dominio}/renovar.php\n' +
+                                          'Esse link ðŸ‘† servirÃ¡ para vocÃª fazer as suas renovaÃ§Ãµes',
+                                          criarrevenda: 'ðŸŽ‰ Revenda Criada ðŸŽ‰ <br><br>\n\n' +
+                                          'ðŸ”Ž Revenda: {usuario}\n' +
+                                          'ðŸ”‘ Senha: {senha}\n' +
+                                          'ðŸŽ¯ Validade: {validade}\n' +
+                                          'ðŸ•Ÿ Limite: {limite} <br><br>\n\n' +
+                                          'ðŸ’¥ Obrigado por usar nossos serviÃ§os!\n' +
+                                          'ðŸŒLink do Painel: https://{dominio}/\n' +
+                                          'Esse link ðŸ‘† servirÃ¡ para vocÃª acessar o painel de revenda',
+                                          contaexpirada: 'ðŸ˜© Sua conta esta prestes a vencer ðŸ˜© <br><br>\n\n' +
+                                          'ðŸ”Ž Usuario: {usuario}\n' +
+                                          'ðŸ”‘ Senha: {senha}\n' +
+                                          'ðŸŽ¯ Validade: {validade}\n' +
+                                          'ðŸ•Ÿ Limite: {limite} <br><br>\n\n' +
+                                          'ðŸŒLink de RenovaÃ§Ã£o: https://{dominio}/renovar.php\n' +
+                                          'Esse link ðŸ‘† servirÃ¡ para vocÃª fazer as suas renovaÃ§Ãµes',
+                                          revendaexpirada: 'ðŸ˜© Sua conta esta prestes a vencer ðŸ˜© <br><br>\n\n' +
+                                          'ðŸ”Ž Revenda: {usuario}\n' +
+                                          'ðŸ”‘ Senha: {senha}\n' +
+                                          'ðŸŽ¯ Validade: {validade}\n' +
+                                          'ðŸ•Ÿ Limite: {limite} <br><br>\n\n' +
+                                          'ðŸ’¥ Acesse o Painel para Renovar sua Revenda'
 
                                         };
 
-                                        // Função para atualizar o <textarea>
+                                        // FunÃ§Ã£o para atualizar o <textarea>
                                         function atualizarTextArea() {
                                             const funcaoSelecionada = funcaoSelect.value;
                                             const mensagemSelecionada = mensagens[funcaoSelecionada];
@@ -528,7 +512,7 @@ if (isset($_POST['deletar'])) {
                                         // Aguarda o carregamento completo do documento HTML
                                         document.addEventListener('DOMContentLoaded', atualizarTextArea);
 
-                                        // Atualiza o <textarea> e exibe/oculta o campo de hora quando houver uma alteração no <select>
+                                        // Atualiza o <textarea> e exibe/oculta o campo de hora quando houver uma alteraÃ§Ã£o no <select>
                                         funcaoSelect.addEventListener('change', atualizarTextArea);
                                     </script>
                                              
@@ -548,7 +532,7 @@ if (isset($_POST['deletar'])) {
                                           </div>
                                           <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
-                                            <button type="submit" class="btn btn-primary" name="adicionar">Salvar Alterações</button>
+                                            <button type="submit" class="btn btn-primary" name="adicionar">Salvar AlteraÃ§Ãµes</button>
 
                                           </div>
                                         </form>
@@ -564,7 +548,7 @@ if (isset($_POST['deletar'])) {
                                             $verifiq = "SELECT * FROM mensagens WHERE funcao='$funcao' AND byid='$_SESSION[iduser]'";
                                             $resultverifiq = mysqli_query($conn, $verifiq);
                                             if (mysqli_num_rows($resultverifiq) > 0) {
-                                                echo "<script>sweetAlert('Erro','Função já Cadastrada!','error')</script>";
+                                                echo "<script>sweetAlert('Erro','FunÃ§Ã£o jÃ¡ Cadastrada!','error')</script>";
                                                 exit();
                                             }
                                             $sql = "INSERT INTO mensagens (mensagem, funcao, ativo, hora, byid) VALUES ('$mensagem', '$funcao', '$ativo', '$hora', '$_SESSION[iduser]')";
@@ -579,7 +563,7 @@ if (isset($_POST['deletar'])) {
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="addNetworkModalLabel">Verificar Status Conexão</h5>
+                <h5 class="modal-title" id="addNetworkModalLabel">Verificar Status ConexÃ£o</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -597,7 +581,7 @@ if (isset($_POST['deletar'])) {
                         <h6 for="status" id="status"></h6>
                     </div>
                     <center>
-                <a class="btn btn-primary" id="verificarconexao" value="Verificar Conexão">Verificar Conexão</a>
+                <a class="btn btn-primary" id="verificarconexao" value="Verificar ConexÃ£o">Verificar ConexÃ£o</a>
                 <br>
             </div>
         </div>
@@ -640,7 +624,7 @@ fetch(url, {
 </script>
 
 
-<!-- ...código anterior... -->
+<!-- ...cÃ³digo anterior... -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>

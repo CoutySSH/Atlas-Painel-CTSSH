@@ -1,4 +1,4 @@
-//error_reporting(0);
+<?php //error_reporting(0);
 session_start();
 include('atlas/conexao.php');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
@@ -19,7 +19,7 @@ function anti_sql($input)
 //anti sql injection na $_GET['token']
 $_GET['token'] = anti_sql($_GET['token']);
 
-$sql = "SELECT * FROM accounts WHERE tokenvenda = '$_GET[token]'";
+$sql = "SELECT * FROM accounts WHERE tokenvenda = '{$_GET['token']}'";
 $result = $conn->query($sql);
 if ($result->num_rows > 0){
   while ($row = $result->fetch_assoc()) {

@@ -12,23 +12,7 @@ if ($_POST['limiteedit'] < $_SESSION['soma']) {
     echo "<script>sweetAlert('Oops...', 'Limite menor que o permitido!', 'error').then((value) => {window.location = 'editarrevenda.php?id=$id';});</script>";
     exit();
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 $sql2 = "SELECT * FROM atribuidos WHERE userid = '$id'";
 $result2 = mysqli_query($conn, $sql2);
 $row2 = mysqli_fetch_assoc($result2);
@@ -40,7 +24,7 @@ $limiteesta = $row2['limite'];
                     $usuarioedit = $_POST['usuarioedit'];
                     $senhaedit = $_POST['senhaedit'];
                     $validadeedit = $_POST['validadeedit'];
-                    //converter dias para data de expiração
+                    //converter dias para data de expiraÃ§Ã£o
                     $validadeedit = date('Y-m-d H:i:s', strtotime('+'.$validadeedit.' days'));
 
                     $limiteedit = $_POST['limiteedit'];

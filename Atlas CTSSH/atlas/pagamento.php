@@ -21,23 +21,7 @@ if ($result4->num_rows > 0) {
     }
 }
 
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 
 $sql5 = "SELECT * FROM atribuidos WHERE userid = '$_SESSION[iduser]'";
 $result5 = $conn->query($sql5);
@@ -62,12 +46,12 @@ if ($result6->num_rows > 0) {
         $_SESSION['access_token'] = $row6['access_token'];
     }
 }
-//se valor revenda for 0, não tem revenda
+//se valor revenda for 0, nÃ£o tem revenda
 if ($_SESSION['valorrevenda'] == 0) {
-  echo '<script>alert("Seu revendedor não Esta cadrastado para Pagamento Automatico")</script>';
+  echo '<script>alert("Seu revendedor nÃ£o Esta cadrastado para Pagamento Automatico")</script>';
     echo '<script>window.location.href = "../home.php";</script>';
 }
-//se access token for null, não tem revenda
+//se access token for null, nÃ£o tem revenda
 
 
 if (isset($_SESSION['valoradd'])) {
@@ -144,10 +128,10 @@ $renovacao = $_SESSION['valorrevenda'] * $_SESSION['limite'];
                                             <div class="col-8 col-sm-6 d-flex justify-content-end mt-75">
                                                 <div class="invoice-subtotal">
                                                     <div class="invoice-calc d-flex justify-content-between">
-                                                        <span class="invoice-title">Seu Limite é <?php echo $_SESSION['limite'] ?></span>
+                                                        <span class="invoice-title">Seu Limite Ã© <?php echo $_SESSION['limite'] ?></span>
                                                     </div>
                                                     <div class="invoice-calc d-flex justify-content-between">
-                                                        <span class="invoice-title">Sua Mensalidade é <?php echo $renovacao ?> Reais</span>
+                                                        <span class="invoice-title">Sua Mensalidade Ã© <?php echo $renovacao ?> Reais</span>
                                                     </div>
                                                     <hr>
                                                     
@@ -185,7 +169,7 @@ $renovacao = $_SESSION['valorrevenda'] * $_SESSION['limite'];
                       $_SESSION['cupom'] = anti_sql($_POST['cupom']);
 
                       if ($_SESSION['valor'] == 0) {
-                          echo "<script>alert('Você não tem limite para renovar')</script>";
+                          echo "<script>alert('VocÃª nÃ£o tem limite para renovar')</script>";
                       }else{
                           echo "<script>location.href='processando.php'</script>";
                       }

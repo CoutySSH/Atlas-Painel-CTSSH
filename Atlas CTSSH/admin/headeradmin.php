@@ -14,7 +14,7 @@
     $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
       if ($_SESSION['login'] == 'admin') {
       }else{
-        echo "<script>alert('Você não tem permissão para acessar essa página!');window.location.href='../logout.php';</script>";
+        echo "<script>alert('VocÃª nÃ£o tem permissÃ£o para acessar essa pÃ¡gina!');window.location.href='../logout.php';</script>";
         exit();
       }
       
@@ -162,11 +162,7 @@ if (!isset($_SESSION['token'])) {
 	include_once '../atlas/conexao.php';
 }
 
-if (!file_exists('suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once 'suspenderrev.php'; 
-}
+include_once 'suspenderrev.php';
 ?>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -346,7 +342,7 @@ if (!file_exists('suspenderrev.php')) {
                 </li>
 
 
-                <li class=" navigation-header"><span>Configurações</span>
+                <li class=" navigation-header"><span>ConfiguraÃ§Ãµes</span>
                 <li class=" nav-item"><a href="editconta.php"><i class="menu-livicon" data-icon="wrench"></i><span class="menu-title">Conta</span></a>
                 </li>
                 </li>
@@ -390,7 +386,7 @@ if (!file_exists('suspenderrev.php')) {
   }
   .col-xl-3.col-sm-6.grid-margin.stretch-card {
     .animacao-mouse {
-  transition: background-color 0.3s ease; /* Define a duração e o easing da transição */
+  transition: background-color 0.3s ease; /* Define a duraÃ§Ã£o e o easing da transiÃ§Ã£o */
 }
 
 .animacao-mouse:hover {
@@ -431,7 +427,7 @@ function redirecionaroonlines() {
                     <div class="row">
                       <div class="col-9">
                         <div class="d-flex align-items-center align-self-start">
-                          <h3 class="mb-0">Versão</h3>
+                          <h3 class="mb-0">VersÃ£o</h3>
                           <p class="text-success ml-2 mb-0 font-weight-medium">4.5.6</p>
                         </div>
                       </div>
@@ -470,16 +466,16 @@ function redirecionaroonlines() {
     var senhaatualizar = "<?php echo $_SESSION['senhaatualizar'] ?>";
     var domain = "<?php echo $domain ?>";
 
-    // Exibe uma mensagem de confirmação antes de atualizar
+    // Exibe uma mensagem de confirmaÃ§Ã£o antes de atualizar
     swal({
         title: "Deseja realmente atualizar?",
-        text: "Ao clicar em OK, os dados serão atualizados.",
+        text: "Ao clicar em OK, os dados serÃ£o atualizados.",
         icon: "warning",
         buttons: ["Cancelar", "OK"],
         dangerMode: true,
     }).then(function (confirm) {
         if (confirm) {
-            // O usuário confirmou a atualização, envie a solicitação AJAX
+            // O usuÃ¡rio confirmou a atualizaÃ§Ã£o, envie a solicitaÃ§Ã£o AJAX
             $.ajax({
                 url: '<?php echo $protocol ?><?php echo $domain ?>/atualizar.php',
                 type: 'POST',
@@ -491,17 +487,17 @@ function redirecionaroonlines() {
                 success: function (data) {
                     if (data) {
                         // Mostra a mensagem de sucesso
-                        swal("Atualizado com sucesso!", "Clique em OK para atualizar a página!", "success").then(function () {
+                        swal("Atualizado com sucesso!", "Clique em OK para atualizar a pÃ¡gina!", "success").then(function () {
                             location.reload();
                         });
                     } else {
                         // Mostra a mensagem de erro
-                        swal("Erro na atualização!", "Houve um erro ao atualizar os dados.", "error");
+                        swal("Erro na atualizaÃ§Ã£o!", "Houve um erro ao atualizar os dados.", "error");
                     }
                 },
                 error: function () {
-                    // Mostra a mensagem de erro em caso de falha na requisição AJAX
-                    swal("Erro na atualização!", "Houve um erro na requisição.", "error");
+                    // Mostra a mensagem de erro em caso de falha na requisiÃ§Ã£o AJAX
+                    swal("Erro na atualizaÃ§Ã£o!", "Houve um erro na requisiÃ§Ã£o.", "error");
                 }
             });
         }
@@ -827,10 +823,10 @@ setInterval(() => {
     method: 'POST',
   })
     .then(response => {
-      // Tratar a resposta, se necessário
+      // Tratar a resposta, se necessÃ¡rio
     })
     .catch(error => {
-      // Tratar o erro, se necessário
+      // Tratar o erro, se necessÃ¡rio
     });
 }, 10000); // 10000 milissegundos = 10 segundos
 </script>
@@ -843,7 +839,7 @@ setInterval(() => {
                 $textopersonali = $row["textoedit"];
         }
     
-    // Recupere o conteúdo da variável $tradutor e converta-o para um array em PHP
+    // Recupere o conteÃºdo da variÃ¡vel $tradutor e converta-o para um array em PHP
     $tradutor = $textopersonali;
     $linhas = explode("\n", $tradutor);
     $substituicoes = array();
@@ -858,7 +854,7 @@ setInterval(() => {
     ?>
 <script>
 window.addEventListener('DOMContentLoaded', function() {
-        // Define as substituições desejadas
+        // Define as substituiÃ§Ãµes desejadas
         var substituicoes = <?php echo json_encode($substituicoes); ?>;
 
         // Recursivamente percorre os elementos e substitui o texto dentro deles
@@ -874,10 +870,10 @@ window.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Obtém o elemento pai dos elementos onde deseja aplicar as substituições
+        // ObtÃ©m o elemento pai dos elementos onde deseja aplicar as substituiÃ§Ãµes
         var paiElemento = document.getElementById('inicialeditor').parentNode;
 
-        // Percorre os elementos dentro do pai e realiza as substituições
+        // Percorre os elementos dentro do pai e realiza as substituiÃ§Ãµes
         percorrerElementos(paiElemento);
 });
 </script>

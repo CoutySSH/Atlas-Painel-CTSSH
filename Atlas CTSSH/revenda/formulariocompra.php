@@ -6,39 +6,7 @@ if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
     
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once '../admin/suspenderrev.php';
-  
-}
-$sqlvezesuso = "SELECT * FROM cupons";
-    $resultvezesuso = $conn->query($sqlvezesuso);
-    
-    if ($resultvezesuso->num_rows > 0) {
-        while ($rowvezesuso = $resultvezesuso->fetch_assoc()) {
-            $vezesuso[] = $rowvezesuso;
-        }
-    
-        foreach ($vezesuso as $cupom) {
-            if ($cupom['usado'] >= $cupom['vezesuso']) {
-                $cupomId = $cupom['id'];
-                $sqlDelete = "DELETE FROM cupons WHERE id = $cupomId";
-                $conn->query($sqlDelete);
-            }
-        }
-    }
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-  if (function_exists('security')) {
-      security();
-  } else {
-      echo "<script>alert('Token Inválido!');</script>";
-      echo "<script>location.href='../index.php';</script>";
-
-      $_SESSION['token_invalido_'] = true;
-      exit;
-  }
-}
+include_once '../admin/suspenderrev.php';
 
   $sql = "SELECT * FROM accounts WHERE tokenvenda = '$_SESSION[tokenrevenda]'";
   $result = mysqli_query($conn, $sql);
@@ -47,7 +15,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
     $_SESSION['valorrevenda'] = $row['valorrevenda'];
     $_SESSION['byid'] = $row['id'];
   } else {
-    echo "<script>sweetAlert('Oops...', 'Link inválido!', 'error');</script>";
+    echo "<script>sweetAlert('Oops...', 'Link invÃ¡lido!', 'error');</script>";
     exit;
   }
   if ($_SESSION['byid'] == '1'){
@@ -63,7 +31,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
   }
   }
   if ($_SESSION['tipo'] == 'Credito'){
-    echo "<script>alert('Modo Credito não disponível para Compra!');</script>";
+    echo "<script>alert('Modo Credito nÃ£o disponÃ­vel para Compra!');</script>";
     exit;
   }
     
@@ -119,7 +87,7 @@ $csspersonali = $row["corfundologo"];
     </style>     
 <body class="vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  " data-open="click" data-menu="vertical-menu-modern" data-col="2-columns" data-layout="dark-layout" >
    
-      <h2 class="text-center mb-3 mt-0 mt-md-4">Preecha as Informações</h2>
+      <h2 class="text-center mb-3 mt-0 mt-md-4">Preecha as InformaÃ§Ãµes</h2>
       <p class="text-center">Preencha os campos abaixo para realizar a compra.</p>
 
       <form action='formulariocompra.php' method='post'>
@@ -145,10 +113,10 @@ $csspersonali = $row["corfundologo"];
                 <input type="email" class="form-control" name="email" placeholder="Email" required>
               </div>  
               <div class="col-md-4">
-              <label>Usuário</label>
+              <label>UsuÃ¡rio</label>
               </div>
                <div class="col-md-8 form-group">
-                <input type="text" class="form-control" name="usuario" placeholder="Usuário" required>
+                <input type="text" class="form-control" name="usuario" placeholder="UsuÃ¡rio" required>
               </div> 
               <div class="col-md-4">
               <label>Senha</label>
@@ -162,7 +130,7 @@ $csspersonali = $row["corfundologo"];
                <div class="col-md-8 form-group">
                 <input type="text" class="form-control" name="cupom" placeholder="Cupom">
               </div> 
-              <p>Salve seu usuário e senha, pois você precisará dele para acessar o painel.</p>
+              <p>Salve seu usuÃ¡rio e senha, pois vocÃª precisarÃ¡ dele para acessar o painel.</p>
               
                                                                                                                                 
 
@@ -195,7 +163,7 @@ $csspersonali = $row["corfundologo"];
         $verifica = "SELECT * FROM accounts WHERE login = '".$_POST['usuario']."'";
         $verifica = $conn->query($verifica);    
         if ($verifica->num_rows > 0) {
-            echo "<script>alert('Usuário já existe!');</script>";
+            echo "<script>alert('UsuÃ¡rio jÃ¡ existe!');</script>";
             echo "<script>location.href='formulariocompra.php'</script>";
             exit;
         }

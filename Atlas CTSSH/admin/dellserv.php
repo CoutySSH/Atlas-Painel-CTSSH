@@ -1,4 +1,4 @@
-session_start();
+<?php session_start();
 
 // Verifica se as variáveis de sessão de login e senha existem
 if (!isset($_SESSION['login']) || !isset($_SESSION['senha'])) {

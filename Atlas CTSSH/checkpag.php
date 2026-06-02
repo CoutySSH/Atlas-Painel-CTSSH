@@ -1,4 +1,4 @@
-session_start();
+<?php session_start();
 include('atlas/conexao.php');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
@@ -27,6 +27,7 @@ $result = $conn->query($sql);
 
     $sql2 = "SELECT * FROM pagamentos WHERE status = 'Aguardando Pagamento'";
     $result2 = $conn->query($sql2);
+    $idpagamentos = [];
     if ($result2->num_rows > 0) {
         while ($row2 = $result2->fetch_assoc()) {
             $idpagamentos[] = $row2;

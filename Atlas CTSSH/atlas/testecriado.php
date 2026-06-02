@@ -81,8 +81,8 @@ if ($tokenwpp != '' || $sessaowpp != '') {
         };
     
         const enviar = () => {
-          if (!enviado) { // Verifica se a mensagem ainda não foi enviada
-            enviado = true; // Define a variável como true para evitar novo envio
+          if (!enviado) { // Verifica se a mensagem ainda nÃ£o foi enviada
+            enviado = true; // Define a variÃ¡vel como true para evitar novo envio
     
             $.ajax({
               url: urlsend,
@@ -92,7 +92,7 @@ if ($tokenwpp != '' || $sessaowpp != '') {
               success: function(response) {
                 console.log(response);
                 if (response.status == 'success') {
-                  // Exiba uma mensagem de sucesso ou faça qualquer outra ação necessária
+                  // Exiba uma mensagem de sucesso ou faÃ§a qualquer outra aÃ§Ã£o necessÃ¡ria
                 } else {
                   // Trate o erro de envio da mensagem
                 }
@@ -111,23 +111,7 @@ if ($tokenwpp != '' || $sessaowpp != '') {
 
 }
 }
-if (!file_exists('../admin/suspenderrev.php')) {
-  exit ("<script>alert('Token Invalido!');</script>");
-}else{
-  include_once '../admin/suspenderrev.php';
-  
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-  if (function_exists('security')) {
-      security();
-  } else {
-      echo "<script>alert('Token Inválido!');</script>";
-      echo "<script>location.href='../index.php';</script>";
-
-      $_SESSION['token_invalido_'] = true;
-      exit;
-  }
-}
+include_once '../admin/suspenderrev.php';
 ?>
  <!--scrolling content Modal -->
  <div class="app-content content">
@@ -175,14 +159,14 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
                                                     <div class="alert alert-alert" role="alert" style="text-align: center; font-size: 18px;">
                                                        <div class="divider divider-success">
                                                             
-                                                        <strong class="divider-text" style="font-size: 20px;">🎉 Teste Criado 🎉</strong>
+                                                        <strong class="divider-text" style="font-size: 20px;">ðŸŽ‰ Teste Criado ðŸŽ‰</strong>
                                                         </div>
-                                                        <p>🔎 Usuario: <?php echo $_SESSION['usuariofin']; ?></p>
-                                                        <p>🔑 Senha: <?php echo $_SESSION['senhafin']; ?></p>
-                                                        <p>🎯 Validade: <?php echo $validade; ?> Minutos</p>
-                                                        <p>🕟 Limite: <?php echo $_SESSION['limitefin']; ?></p>
+                                                        <p>ðŸ”Ž Usuario: <?php echo $_SESSION['usuariofin']; ?></p>
+                                                        <p>ðŸ”‘ Senha: <?php echo $_SESSION['senhafin']; ?></p>
+                                                        <p>ðŸŽ¯ Validade: <?php echo $validade; ?> Minutos</p>
+                                                        <p>ðŸ•Ÿ Limite: <?php echo $_SESSION['limitefin']; ?></p>
                                                         <?php if (!empty($_SESSION['uuid'])) {
-                                                            echo "<p>🔑 UUID V2ray: " . $_SESSION['uuid'] . "</p>";
+                                                            echo "<p>ðŸ”‘ UUID V2ray: " . $_SESSION['uuid'] . "</p>";
                                                         }
                                                         ?>
                                                         <?php
@@ -190,8 +174,8 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
                                                         if ($accesstoken == ''){
                                                         }else{
                                                           echo '
-                                                          <p>🌍Link de Renovação: https://'.$dominio.'/renovar.php</p>
-                                                          <p>Esse link 👆 servirá para você fazer as suas renovações</p>
+                                                          <p>ðŸŒLink de RenovaÃ§Ã£o: https://'.$dominio.'/renovar.php</p>
+                                                          <p>Esse link ðŸ‘† servirÃ¡ para vocÃª fazer as suas renovaÃ§Ãµes</p>
                                                           ';
                                                         }
                                                         ?>
@@ -201,13 +185,13 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
                                                         
                                                         </div>
                                                     </div>
-                                                    <p style="text-align: center;">✔️ Criado: <?php echo implode(", ", $sucess_servers); ?></p>
+                                                    <p style="text-align: center;">âœ”ï¸ Criado: <?php echo implode(", ", $sucess_servers); ?></p>
                                                     <?php
                                                     if ($failed_servers[0] == ""){
                                                     
                                                     }else{
                                                       echo '
-                                                      <p style="text-align: center;">❌ Falha: '.implode(", ", $failed_servers).'</p>
+                                                      <p style="text-align: center;">âŒ Falha: '.implode(", ", $failed_servers).'</p>
                                                       ';
                                                     }
                                                     ?>
@@ -215,7 +199,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
                                                     <div class="btn-group dropup mr-1 mb-1">
                                                         <style>
                                                             button {
-                                                                /* espaço entre os botoes */
+                                                                /* espaÃ§o entre os botoes */
                                                                 margin-right: 5px;
                                                                 }
                                                         </style>
@@ -238,19 +222,19 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
 
 <script>
 function shareOnWhatsApp() {
-  var text = "🎉 Conta Criada com Sucesso! 🎉\n" + 
-             "🔎 Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
-             "🔑 Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
-             "🎯 Validade: <?php echo $validade; ?> Minutos\n" +
-             "🕟 Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
+  var text = "ðŸŽ‰ Conta Criada com Sucesso! ðŸŽ‰\n" + 
+             "ðŸ”Ž Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
+             "ðŸ”‘ Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
+             "ðŸŽ¯ Validade: <?php echo $validade; ?> Minutos\n" +
+             "ðŸ•Ÿ Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
              <?php
              echo '"'.$applink.'\n" +' ;
                if ($accesstoken == ''){
                 echo '" "';
             }else{
               echo '
-              "🌍Link de Renovação: https://'.$dominio.'/renovar.php\n" +
-                "Esse link servirá para você fazer as suas renovações.\n\n";
+              "ðŸŒLink de RenovaÃ§Ã£o: https://'.$dominio.'/renovar.php\n" +
+                "Esse link servirÃ¡ para vocÃª fazer as suas renovaÃ§Ãµes.\n\n";
                 ';
             }
             ?>                                         
@@ -264,20 +248,20 @@ function shareOnWhatsApp() {
 </script>
 <script>
 function copytotelegram() {
-    /* monoespaçado */
-    var text = "🎉 Conta Criada com Sucesso! 🎉\n" +
-        "🔎 Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
-        "🔑 Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
-        "🎯 Validade: <?php echo $validade; ?> Minutos\n" +
-        "🕟 Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
+    /* monoespaÃ§ado */
+    var text = "ðŸŽ‰ Conta Criada com Sucesso! ðŸŽ‰\n" +
+        "ðŸ”Ž Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
+        "ðŸ”‘ Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
+        "ðŸŽ¯ Validade: <?php echo $validade; ?> Minutos\n" +
+        "ðŸ•Ÿ Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
         <?php
         echo '"'.$applink.'\n" +' ;
                if ($accesstoken == ''){
                 echo '" "';
             }else{
               echo '
-              "🌍Link de Renovação: https://'.$dominio.'/renovar.php\n" +
-                "Esse link servirá para você fazer as suas renovações.\n\n";
+              "ðŸŒLink de RenovaÃ§Ã£o: https://'.$dominio.'/renovar.php\n" +
+                "Esse link servirÃ¡ para vocÃª fazer as suas renovaÃ§Ãµes.\n\n";
                 ';
             }
             ?>   

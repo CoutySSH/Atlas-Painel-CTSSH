@@ -1,4 +1,4 @@
-    session_start();
+<?php session_start();
     error_reporting(0);
     include('atlas/conexao.php');
 ini_set('memory_limit', '-1');

@@ -1,6 +1,6 @@
 error_reporting(0);
 session_start();
-//se a sessão não existir, redireciona para o login
+//se a sessÃ£o nÃ£o existir, redireciona para o login
 if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
     session_destroy();
     unset($_SESSION['login']);
@@ -27,23 +27,7 @@ $valordocredito = $row['mainid'];
 $tokenpaghiper = $row['acesstokenpaghiper'];
 $metodopag = $row['formadepag']; 
 $tokenapipaghiper = $row['tokenpaghiper'];
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
 /* if ($conn->query("DESCRIBE `metododepag`")) {
 } else {
     $sql = "CREATE TABLE `metododepag` (
@@ -66,7 +50,7 @@ if (!file_exists('../admin/suspenderrev.php')) {
  <div class="app-content content">
         <div class="content-overlay"></div>
         <div class="content-wrapper">
-        <p class="text-primary">Aqui você pode Editar o Revendedor.</p>
+        <p class="text-primary">Aqui vocÃª pode Editar o Revendedor.</p>
             <div class="content-header row">
             </div>
             <div class="content-body">
@@ -77,7 +61,7 @@ if (!file_exists('../admin/suspenderrev.php')) {
                         <div class="col-md-6 col-12">
                             <div class="card">
                                 <div class="card-header">
-                                    <h4 class="card-title">Configurações de Pagamento</h4>
+                                    <h4 class="card-title">ConfiguraÃ§Ãµes de Pagamento</h4>
                                 </div>
 
                                 <div id="alerta">
@@ -87,7 +71,7 @@ if (!file_exists('../admin/suspenderrev.php')) {
                                 <div class="card-content">
                                     
                                     <div class="card-body">
-                                    <p class="card-description">Aqui Você Pode Editar Suas Formas De Pagamento</code></p>
+                                    <p class="card-description">Aqui VocÃª Pode Editar Suas Formas De Pagamento</code></p>
                                         <form class="form form-horizontal" action="formaspag.php" method="POST">
                                             <div class="form-body">
                                                 <div class="row">
@@ -137,7 +121,7 @@ if (!file_exists('../admin/suspenderrev.php')) {
                                                     </div>
                                                     
                                                     <div class="col-md-4">
-                                                        <label>Valor De Cada Crédito</label>
+                                                        <label>Valor De Cada CrÃ©dito</label>
                                                     </div>
                                                     <div class="col-md-8 form-group">
                                                     <input type="text" class="form-control" name="valorcredit" placeholder="Token" value="<?php echo $valordocredito?>">

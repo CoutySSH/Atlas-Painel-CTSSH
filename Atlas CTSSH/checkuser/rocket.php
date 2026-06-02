@@ -1,4 +1,4 @@
-require_once '../atlas/conexao.php';
+<?php require_once '../atlas/conexao.php';
 session_start();
 error_reporting(0);
 

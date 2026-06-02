@@ -6,23 +6,7 @@ include 'header2.php';
  require_once '../vendor/pix/autoload.php';
 
 date_default_timezone_set('America/Sao_Paulo');
-if (!file_exists('../admin/suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-  }else{
-    include_once '../admin/suspenderrev.php';
-    
-  }
-  if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-  }
+include_once '../admin/suspenderrev.php';
     $validade = [];
     
     $_SESSION['LAST_ACTIVITY'] = time();
@@ -98,16 +82,16 @@ $formatted_date = $dt->format('Y-m-d\TH:i:s.000O');
     MercadoPago\SDK::setAccessToken($access_token);
     $payment = new MercadoPago\Payment();
     $payment->transaction_amount = $valor;
-    $payment->description = "Renovação de conta com Limite de ".$_SESSION['limite']." - Usuário: ".$_SESSION['login']."";
+    $payment->description = "RenovaÃ§Ã£o de conta com Limite de ".$_SESSION['limite']." - UsuÃ¡rio: ".$_SESSION['login']."";
     $payment->payment_method_id = "pix";
-// Atribui a data e hora formatada à propriedade do objeto $payment
+// Atribui a data e hora formatada Ã  propriedade do objeto $payment
     $payment->date_of_expiration = $formatted_date;
     $payment->payer = array(
         "email" => 'suporte@atlaspainel.com.br'
     );
    
     $payment->save();
-   #salva o tempo de expiração do pagamento
+   #salva o tempo de expiraÃ§Ã£o do pagamento
     $_SESSION['expiracaopix'] = $payment->date_of_expiration;
    $_SESSION['payment_id'] = $payment->id;
    $_SESSION['qr_code_base64'] = $payment->point_of_interaction->transaction_data->qr_code_base64;
@@ -129,14 +113,14 @@ $data = array(
   'payer_email' => $_SESSION['email'],
   'payer_name' => $_SESSION['nome'],    
   'payer_cpf_cnpj' => '74293930043', // cpf ou cnpj
-  'payer_phone' => '1140638785', // fixou ou móvel
+  'payer_phone' => '1140638785', // fixou ou mÃ³vel
   'notification_url' => 'https://mysite.com/notification/paghiper/',
   'shipping_methods' => 'PAC',
   'number_ntfiscal' => $idpedido,
   'fixed_description' => true,
   'days_due_date' => '1', // dias para vencimento do Pix
   'items' => array(
-      array ('description' => "Renovação de conta com Limite de ".$_SESSION['limite']." - Usuário: ".$_SESSION['login']."",
+      array ('description' => "RenovaÃ§Ã£o de conta com Limite de ".$_SESSION['limite']." - UsuÃ¡rio: ".$_SESSION['login']."",
       'quantity' => '1',
 'item_id' => '1',
 'price_cents' => $valor_em_centavos),
@@ -144,7 +128,7 @@ $data = array(
 );
 $data_post = json_encode( $data );
 $url = "https://pix.paghiper.com/invoice/create/";
-$mediaType = "application/json"; // formato da requisição
+$mediaType = "application/json"; // formato da requisiÃ§Ã£o
 $charSet = "UTF-8";
 $headers = array();
 $headers[] = "Accept: ".$mediaType;
@@ -172,7 +156,7 @@ else:
 echo $result;
 endif;
 }
-   $texto = 'Renovação de conta com Limite de '.$_SESSION['limite'].'';
+   $texto = 'RenovaÃ§Ã£o de conta com Limite de '.$_SESSION['limite'].'';
    $login = $_SESSION['login'];
 date_default_timezone_set('America/Sao_Paulo');
 
@@ -196,7 +180,7 @@ if ($result2->num_rows > 0) {
             "Content-Type: application/json"
         );
         $payment_id = $row['idpagamento'];
-        // Define as opções da requisição cURL
+        // Define as opÃ§Ãµes da requisiÃ§Ã£o cURL
         $options = array(
             CURLOPT_URL => "https://api.mercadopago.com/v1/payments/" . $payment_id,
             CURLOPT_CUSTOMREQUEST => "PUT",
@@ -205,16 +189,16 @@ if ($result2->num_rows > 0) {
             CURLOPT_RETURNTRANSFER => true
         );
         
-        // Inicializa a sessão cURL
+        // Inicializa a sessÃ£o cURL
         $curl = curl_init();
         
-        // Define as opções da sessão cURL
+        // Define as opÃ§Ãµes da sessÃ£o cURL
         curl_setopt_array($curl, $options);
         
-        // Executa a requisição cURL e armazena a resposta
+        // Executa a requisiÃ§Ã£o cURL e armazena a resposta
         $response = curl_exec($curl);
         
-        // Fecha a sessão cURL
+        // Fecha a sessÃ£o cURL
         curl_close($curl);
         $sql3 = "DELETE FROM pagamentos WHERE idpagamento = '$row[idpagamento]'";
         $result3 = $conn->query($sql3);

@@ -44,29 +44,13 @@ $restante = $_SESSION['limite'] - $limiteusado;
 $_SESSION['restante'] = $restante;
 
 $_SESSION['limiteusado'] = $limiteusado;
-if (!file_exists('suspenderrev.php')) {
-    exit ("<script>alert('Token Invalido!');</script>");
-}else{
-    include_once 'suspenderrev.php';
-    
-}
-if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['token']) || $_SESSION['tokenatual'] != $_SESSION['token'] || isset($_SESSION['token_invalido_']) && $_SESSION['token_invalido_'] === true) {
-    if (function_exists('security')) {
-        security();
-    } else {
-        echo "<script>alert('Token Inválido!');</script>";
-        echo "<script>location.href='../index.php';</script>";
-
-        $_SESSION['token_invalido_'] = true;
-        exit;
-    }
-}
+include_once 'suspenderrev.php';
 ?>
 
 <div class="app-content content">
         <div class="content-overlay"></div>
         <div class="content-wrapper">
-        <p class="text-primary">Aqui você pode criar revendedores.</p>
+        <p class="text-primary">Aqui vocÃª pode criar revendedores.</p>
             <div class="content-header row">
             </div>
             <div class="content-body">
@@ -245,23 +229,23 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
                                                     <div class="alert alert-alert" role="alert" style="text-align: center; font-size: 18px;">
                                                        <div class="divider divider-success">
                                                             
-                                                        <strong class="divider-text" style="font-size: 20px;">🎉 Revendedor Criado 🎉</strong>
+                                                        <strong class="divider-text" style="font-size: 20px;">ðŸŽ‰ Revendedor Criado ðŸŽ‰</strong>
                                                         </div>
-                                                        <p>🔎 Usuario: <?php echo $_POST['usuariorevenda']; ?></p>
-                                                        <p>🔑 Senha: <?php echo $_POST['senharevenda']; ?></p>
+                                                        <p>ðŸ”Ž Usuario: <?php echo $_POST['usuariorevenda']; ?></p>
+                                                        <p>ðŸ”‘ Senha: <?php echo $_POST['senharevenda']; ?></p>
                                                         <?php
                                                         if ($_POST['credivalid'] == "Validade") {
-                                                            echo "<p>🎯 Validade: " . $_POST['validaderevenda'] . " Dias</p>";
+                                                            echo "<p>ðŸŽ¯ Validade: " . $_POST['validaderevenda'] . " Dias</p>";
                                                         } else {
                                                            
                                                         }
                                                         ?>
-                                                        <p>🕟 Limite: <?php echo $_POST['limiterevenda']; ?> </p>
-                                                        <p>💥 Obrigado por usar nossos serviços!</p>
+                                                        <p>ðŸ•Ÿ Limite: <?php echo $_POST['limiterevenda']; ?> </p>
+                                                        <p>ðŸ’¥ Obrigado por usar nossos serviÃ§os!</p>
                                                         <?php
                                                         /* link painel  */
                                                         $dominio = $_SERVER['HTTP_HOST'];
-                                                        echo "<p>🔗 Link do Painel: <a href='https://$dominio/'>https://$dominio/</a></p>";
+                                                        echo "<p>ðŸ”— Link do Painel: <a href='https://$dominio/'>https://$dominio/</a></p>";
                                                         ?>
                                                         <div class="divider divider-success">
                                                             <p><strong class="divider-text" style="font-size: 20px;"></strong></p>
@@ -273,7 +257,7 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
                                                     <div class="btn-group dropup mr-1 mb-1">
                                                         <style>
                                                             button {
-                                                                /* espaço entre os botoes */
+                                                                /* espaÃ§o entre os botoes */
                                                                 margin-right: 5px;
                                                                 }
                                                         </style>
@@ -297,12 +281,12 @@ if (!isset($_SESSION['sgdfsr43erfggfd4rgs3rsdfsdfsadfe']) || !isset($_SESSION['t
 
 <script>
 function shareOnWhatsApp() {
-  var text = "🎉 Revendedor Criado! 🎉\n" + 
-             "🔎 Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
-             "🔑 Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
-             "🎯 Validade: <?php echo $_SESSION['validadefin']; ?>\n" +
-             "🕟 Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
-             "💥 Obrigado por usar nossos serviços!\n\n" +
+  var text = "ðŸŽ‰ Revendedor Criado! ðŸŽ‰\n" + 
+             "ðŸ”Ž Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
+             "ðŸ”‘ Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
+             "ðŸŽ¯ Validade: <?php echo $_SESSION['validadefin']; ?>\n" +
+             "ðŸ•Ÿ Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
+             "ðŸ’¥ Obrigado por usar nossos serviÃ§os!\n\n" +
               '';
                                                    
              
@@ -315,13 +299,13 @@ function shareOnWhatsApp() {
 </script>
 <script>
 function copytotelegram() {
-    /* monoespaçado */
-var text = "🎉 Revendedor Criado! 🎉\n" +
-        "🔎 Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
-        "🔑 Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
-        "🎯 Validade: <?php echo $_SESSION['validadefin']; ?>\n" +
-        "🕟 Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
-        "💥 Obrigado por usar nossos serviços!\n\n" +
+    /* monoespaÃ§ado */
+var text = "ðŸŽ‰ Revendedor Criado! ðŸŽ‰\n" +
+        "ðŸ”Ž Usuario: <?php echo $_SESSION['usuariofin']; ?>\n" +
+        "ðŸ”‘ Senha: <?php echo $_SESSION['senhafin']; ?>\n" +
+        "ðŸŽ¯ Validade: <?php echo $_SESSION['validadefin']; ?>\n" +
+        "ðŸ•Ÿ Limite: <?php echo $_SESSION['limitefin']; ?>\n" +
+        "ðŸ’¥ Obrigado por usar nossos serviÃ§os!\n\n" +
         '" "';
 
     var encodedText = encodeURIComponent(text);
@@ -382,7 +366,7 @@ function anti_sql($input)
                                     $sql7 = "SELECT * FROM accounts "; 
                                     $result7 = mysqli_query($conn, $sql7);
                                     //verifica se o usuario ja existe
-                                    //verifica se os campos estão vazios
+                                    //verifica se os campos estÃ£o vazios
                                     if (empty($_POST['usuariorevenda']) || empty($_POST['senharevenda']) || empty($_POST['limiterevenda'])) {
                                         echo "<script>var alerta = document.getElementById('alerta'); alerta.innerHTML = '<div class=\'alert alert-danger\' role=\'alert\'>Preencha todos os campos!</div>';setTimeout(function() { $('.alert').fadeOut(); }, 2000);</script>";
                                         exit;
@@ -438,7 +422,7 @@ function anti_sql($input)
                                         $mensagem = str_replace("<br><br>", "\n", $mensagem);
                                         //se a mensagem nao tiver vazia
                                         $numerowpp = $_POST['whatsapp'];
-                                        //remove espaços e - do numero
+                                        //remove espaÃ§os e - do numero
                                         $numerowpp = str_replace(" ", "", $numerowpp);
                                         $numerowpp = str_replace("-", "", $numerowpp);
                                         $numerowpp = str_replace("+", "", $numerowpp);
@@ -477,8 +461,8 @@ function anti_sql($input)
                                             };
                                         
                                             const enviar = () => {
-                                            if (!enviado) { // Verifica se a mensagem ainda não foi enviada
-                                                enviado = true; // Define a variável como true para evitar novo envio
+                                            if (!enviado) { // Verifica se a mensagem ainda nÃ£o foi enviada
+                                                enviado = true; // Define a variÃ¡vel como true para evitar novo envio
                                         
                                                 $.ajax({
                                                 url: urlsend,
@@ -488,7 +472,7 @@ function anti_sql($input)
                                                 success: function(response) {
                                                     console.log(response);
                                                     if (response.status == 'success') {
-                                                    // Exiba uma mensagem de sucesso ou faça qualquer outra ação necessária
+                                                    // Exiba uma mensagem de sucesso ou faÃ§a qualquer outra aÃ§Ã£o necessÃ¡ria
                                                     } else {
                                                     // Trate o erro de envio da mensagem
                                                     }
