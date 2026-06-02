@@ -342,23 +342,13 @@ if (!file_exists('suspenderrev.php')) {
 <li class=" nav-item"><a href="servidores.php"><i class="menu-livicon" data-icon="cpu"></i><span class="menu-title">Servidores</span></a>
 </li>
 
-<li class=" nav-item"><a href="gerarpay.php"><i class="menu-livicon" data-icon="diagram"></i><span class="menu-title">Gerar Payload</span></a>
-</li>
-<li class="nav-item"><a href="geradorany.php"><i class="menu-livicon" data-icon="briefcase"></i><span class="menu-title textmod">Gerador AnyVpn</span></a>
-
-
 
 <li class=" navigation-header"><span>Logs</span>
                 </li>
                 <li class=" nav-item"><a href="logs.php"><i class="menu-livicon" data-icon="priority-low"></i><span class="menu-title">Logs</span></a>
                 </li>
 
-                <li class=" navigation-header"><span>Grupo Suporte</span>
-                </li>
-                <li class=" nav-item"><a href="https://chat.whatsapp.com/ETGQKEqmQNWDhrP5j2nqLK"><i class="menu-livicon" data-icon="phone"></i><span class="menu-title">Grupo 1</span></a>
-                </li>
-                <li class=" nav-item"><a href="https://chat.whatsapp.com/JOfLVycZZed2GG9unthy58"><i class="menu-livicon" data-icon="phone"></i><span class="menu-title">Grupo 2</span></a>
-                </li>
+
                 <li class=" navigation-header"><span>Configurações</span>
                 <li class=" nav-item"><a href="editconta.php"><i class="menu-livicon" data-icon="wrench"></i><span class="menu-title">Conta</span></a>
                 </li>
