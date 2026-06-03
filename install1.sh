@@ -153,7 +153,7 @@ prepare_system() {
     progress_bar 4 $total "Instalando Apache + PHP 8.3..."
     local deps=(
         apache2 mariadb-server certbot python3-certbot-apache
-        curl wget unzip git openssl cron sudo
+        curl wget unzip git openssl
         php8.3 php8.3-mysql php8.3-curl php8.3-zip php8.3-xml
         php8.3-mbstring php8.3-cli php8.3-common php8.3-fpm php-ssh2
     )
@@ -170,11 +170,11 @@ prepare_system() {
 
     # ── 6/8: Habilitar serviços ──
     progress_bar 6 $total "Habilitando serviços..."
-    systemctl enable apache2 mariadb php8.3-fpm cron > /dev/null 2>&1
+    systemctl enable apache2 mariadb php8.3-fpm > /dev/null 2>&1
 
     # ── 7/8: Reiniciar serviços ──
     progress_bar 7 $total "Reiniciando serviços..."
-    systemctl restart apache2 mariadb php8.3-fpm cron > /dev/null 2>&1
+    systemctl restart apache2 mariadb php8.3-fpm > /dev/null 2>&1
     sleep 2
 
     # ── 8/8: Firewall ──
@@ -314,11 +314,7 @@ SSLVHOST
     # ── Renovação automática ──
     progress_bar 3 $total "Configurando renovação automática..."
     if ! crontab -l 2>/dev/null | grep -q "certbot renew"; then
-        (crontab -l 2>/dev/null; cat <<CRON
-# ATLAS_PANEL:ssl
-0 3 * * * certbot renew --quiet >> $LOG_FILE 2>&1
-CRON
-) | crontab -
+        (crontab -l 2>/dev/null; echo "0 3 * * * certbot renew --quiet >> $LOG_FILE 2>&1") | crontab -
         ok "Renovação SSL automática configurada (03:00)"
     fi
 
@@ -328,221 +324,6 @@ CRON
     salvar_meta "EMAIL" "$EMAIL"
 
     pause
-}
-
-# ─── Instalar helper de crons ──────────────────────────────────────────────
-
-install_cron_helper() {
-    subtitulo "Instalando helper de gerenciamento de crons..."
-
-    cat > /root/atlas_cron_helper.sh <<'HELPER'
-#!/bin/bash
-# Atlas Painel - Helper de crons (executado via sudo pelo www-data)
-# Gerencia APENAS crons marcados com # ATLAS_PANEL:<id>
-# Crons fora desse padrao (ex: SSL) sao preservados.
-
-ATLAS_MARKER="# ATLAS_PANEL:"
-WEB_ROOT="/var/www/html"
-LOG_DIR="/var/log/atlas_painel"
-mkdir -p "$LOG_DIR" 2>/dev/null
-
-cmd="${1:-}"
-shift || true
-
-case "$cmd" in
-    list)
-        crontab -l 2>/dev/null
-        ;;
-
-    status)
-        if systemctl is-active --quiet cron 2>/dev/null; then
-            echo "ACTIVE"
-        else
-            echo "INACTIVE"
-        fi
-        ;;
-
-    enabled)
-        # Lista apenas as crons do painel (sem SSL) com estado ativo/inativo
-        # Formato: id|schedule|command|state
-        crontab -l 2>/dev/null | awk -v marker="$ATLAS_MARKER" '
-            BEGIN { inblock=0; name=""; sched=""; cmd=""; state="ACTIVE" }
-            /^[[:space:]]*#/ && index($0, marker) {
-                # nova entrada
-                if (name != "") print name "|" sched "|" cmd "|" state
-                inblock=1
-                state="ACTIVE"
-                name=$0
-                sub(".*" marker, "", name)
-                sub("[[:space:]]*$", "", name)
-                sched=""
-                cmd=""
-                next
-            }
-            /^[[:space:]]*#/ {
-                if (inblock) { state="DISABLED"; next }
-            }
-            inblock && NF>0 {
-                if (sched == "") sched=$1" "$2" "$3" "$4" "$5
-                if (cmd == "") { for (i=6;i<=NF;i++) cmd = cmd (i>6?" ":"") $i }
-            }
-            END {
-                if (name != "") print name "|" sched "|" cmd "|" state
-            }
-        '
-        ;;
-
-    ssl)
-        # Imprime a cron do SSL (marcada com ATLAS_PANEL:ssl)
-        crontab -l 2>/dev/null | awk -v marker="# ATLAS_PANEL:ssl" '
-            /^[[:space:]]*#/ && index($0, marker) { inblock=1; print; next }
-            inblock && /^[[:space:]]*[^#]/ { print; inblock=0 }
-        '
-        ;;
-
-    apply)
-        # Reaplica todas as crons padrao do painel (backup, onlines, checkpag, suspenderauto)
-        # Preserva qualquer cron que nao seja ATLAS_PANEL (ex: usuario adicionou)
-        # Preserva o bloco SSL (ATLAS_PANEL:ssl)
-        tmp=$(mktemp)
-        crontab -l 2>/dev/null > "$tmp"
-
-        # Remove bloco de crons do painel (exceto SSL) - elas serao readicionadas
-        awk -v marker="$ATLAS_MARKER" '
-            /^[[:space:]]*#/ && index($0, marker) {
-                block=$0
-                inblock=1
-                next
-            }
-            inblock && /^[[:space:]]*[^#]/ { inblock=0; next }
-            inblock && /^[[:space:]]*$/ { inblock=0; next }
-            !inblock { print }
-        ' "$tmp" > "${tmp}.new"
-        mv "${tmp}.new" "$tmp"
-
-        # Adiciona as crons padrao
-        cat >> "$tmp" <<PANEL
-# ATLAS_PANEL:backup
-0 */12 * * * /usr/bin/php $WEB_ROOT/backup.php >> $LOG_DIR/backup.log 2>&1
-# ATLAS_PANEL:onlines
-* * * * * /usr/bin/php $WEB_ROOT/onlines.php >> $LOG_DIR/onlines.log 2>&1
-# ATLAS_PANEL:checkpag
-* * * * * /usr/bin/php $WEB_ROOT/checkpag.php >> $LOG_DIR/checkpag.log 2>&1
-# ATLAS_PANEL:suspenderauto
-*/30 * * * * /usr/bin/php $WEB_ROOT/admin/suspenderauto.php >> $LOG_DIR/suspenderauto.log 2>&1
-PANEL
-
-        # Limpa linhas em branco extras
-        awk 'NF' "$tmp" > "${tmp}.new" && mv "${tmp}.new" "$tmp"
-        echo "" >> "$tmp"
-
-        crontab "$tmp"
-        rm -f "$tmp"
-        echo "OK"
-        ;;
-
-    enable)
-        # Reativa (descomenta) a cron identificada
-        id="$1"
-        if [ -z "$id" ]; then echo "ERR:missing id"; exit 1; fi
-        tmp=$(mktemp)
-        crontab -l 2>/dev/null > "$tmp"
-        # Encontra a linha com o marker; descomenta apenas linhas deste bloco
-        awk -v marker="$ATLAS_MARKER$id" -v base_marker="$ATLAS_MARKER" '
-            /^[[:space:]]*#/ && index($0, marker) {
-                print
-                inblock=1
-                next
-            }
-            inblock {
-                if (/^[[:space:]]*#.*ATLAS_PANEL:/) { inblock=0; print; next }
-                if (/^[[:space:]]*#/) { sub(/^[[:space:]]*#[[:space:]]?/, ""); print; next }
-                if (NF==0) { inblock=0; print ""; next }
-                inblock=0
-                print
-                next
-            }
-            { print }
-        ' "$tmp" > "${tmp}.new"
-        mv "${tmp}.new" "$tmp"
-        if crontab "$tmp" 2>/dev/null; then
-            echo "OK"
-        else
-            echo "ERR: crontab invalido (verifique o conteudo)"
-            exit 1
-        fi
-        rm -f "$tmp"
-        ;;
-
-    disable)
-        # Desativa (comenta) a cron identificada sem remover
-        id="$1"
-        if [ -z "$id" ]; then echo "ERR:missing id"; exit 1; fi
-        tmp=$(mktemp)
-        crontab -l 2>/dev/null > "$tmp"
-        awk -v marker="$ATLAS_MARKER$id" '
-            /^[[:space:]]*#/ && index($0, marker) { print; inblock=1; next }
-            inblock {
-                if (/^[[:space:]]*#.*ATLAS_PANEL:/) { inblock=0; print; next }
-                if (NF>0 && !/^[[:space:]]*#/) { print "# " $0; next }
-                if (NF==0) { inblock=0; print ""; next }
-                inblock=0
-                print
-                next
-            }
-            { print }
-        ' "$tmp" > "${tmp}.new"
-        mv "${tmp}.new" "$tmp"
-        if crontab "$tmp" 2>/dev/null; then
-            echo "OK"
-        else
-            echo "ERR: crontab invalido"
-            exit 1
-        fi
-        rm -f "$tmp"
-        ;;
-
-    restart)
-        systemctl restart cron 2>/dev/null
-        if systemctl is-active --quiet cron; then
-            echo "OK"
-        else
-            echo "ERR: cron nao reiniciou"
-            exit 1
-        fi
-        ;;
-
-    *)
-        echo "uso: $0 {list|status|enabled|ssl|apply|enable <id>|disable <id>|restart}"
-        exit 2
-        ;;
-esac
-HELPER
-
-    chmod 700 /root/atlas_cron_helper.sh
-    chown root:root /root/atlas_cron_helper.sh
-    ok "Helper criado: /root/atlas_cron_helper.sh"
-
-    # Configurar sudoers para que www-data possa executar o helper sem senha
-    local sudoers_file="/etc/sudoers.d/atlas_cron"
-    cat > "$sudoers_file" <<SUDO
-# Permite que www-data gerencie crons do Atlas Painel via helper
-www-data ALL=(root) NOPASSWD: /root/atlas_cron_helper.sh
-SUDO
-    chmod 440 "$sudoers_file"
-    if visudo -c -f "$sudoers_file" >/dev/null 2>&1; then
-        ok "Sudoers configurado: $sudoers_file"
-    else
-        fail_ "Sintaxe invalida em $sudoers_file"
-        rm -f "$sudoers_file"
-    fi
-
-    # Garante que o servico cron esta rodando
-    if ! systemctl is-active --quiet cron 2>/dev/null; then
-        systemctl enable cron >/dev/null 2>&1
-        systemctl start cron >/dev/null 2>&1
-    fi
-    ok "Servico cron ativo"
 }
 
 # ─── Instalar Painel ───────────────────────────────────────────────────────
@@ -771,14 +552,13 @@ HTACCESS
     ok "Arquivos temporários removidos"
 
     # ── Cron ──
-    progress_bar 11 $total "Configurando gerenciamento de crons..."
-    mysql -e "ALTER TABLE configs ADD COLUMN IF NOT EXISTS cron_ativo INT(1) NOT NULL DEFAULT 1;" 2>/dev/null
-    mysql -e "UPDATE configs SET cron_ativo = 1 WHERE id = 1;" 2>/dev/null
-
-    install_cron_helper
-
-    if [ -x /root/atlas_cron_helper.sh ]; then
-        /root/atlas_cron_helper.sh apply >/dev/null 2>&1 && ok "Crons do painel aplicadas" || warn "Falha ao aplicar crons (helper apply)"
+    progress_bar 11 $total "Configurando cron..."
+    if command -v crontab &>/dev/null; then
+        (crontab -l 2>/dev/null | grep -v "cron_exec.php\|onlines.php\|checkpag.php") | crontab -
+        (crontab -l 2>/dev/null; echo "* * * * * cd /var/www/html && php cron_exec.php >/dev/null 2>&1") | crontab -
+        mysql -e "ALTER TABLE configs ADD COLUMN IF NOT EXISTS cron_ativo INT(1) NOT NULL DEFAULT 1;" 2>/dev/null
+        mysql -e "UPDATE configs SET cron_ativo = 1 WHERE id = 1;" 2>/dev/null
+        ok "Cron configurado (1 min)"
     fi
 
     # ── Recarregar Apache ──
@@ -1149,26 +929,10 @@ status_sistema() {
 
     echo -e ""
     echo -e " ${CIANO}▸ Crons${NC}"
-    if [ -x /root/atlas_cron_helper.sh ]; then
-        if systemctl is-active --quiet cron 2>/dev/null; then
-            echo -e "   Servico cron: ${VERDE}ATIVO${NC}"
-        else
-            echo -e "   Servico cron: ${VERMELHO}INATIVO${NC}"
-        fi
-        local painel_total=0 painel_ativas=0
-        while IFS='|' read -r name sched cmd state; do
-            [ -z "$name" ] && continue
-            painel_total=$((painel_total+1))
-            [ "$state" = "ACTIVE" ] && painel_ativas=$((painel_ativas+1))
-        done < <(/root/atlas_cron_helper.sh enabled 2>/dev/null)
-        echo -e "   Crons do painel: ${VERDE}${painel_ativas} ativas${NC} / ${painel_total} total"
-        if /root/atlas_cron_helper.sh ssl 2>/dev/null | grep -q "certbot renew"; then
-            echo -e "   Renovacao SSL: ${VERDE}configurada${NC}"
-        else
-            echo -e "   Renovacao SSL: ${AMARELO}nao configurada${NC}"
-        fi
+    if crontab -l 2>/dev/null | grep -q "cron_exec.php"; then
+        echo -e "   ${VERDE}Instaladas${NC}"
     else
-        echo -e "   ${AMARELO}Helper nao instalado. Use opcao 03 para instalar.${NC}"
+        echo -e "   ${AMARELO}Não instaladas${NC}"
     fi
 
     echo -e ""
@@ -1294,12 +1058,6 @@ HTACCESS
     find /var/www/html -type f -exec chmod 644 {} \;
     ok "Permissões ajustadas"
 
-    # Helper de crons (reaplica e mantem servico ativo)
-    install_cron_helper
-    if [ -x /root/atlas_cron_helper.sh ]; then
-        /root/atlas_cron_helper.sh apply >/dev/null 2>&1 && ok "Crons do painel reaplicadas" || warn "Falha ao reaplicar crons"
-    fi
-
     # ── 8/8: Recarregar Apache ──
     progress_bar 8 $total "Recarregando Apache..."
     systemctl reload apache2 > /dev/null 2>&1 || systemctl restart apache2 > /dev/null 2>&1
@@ -1331,7 +1089,7 @@ reiniciar_servicos() {
     titulo "09" "REINICIAR SERVIÇOS"
 
     load_config
-    local servicos=("apache2" "mariadb" "php8.3-fpm" "cron")
+    local servicos=("apache2" "mariadb" "php8.3-fpm")
     local total=5
 
     # ── 1/5: Status atual ──
@@ -1420,590 +1178,6 @@ reiniciar_servicos() {
     pause
 }
 
-# ─── Instalar/Reinstalar Drivers em Servidor Remoto ────────────────────────
-
-DRIVERS_DIR="/root/atlas_drivers"
-DRIVERS_BASE_URL="https://raw.githubusercontent.com/atlaspaineL/atlasPainel/main"
-DRIVERS_FILES=(
-    "atlascreate.sh"
-    "atlasteste.sh"
-    "atlasremove.sh"
-    "atlasdata.sh"
-    "add.sh"
-    "rem.sh"
-    "addteste.sh"
-    "addsinc.sh"
-    "remsinc.sh"
-    "delete.py"
-    "sincronizar.py"
-    "verificador.py"
-    "modulosinstall.sh"
-)
-
-drivers_download() {
-    # Garante que os drivers estao baixados localmente
-    mkdir -p "$DRIVERS_DIR"
-    if [ ! -f "$DRIVERS_DIR/atlascreate.sh" ]; then
-        info "Baixando drivers do GitHub..."
-        local f
-        for f in "${DRIVERS_FILES[@]}"; do
-            curl -sk --max-time 15 "$DRIVERS_BASE_URL/$f" -o "$DRIVERS_DIR/$f" 2>/dev/null
-        done
-        chmod +x "$DRIVERS_DIR"/*.sh "$DRIVERS_DIR"/*.py 2>/dev/null
-    fi
-    if [ ! -s "$DRIVERS_DIR/atlascreate.sh" ]; then
-        fail_ "Falha ao baixar drivers do GitHub"
-        return 1
-    fi
-    return 0
-}
-
-drivers_upload_one() {
-    # $1 = ssh handle, $2 = nome do arquivo
-    local ssh="$1" fname="$2"
-    local src="$DRIVERS_DIR/$fname"
-    [ ! -f "$src" ] && return 1
-    # Usa base64 para transferencia binaria segura
-    local b64
-    b64=$(base64 -w0 "$src" 2>/dev/null)
-    [ -z "$b64" ] && { echo "ERR:base64"; return 1; }
-    # Envia o conteudo decodificado para o servidor remoto
-    echo "$b64" | base64 -d > "/tmp/upload_$fname"
-    # Usa o proprio SSH para gravar
-    $ssh exec "cat > /root/$fname << 'ATLAS_EOF'
-$(cat "/tmp/upload_$fname")
-ATLAS_EOF"
-    rm -f "/tmp/upload_$fname"
-    # Verifica se gravou
-    if $ssh exec "test -s /root/$fname" >/dev/null 2>&1; then
-        return 0
-    fi
-    # Fallback: usa echo piped (para scripts sem chars problematicos)
-    echo "WARN: fallback para $fname"
-    cat "$src" | $ssh exec "cat > /root/$fname"
-    $ssh exec "test -s /root/$fname" >/dev/null 2>&1 && return 0 || return 1
-}
-
-drivers_check_remote() {
-    # $1 = ssh handle -> imprime "PRESENTE" ou lista de ausentes
-    local ssh="$1"
-    local missing=()
-    local f
-    for f in "${DRIVERS_FILES[@]}"; do
-        if [ "$f" = "modulosinstall.sh" ]; then continue; fi
-        if ! $ssh exec "test -s /root/$f" >/dev/null 2>&1; then
-            missing+=("$f")
-        fi
-    done
-    if [ ${#missing[@]} -eq 0 ]; then
-        echo "PRESENTE"
-    else
-        printf '%s\n' "${missing[@]}"
-    fi
-}
-
-drivers_test_create() {
-    # $1 = ssh handle -> testa se o atlascreate.sh funciona
-    local ssh="$1"
-    local test_user="atlastest$$"
-    local test_pass="TestPass123!"
-    local out
-    out=$($ssh exec "bash /root/atlascreate.sh $test_user $test_pass 1 1 2>&1; echo EXIT=\$?" 2>/dev/null)
-    if echo "$out" | grep -q "EXIT=0\|EXIT=\$?"; then
-        # Verifica se o usuario foi criado
-        if $ssh exec "id $test_user" >/dev/null 2>&1; then
-            # Limpa o usuario de teste
-            $ssh exec "userdel -f $test_user 2>/dev/null; sed -i '/^${test_user} /d' /root/usuarios.db 2>/dev/null; rm -f /etc/SSHPlus/senha/$test_user 2>/dev/null" >/dev/null 2>&1
-            echo "OK"
-        else
-            echo "FAIL: usuario nao foi criado. Saida: $out"
-        fi
-    else
-        echo "FAIL: $out"
-    fi
-}
-
-instalar_drivers_servidor() {
-    titulo "11" "INSTALAR/REINSTALAR DRIVERS EM SERVIDOR REMOTO"
-
-    load_config
-
-    # ── Checar dependencias locais ──
-    if ! command -v sshpass &>/dev/null; then
-        info "Instalando sshpass..."
-        DEBIAN_FRONTEND=noninteractive apt install -y sshpass >> "$LOG_FILE" 2>&1 || warn "Falha ao instalar sshpass"
-    fi
-    if ! command -v expect &>/dev/null; then
-        info "Instalando expect..."
-        DEBIAN_FRONTEND=noninteractive apt install -y expect >> "$LOG_FILE" 2>&1 || warn "Falha ao instalar expect"
-    fi
-
-    if ! drivers_download; then
-        pause
-        return
-    fi
-    ok "Drivers locais disponiveis em $DRIVERS_DIR"
-
-    # ── Listar servidores do banco ──
-    if [ -z "$DB_PASS" ]; then
-        fail_ "Banco nao configurado. Instale o painel primeiro."
-        pause
-        return
-    fi
-    local servidores
-    servidores=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
-        "SELECT id, nome, ip, porta, usuario, subid FROM servidores ORDER BY id;" 2>/dev/null)
-    if [ -z "$servidores" ]; then
-        warn "Nenhum servidor cadastrado. Adicione um servidor pelo painel primeiro."
-        pause
-        return
-    fi
-
-    echo -e ""
-    echo -e " ${CIANO}▸ Servidores cadastrados:${NC}"
-    echo -e "   ${CIANO}ID${NC}  ${CIANO}NOME${NC}                    ${CIANO}IP${NC}                ${CIANO}PORTA${NC}  ${CIANO}USER${NC}    ${CIANO}CAT${NC}"
-    linha "$CIANO"
-    local srv_ids=()
-    while IFS=$'\t' read -r sid snome sip sporta suser ssub; do
-        [ -z "$sid" ] && continue
-        srv_ids+=("$sid")
-        printf "   %-4s %-24s %-18s %-7s %-10s %s\n" "$sid" "$snome" "$sip" "$sportal" "$suser" "$ssub"
-    done <<< "$servidores"
-
-    echo -e ""
-    echo -e -n " ${BRANCO}ID do servidor para reinstalar drivers (0=voltar):${NC} "; read srv_id
-    if [ -z "$srv_id" ] || [ "$srv_id" = "0" ]; then return; fi
-
-    # Buscar dados
-    local srv_data
-    srv_data=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
-        "SELECT nome, ip, porta, usuario, senha FROM servidores WHERE id = '$srv_id' LIMIT 1;" 2>/dev/null)
-    if [ -z "$srv_data" ]; then
-        fail_ "Servidor id=$srv_id nao encontrado."
-        pause
-        return
-    fi
-    local srv_nome srv_ip srv_porta srv_user srv_pass
-    IFS=$'\t' read -r srv_nome srv_ip srv_porta srv_user srv_pass <<< "$srv_data"
-
-    echo -e ""
-    echo -e " ${CIANO}▸ Alvo:${NC} ${BRANCO}$srv_nome${NC} ($srv_ip:$srv_porta como $srv_user)"
-    linha "$AZUL"
-
-    # ── Teste de conexao SSH ──
-    info "Testando conexao SSH..."
-    if ! command -v sshpass &>/dev/null; then
-        fail_ "sshpass nao disponivel. Instale: apt install -y sshpass"
-        pause
-        return
-    fi
-
-    local ssh_test
-    ssh_test=$(sshpass -p "$srv_pass" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null \
-        -p "$srv_porta" "$srv_user@$srv_ip" "echo OK-CONNECTED" 2>&1)
-    if ! echo "$ssh_test" | grep -q "OK-CONNECTED"; then
-        fail_ "Falha no SSH: $ssh_test"
-        pause
-        return
-    fi
-    ok "SSH OK"
-
-    # ── Definir funcao de execucao remota ──
-    # Usa expect para lidar com senha de forma confiavel
-    info "Preparando executor remoto via expect..."
-    local exec_helper="/tmp/atlas_remote_exec_$$.sh"
-    cat > "$exec_helper" <<'EXPECT_EOF'
-#!/bin/bash
-# Uso: atlas_remote_exec.sh <porta> <user> <ip> <comando...>
-PORT="$1"; shift
-USER="$1"; shift
-IP="$1"; shift
-CMD="$*"
-# Codifica o comando em base64 para evitar problemas com aspas
-B64=$(echo -n "$CMD" | base64 -w0)
-sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null \
-    -p "$PORT" "$USER@$IP" "echo $B64 | base64 -d | bash"
-EXPECT_EOF
-    chmod +x "$exec_helper"
-
-    # Para upload de arquivos, usa scp
-    export PASS="$srv_pass"
-    REMOTE_SSH() {
-        # $@ = comando remoto
-        "$exec_helper" "$srv_porta" "$srv_user" "$srv_ip" "$*"
-    }
-    REMOTE_SCP() {
-        # $1 = local, $2 = remoto
-        sshpass -p "$srv_pass" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null \
-            -P "$srv_porta" "$1" "$srv_user@$srv_ip:$2"
-    }
-
-    # ── Verificar drivers atuais ──
-    info "Verificando drivers instalados no servidor..."
-    local status_atual
-    status_atual=$(REMOTE_SSH "for f in atlascreate.sh atlasteste.sh atlasremove.sh atlasdata.sh add.sh rem.sh addteste.sh addsinc.sh remsinc.sh delete.py sincronizar.py verificador.py; do if [ -s /root/\$f ]; then echo \"OK \$f\"; else echo \"FALTA \$f\"; fi; done")
-    echo "$status_atual" | sed 's/^/     /'
-
-    local tem_todos="sim"
-    if echo "$status_atual" | grep -q "FALTA"; then
-        tem_todos="nao"
-    fi
-
-    # ── Instalar cron se faltar ──
-    info "Garantindo cron instalado no servidor..."
-    if ! REMOTE_SSH "command -v crontab >/dev/null 2>&1 && echo TEM-CRON || echo SEM-CRON" | grep -q "TEM-CRON"; then
-        warn "Servidor SEM crontab. Instalando..."
-        REMOTE_SSH "DEBIAN_FRONTEND=noninteractive apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y cron >/dev/null 2>&1 && systemctl enable cron >/dev/null 2>&1 && systemctl start cron >/dev/null 2>&1 && echo INSTALADO || echo FALHOU"
-        if REMOTE_SSH "command -v crontab >/dev/null 2>&1" | grep -q ""; then
-            ok "Cron instalado no servidor"
-        else
-            warn "Nao foi possivel instalar cron (pode nao ser necessario)"
-        fi
-    else
-        ok "Cron ja disponivel no servidor"
-    fi
-
-    # ── Criar diretorios necessarios ──
-    info "Criando diretorios..."
-    REMOTE_SSH "mkdir -p /etc/SSHPlus/senha /etc/SSHPlus/userteste /etc/usuarios /root >/dev/null 2>&1; touch /root/usuarios.db; chmod 777 /root/usuarios.db"
-    ok "Diretorios OK"
-
-    # ── Upload de cada driver ──
-    local total_files=0 uploaded=0 failed=()
-    for f in atlascreate.sh atlasteste.sh atlasremove.sh atlasdata.sh \
-             add.sh rem.sh addteste.sh addsinc.sh remsinc.sh \
-             delete.py sincronizar.py verificador.py; do
-        total_files=$((total_files+1))
-        if REMOTE_SCP "$DRIVERS_DIR/$f" "/root/$f" 2>/dev/null; then
-            uploaded=$((uploaded+1))
-        else
-            failed+=("$f")
-        fi
-    done
-
-    if [ $uploaded -ne $total_files ]; then
-        warn "Upload parcial: $uploaded/$total_files. Tentando metodo alternativo..."
-        for f in "${failed[@]}"; do
-            local src="$DRIVERS_DIR/$f"
-            local b64
-            b64=$(base64 -w0 "$src" 2>/dev/null)
-            if REMOTE_SSH "echo '$b64' | base64 -d > /root/$f && chmod +x /root/$f && echo OK || echo FAIL" 2>/dev/null | grep -q "OK"; then
-                uploaded=$((uploaded+1))
-                ok "Recuperado: $f"
-            else
-                fail_ "Falha no upload de: $f"
-            fi
-        done
-    fi
-    ok "Drivers enviados: $uploaded/$total_files"
-
-    # ── Permissoes e dos2unix ──
-    info "Aplicando permissoes..."
-    REMOTE_SSH "chmod +x /root/*.sh /root/*.py 2>/dev/null; which dos2unix >/dev/null 2>&1 && dos2unix /root/*.sh /root/*.py 2>/dev/null; echo OK"
-    ok "Permissoes OK"
-
-    # ── Verificar usuarios.db ──
-    info "Verificando /root/usuarios.db..."
-    local dbcheck
-    dbcheck=$(REMOTE_SSH "if [ -s /root/usuarios.db ]; then wc -l < /root/usuarios.db; else echo 0; fi")
-    ok "usuarios.db tem $dbcheck linha(s)"
-
-    # ── Teste real: criar usuario de teste ──
-    info "Testando criacao de usuario de teste..."
-    local test_result
-    test_result=$(REMOTE_SSH "bash /root/atlascreate.sh testdriver\$\$ TestDrv123! 1 1 2>&1; echo \"---\"; id testdriver\$\$ 2>&1; echo \"---\"; userdel -f testdriver\$\$ 2>/dev/null; sed -i '/^testdriver/d' /root/usuarios.db 2>/dev/null; rm -f /etc/SSHPlus/senha/testdriver\$\$ 2>/dev/null; echo DONE")
-    if echo "$test_result" | grep -q "uid="; then
-        ok "Teste de criacao passou! (usuario foi criado e removido)"
-    else
-        warn "Teste inconclusive: $test_result"
-    fi
-
-    # ── Configurar crontab do verificador ──
-    info "Configurando crontab do verificador..."
-    REMOTE_SSH "(crontab -l 2>/dev/null | grep -v 'verificador.py' | grep -v 'modulo.py' ; echo '* * * * * python3 /root/verificador.py' ; echo '@reboot python3 /root/modulo.py' ; echo '*/10 * * * * python3 /root/modulo.py') | crontab -"
-    ok "Crontab configurado"
-
-    # ── Reiniciar modulo.py ──
-    info "Reiniciando modulo.py..."
-    REMOTE_SSH "pkill -f modulo.py 2>/dev/null; sleep 1; nohup python3 /root/modulo.py >/dev/null 2>&1 & echo REINICIADO"
-    ok "modulo.py reiniciado"
-
-    # ── Limpar arquivo temporario ──
-    rm -f "$exec_helper"
-    unset PASS
-
-    # ── Resumo ──
-    echo -e ""
-    linha "$VERDE"
-    echo -e " ${VERDE}${NEGRITO}✔ DRIVERS REINSTALADOS EM: $srv_nome ($srv_ip)${NC}"
-    echo -e ""
-    echo -e " ${BRANCO}Drivers instalados:${NC}"
-    for f in atlascreate.sh atlasteste.sh atlasremove.sh atlasdata.sh \
-             add.sh rem.sh addteste.sh addsinc.sh remsinc.sh \
-             delete.py sincronizar.py verificador.py; do
-        echo -e "   ${VERDE}✔${NC} $f"
-    done
-    echo -e ""
-    echo -e " ${BRANCO}Agora o painel ja pode criar usuarios neste servidor.${NC}"
-    echo -e " ${BRANCO}Volte ao painel e tente criar um usuario ou teste.${NC}"
-    linha "$VERDE"
-
-    pause
-}
-
-# ─── Gerenciar Crons ────────────────────────────────────────────────────────
-
-cron_decode_schedule() {
-    # Recebe "m h dom mon dow" e retorna descricao legivel
-    local s="$1"
-    local m h dom mon dow
-    read -r m h dom mon dow <<< "$s"
-    local desc=""
-
-    # Caso padrao das 4 crons do painel
-    if   [ "$m" = "0" ] && [ "$h" = "*/12" ]; then desc="a cada 12h (00:00, 12:00)"
-    elif [ "$m" = "*" ] && [ "$h" = "*" ];    then desc="a cada minuto"
-    elif [ "$m" = "*/30" ] && [ "$h" = "*" ]; then desc="a cada 30 min"
-    elif [ "$m" = "*/15" ] && [ "$h" = "*" ]; then desc="a cada 15 min"
-    elif [ "$m" = "*/5" ]  && [ "$h" = "*" ]; then desc="a cada 5 min"
-    elif [ "$m" = "*/10" ] && [ "$h" = "*" ]; then desc="a cada 10 min"
-    elif [ "$m" = "0" ] && [ "$h" = "*/2" ];  then desc="a cada 2h"
-    elif [ "$m" = "0" ] && [ "$h" = "*/3" ];  then desc="a cada 3h"
-    elif [ "$m" = "0" ] && [ "$h" = "*/6" ];  then desc="a cada 6h"
-    elif [ "$m" = "0" ] && [ "$h" = "3" ];    then desc="todo dia as 03:00"
-    elif [ "$m" = "0" ] && [ "$h" = "0" ];    then desc="todo dia a meia-noite"
-    else
-        # Fallback generico
-        case "$m" in
-            */[0-9]*) desc="cada ${m#*/} min" ;;
-            *)        desc="min ${m}" ;;
-        esac
-        case "$h" in
-            */[0-9]*) desc+=" / ciclo ${h#*/}h" ;;
-            *)        [ "$h" != "*" ] && desc+=" as ${h}h" ;;
-        esac
-    fi
-    [ "$dom" != "*" ] && desc+=" / dia ${dom}"
-    [ "$mon" != "*" ] && desc+=" / mes ${mon}"
-    [ "$dow" != "*" ] && desc+=" / sem ${dow}"
-    echo "$desc"
-}
-
-cron_resumo() {
-    # Imprime resumo rapido das crons para o menu
-    local helper="/root/atlas_cron_helper.sh"
-    if [ ! -x "$helper" ]; then
-        echo "helper ausente"
-        return
-    fi
-    local total=0 ativas=0
-    while IFS='|' read -r name sched cmd state; do
-        [ -z "$name" ] && continue
-        total=$((total+1))
-        [ "$state" = "ACTIVE" ] && ativas=$((ativas+1))
-    done < <($helper enabled 2>/dev/null)
-    echo "${ativas}|${total}"
-}
-
-gerenciar_crons() {
-    local helper="/root/atlas_cron_helper.sh"
-
-    # Garante helper instalado
-    if [ ! -x "$helper" ]; then
-        warn "Helper nao encontrado. Instalando..."
-        install_cron_helper
-    fi
-
-    while true; do
-        clear
-        titulo "10" "GERENCIAR CRONS DO PAINEL"
-
-        # ── Status do servico cron ──
-        local cron_state
-        if systemctl is-active --quiet cron 2>/dev/null; then
-            cron_state="${VERDE}ATIVO${NC}"
-        else
-            cron_state="${VERMELHO}INATIVO${NC}"
-        fi
-        echo -e " ${CIANO}▸ Servico cron:${NC} $cron_state"
-        if systemctl is-enabled --quiet cron 2>/dev/null; then
-            echo -e " ${CIANO}▸ Inicializacao automatica:${NC} ${VERDE}habilitada${NC}"
-        else
-            echo -e " ${CIANO}▸ Inicializacao automatica:${NC} ${AMARELO}desabilitada${NC}"
-        fi
-
-        # ── SSL (separado, gerenciado pela opcao 02) ──
-        echo -e ""
-        echo -e " ${CIANO}▸ Renovacao SSL:${NC}"
-        if $helper ssl 2>/dev/null | grep -q "certbot renew"; then
-            echo -e "   ${VERDE}✔${NC} Configurada (03:00 diario)"
-        else
-            echo -e "   ${AMARELO}⚠${NC} Nao configurada (use opcao 02)"
-        fi
-
-        # ── Lista de crons do painel ──
-        echo -e ""
-        echo -e " ${BRANCO}${NEGRITO}▸ Crons do painel:${NC}"
-        echo -e "   ${CIANO}ID${NC}              ${CIANO}AGENDA${NC}                          ${CIANO}COMANDO${NC}                       ${CIANO}ESTADO${NC}"
-        linha "$CIANO"
-
-        local ids=()
-        local idx=0
-        while IFS='|' read -r name sched cmd state; do
-            [ -z "$name" ] && continue
-            idx=$((idx+1))
-            ids+=("$name")
-            local st_icon st_col
-            if [ "$state" = "ACTIVE" ]; then
-                st_icon="●"; st_col="$VERDE"
-            else
-                st_icon="○"; st_col="$AMARELO"
-            fi
-            local desc
-            desc=$(cron_decode_schedule "$sched")
-            local cmd_short="$cmd"
-            [ ${#cmd_short} -gt 32 ] && cmd_short="${cmd_short:0:29}..."
-            printf "   %-15s %-32s %-32s ${st_col}%s${NC}\n" "$name" "$desc" "$cmd_short" "$st_icon $state"
-        done < <($helper enabled 2>/dev/null)
-
-        if [ $idx -eq 0 ]; then
-            echo -e "   ${AMARELO}Nenhuma cron do painel instalada.${NC}"
-            echo -e "   ${CIANO}Dica:${NC} use a opcao [A] para reaplicar as crons padrao."
-        fi
-
-        # ── Logs recentes ──
-        echo -e ""
-        echo -e " ${CIANO}▸ Ultima execucao detectada:${NC}"
-        local log_dir="/var/log/atlas_painel"
-        for f in backup onlines checkpag suspenderauto; do
-            local lf="$log_dir/$f.log"
-            if [ -f "$lf" ] && [ -s "$lf" ]; then
-                local last_line
-                last_line=$(tail -1 "$lf" 2>/dev/null)
-                local last_time
-                last_time=$(stat -c '%y' "$lf" 2>/dev/null | cut -d. -f1)
-                echo -e "   ${BRANCO}$f${NC}: $last_time"
-            fi
-        done
-
-        # ── Submenu ──
-        echo -e ""
-        linha "$AZUL"
-        echo -e " ${BRANCO}${NEGRITO}ACOES:${NC}"
-        echo -e "   ${VERMELHO}[A]${NC} Reaplicar crons padrao do painel"
-        echo -e "   ${VERMELHO}[R]${NC} Reiniciar servico cron"
-        echo -e "   ${VERMELHO}[L]${NC} Listar crontab completa"
-        echo -e "   ${VERMELHO}[E]${NC} Editar crontab manualmente"
-        echo -e "   ${VERMELHO}[D]${NC} Desativar uma cron especifica"
-        echo -e "   ${VERMELHO}[H]${NC} Reativar uma cron especifica"
-        echo -e "   ${VERMELHO}[V]${NC} Ver log de uma cron"
-        echo -e "   ${VERMELHO}[0]${NC} Voltar ao menu principal"
-        linha "$AZUL"
-
-        echo -e -n " ${BRANCO}Opcao:${NC} "; read SUB
-
-        case "$SUB" in
-            A|a)
-                info "Reaplicando crons padrao do painel..."
-                local out
-                out=$($helper apply 2>&1)
-                if [ "$out" = "OK" ]; then
-                    ok "Crons aplicadas com sucesso!"
-                else
-                    fail_ "Falha ao aplicar: $out"
-                fi
-                sleep 2
-                ;;
-            R|r)
-                info "Reiniciando servico cron..."
-                local out
-                out=$($helper restart 2>&1)
-                if [ "$out" = "OK" ]; then
-                    ok "Cron reiniciado!"
-                else
-                    fail_ "Falha: $out"
-                fi
-                sleep 2
-                ;;
-            L|l)
-                echo -e ""
-                linha "$CIANO"
-                echo -e " ${CIANO}▸ Crontab completa (root):${NC}"
-                linha "$CIANO"
-                $helper list 2>/dev/null | sed 's/^/   /'
-                echo -e ""
-                pause
-                ;;
-            E|e)
-                warn "Abrindo editor de crontab (cuidado!)"
-                sleep 1
-                crontab -e
-                pause
-                ;;
-            D|d)
-                if [ ${#ids[@]} -eq 0 ]; then
-                    warn "Nenhuma cron para desativar."
-                    sleep 1
-                    continue
-                fi
-                echo -e ""
-                echo -e -n " ${BRANCO}ID da cron para desativar:${NC} "; read cron_id
-                if [ -z "$cron_id" ]; then continue; fi
-                local out
-                out=$($helper disable "$cron_id" 2>&1)
-                if [ "$out" = "OK" ]; then
-                    ok "Cron '$cron_id' desativada."
-                else
-                    fail_ "Falha: $out"
-                fi
-                sleep 2
-                ;;
-            H|h)
-                if [ ${#ids[@]} -eq 0 ]; then
-                    warn "Nenhuma cron cadastrada. Reaplicar padrao primeiro."
-                    sleep 1
-                    continue
-                fi
-                echo -e ""
-                echo -e -n " ${BRANCO}ID da cron para reativar:${NC} "; read cron_id
-                if [ -z "$cron_id" ]; then continue; fi
-                local out
-                out=$($helper enable "$cron_id" 2>&1)
-                if [ "$out" = "OK" ]; then
-                    ok "Cron '$cron_id' reativada."
-                else
-                    fail_ "Falha: $out"
-                fi
-                sleep 2
-                ;;
-            V|v)
-                echo -e ""
-                echo -e -n " ${BRANCO}ID do log (backup/onlines/checkpag/suspenderauto):${NC} "; read log_id
-                if [ -z "$log_id" ]; then continue; fi
-                local lf="/var/log/atlas_painel/${log_id}.log"
-                if [ -f "$lf" ]; then
-                    echo -e ""
-                    linha "$CIANO"
-                    echo -e " ${CIANO}▸ Ultimas 20 linhas de $lf:${NC}"
-                    linha "$CIANO"
-                    tail -20 "$lf" 2>/dev/null | sed 's/^/   /'
-                else
-                    warn "Log nao encontrado: $lf"
-                fi
-                echo -e ""
-                pause
-                ;;
-            0|"")
-                return
-                ;;
-            *)
-                warn "Opcao invalida."
-                sleep 1
-                ;;
-        esac
-    done
-}
-
 # ─── Helpers (carregar/salvar config) ──────────────────────────────────────
 
 get_php_var() {
@@ -2067,24 +1241,6 @@ show_menu() {
     fi
     echo -e "${AZUL}|${NC}  Apache ${apache_icon}  |  MariaDB ${mariadb_icon}  |  PHP ${php_icon}"
     echo -e "${AZUL}|${NC}  SSL ${ssl_icon}${NC}"
-    local cron_icon cron_info
-    if systemctl is-active --quiet cron 2>/dev/null; then
-        if [ -x /root/atlas_cron_helper.sh ]; then
-            local resumo
-            resumo=$(cron_resumo 2>/dev/null)
-            if [ "$resumo" != "helper ausente" ] && [ -n "$resumo" ]; then
-                local ativas="${resumo%|*}" total="${resumo#*|}"
-                cron_icon="${VERDE}${ativas}/${total} ativas${NC}"
-            else
-                cron_icon="${AMARELO}sem crons${NC}"
-            fi
-        else
-            cron_icon="${AMARELO}helper ausente${NC}"
-        fi
-    else
-        cron_icon="${VERMELHO}INATIVO${NC}"
-    fi
-    echo -e "${AZUL}|${NC}  Cron ${cron_icon}${NC}"
     echo -e "${AZUL}+----------------------------------------------------------------+${NC}"
 
     local opcoes=(
@@ -2098,8 +1254,6 @@ show_menu() {
         "07:Status do Sistema"
         "08:Reinstalar Painel (atualiza arquivos, mantem banco)"
         "09:Reiniciar Servicos (Apache/MariaDB/PHP-FPM)"
-        "10:Gerenciar Crons (listar/ativar/desativar/reaplicar)"
-        "11:Reinstalar Drivers em Servidor Remoto (SSH)"
         "99:Sair"
     )
     for item in "${opcoes[@]}"; do
@@ -2126,9 +1280,7 @@ while true; do
         6|06)             desinstalar     ;;
          7|07)             status_sistema  ;;
          8|08)             reinstalar_painel  ;;
-          9|09)             reiniciar_servicos ;;
-         10|10)             gerenciar_crons   ;;
-         11|11)             instalar_drivers_servidor ;;
+         9|09)             reiniciar_servicos ;;
         99)
             echo -e "\n${VERDE} Saindo...${NC}\n"
             exit 0
