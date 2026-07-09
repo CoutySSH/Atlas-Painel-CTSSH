@@ -183,9 +183,6 @@ if (isset($_POST["criaruser"])) {
         exit;
     }
     if ($sucess) {
-        $sucess_servers_str = implode(", ", $sucess_servers);
-        $failed_servers_str = implode(", ", $failed_servers);
-        echo "<script>window.location.href = 'criado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
         date_default_timezone_set("America/Sao_Paulo");
         $data = date("Y-m-d H:i:s");
         $data = strtotime($data);
@@ -203,9 +200,16 @@ if (isset($_POST["criaruser"])) {
             $sql11 = "UPDATE atribuidos SET limite = '" . $total . "' WHERE userid = '" . $_SESSION["iduser"] . "'";
             $result11 = mysqli_query($conn, $sql11);
         }
+        $_SESSION["validadefin"] = $validadefin;
+        $loop->run();
+        $sucess_servers_str = implode(", ", $sucess_servers);
+        $failed_servers_str = implode(", ", $failed_servers);
+        echo "<script>window.location.href = 'criado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
+        ob_flush();
+        flush();
+        exit;
     }
     $_SESSION["validadefin"] = $validadefin;
-    $loop->run();
 }
 echo "    <div class=\"app-content content\">\r\n        <div class=\"content-overlay\"></div>\r\n        <div class=\"content-wrapper\">\r\n        <p class=\"text-primary\">Aqui você pode criar um usuário para seus clientes.</p>\r\n            <div class=\"content-header row\">\r\n            </div>\r\n            <div class=\"content-body\">\r\n                <section id=\"dashboard-ecommerce\">\r\n                    <div class=\"row\">\r\n                <section id=\"basic-horizontal-layouts\">\r\n                    <div class=\"row match-height\">\r\n                        <div class=\"col-md-6 col-12\">\r\n                            <div class=\"card\">\r\n                                <div class=\"card-header\">\r\n                                    <h4 class=\"card-title\">Criar Usuário</h4>\r\n                                </div>\r\n                                <div class=\"card-content\">\r\n                                    <div class=\"card-body\">\r\n                                        <form class=\"form form-horizontal\" action=\"criarusuario.php\" method=\"POST\">\r\n                                            <div class=\"form-body\">\r\n                                            <button type=\"button\" class=\"btn btn-primary mr-1 mb-1\" onclick=\"gerar()\">Gerar Aleatorio</button>\r\n                                            <p class=\"text-primary\">";
 echo $tipo;

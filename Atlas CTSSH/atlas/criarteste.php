@@ -198,9 +198,6 @@ if (isset($_POST["criaruser"])) {
         exit;
     }
     if ($sucess) {
-        $sucess_servers_str = implode(", ", $sucess_servers);
-        $failed_servers_str = implode(", ", $failed_servers);
-        echo "<script>window.location.href = 'testecriado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
         $datahoje = date("d-m-Y H:i:s");
         $sql10 = "INSERT INTO logs (revenda, byid, validade, texto, userid) VALUES ('" . $_SESSION["login"] . "', '" . $_SESSION["byid"] . "', '" . $datahoje . "', 'Criou um Teste " . $usuariofin . " de " . $validadefin . " Minutos ', '" . $_SESSION["iduser"] . "')";
         $result10 = mysqli_query($conn, $sql10);
@@ -212,6 +209,12 @@ if (isset($_POST["criaruser"])) {
         $sql9 = "INSERT INTO ssh_accounts (login, senha, expira, limite, byid, categoriaid, status, bycredit, mainid, lastview) VALUES ('" . $usuariofin . "', '" . $senhafin . "', '" . $validadefin . "', '" . $limitefin . "', '" . $_SESSION["iduser"] . "', '" . $categoria . "', 'Offline', '0', '0', '" . $notas . "')";
         $result9 = mysqli_query($conn, $sql9);
         $loop->run();
+        $sucess_servers_str = implode(", ", $sucess_servers);
+        $failed_servers_str = implode(", ", $failed_servers);
+        echo "<script>window.location.href = 'testecriado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
+        ob_flush();
+        flush();
+        exit;
     } else {
         echo "<script>alert('Erro ao criar teste, tente novamente')</script><script>window.location.href = 'criarteste.php';</script>";
         exit;

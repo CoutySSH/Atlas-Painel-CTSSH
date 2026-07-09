@@ -9,10 +9,6 @@ set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 
-// Adicione logs para debug
-$logValues = "Valores das variáveis: usuariofin={$_POST['usuariofin']}, senhafin={$_POST['senhafin']}, validadefin={$_POST['validadefin']}, limitefin={$_POST['limitefin']}";
-error_log($logValues);
-
 if (!$conn) {
     exit("Connection failed: " . mysqli_connect_error());
 }
@@ -133,9 +129,6 @@ if (isset($_POST["criaruser"])) {
     }
 
     if ($sucess) {
-        $sucess_servers_str = implode(", ", $sucess_servers);
-        $failed_servers_str = implode(", ", $failed_servers);
-        echo "<script>window.location.href = 'criado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
         $data = date("Y-m-d H:i:s");
         $data = strtotime($data);
         $data = strtotime("+" . $validadefin . " days", $data);
@@ -144,9 +137,14 @@ if (isset($_POST["criaruser"])) {
         $sql9 = "INSERT INTO ssh_accounts (login, senha, expira, limite, byid, categoriaid, lastview ,bycredit, mainid, status, whatsapp, valormensal) VALUES ('" . $usuariofin . "', '" . $senhafin . "', '" . $validadefin . "', '" . $limitefin . "', '" . $_SESSION["iduser"] . "', '" . $categoria . "', '" . $notas . "', '0', 'NULL', 'Offline', '" . $_SESSION["whatsapp"] . "', '" . $valormensal . "')";
         $result9 = mysqli_query($conn, $sql9);
         $_SESSION["validadefin"] = $validadefin;
+        $loop->run();
+        $sucess_servers_str = implode(", ", $sucess_servers);
+        $failed_servers_str = implode(", ", $failed_servers);
+        echo "<script>window.location.href = 'criado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
+        ob_flush();
+        flush();
+        exit;
     }
-
-    $loop->run();
 }
 
 echo " \r\n    <!-- BEGIN: Content-->\r\n    <div class=\"app-content content\">\r\n        <div class=\"content-overlay\"></div>\r\n        <div class=\"content-wrapper\">\r\n        <p class=\"text-primary\">Aqui você pode criar um usuário para seus clientes.</p>\r\n            <div class=\"content-header row\">\r\n            </div>\r\n            <div class=\"content-body\">\r\n                <section id=\"dashboard-ecommerce\">\r\n                    <div class=\"row\">\r\n                <section id=\"basic-horizontal-layouts\">\r\n                    <div class=\"row match-height\">\r\n                        <div class=\"col-md-6 col-12\">\r\n                            <div class=\"card\">\r\n                                <div class=\"card-header\">\r\n                                    <h4 class=\"card-title\">Criar Usuário</h4>\r\n                                </div>\r\n                                <div class=\"card-content\">\r\n                                    <div class=\"card-body\">\r\n                                        <form class=\"form form-horizontal\" action=\"criarusuario.php\" method=\"POST\">\r\n                                            <div class=\"form-body\">\r\n                                            <button type=\"button\" class=\"btn btn-primary mr-1 mb-1\" onclick=\"gerar()\">Gerar Aleatorio</button>\r\n                                                <div class=\"row\">\r\n                                                    <div class=\"col-md-4\">\r\n                                                        <label>Categoria</label>\r\n                                                    </div>\r\n                                                    <div class=\"col-md-8 form-group\">\r\n                                                        <select class=\"form-control\" name=\"categoria\">\r\n                                                            ";

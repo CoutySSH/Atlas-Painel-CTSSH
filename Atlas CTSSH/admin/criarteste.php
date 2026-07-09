@@ -11,10 +11,6 @@ include "../vendor/event/autoload.php";
 include "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 
-// Adicione logs para debug
-$logValues = "Valores das variáveis: categoria={$_POST['categoria']}, usuariofin={$_POST['usuariofin']}, senhafin={$_POST['senhafin']}, validadefin={$_POST['validadefin']}, limitefin={$_POST['limitefin']}";
-error_log($logValues);
-
 if (!$conn) {
     exit("Connection failed: " . mysqli_connect_error());
 }
@@ -39,10 +35,6 @@ if (isset($_POST["criaruser"])) {
     $notas = $_POST["notas"];
     $validadefin = $_POST["validadefin"];
     $limitefin = $_POST["limitefin"];
-    
-    // Adicione os valores ao log novamente para verificar se estão corretos
-    $logValues = "Valores das variáveis após o formulário: categoria={$categoria}, usuariofin={$usuariofin}, senhafin={$senhafin}, validadefin={$validadefin}, limitefin={$limitefin}";
-    error_log($logValues);
 
     $_POST["whatsapp"] = str_replace(" ", "", $_POST["whatsapp"]);
     $_POST["whatsapp"] = str_replace("-", "", $_POST["whatsapp"]);
@@ -143,10 +135,6 @@ if (isset($_POST["criaruser"])) {
     }
 
     if ($sucess) {
-        $sucess_servers_str = implode(", ", $sucess_servers);
-        $failed_servers_str = implode(", ", $failed_servers);
-        echo "<script>window.location.href = 'testecriado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
-
         $validade = $validadefin;
         date_default_timezone_set("America/Sao_Paulo");
         $data = date("Y-m-d H:i:s");
@@ -161,9 +149,15 @@ if (isset($_POST["criaruser"])) {
         $datahoje = date("d-m-Y H:i:s");
         $sql10 = "INSERT INTO logs (revenda, validade, texto, userid) VALUES ('" . $_SESSION["login"] . "', '" . $datahoje . "', 'Criou um Teste " . $usuariofin . " de " . $validade . " minutos', '" . $_SESSION["iduser"] . "')";
         $result10 = mysqli_query($conn, $sql10);
-    }
 
-    $loop->run();
+        $loop->run();
+        $sucess_servers_str = implode(", ", $sucess_servers);
+        $failed_servers_str = implode(", ", $failed_servers);
+        echo "<script>window.location.href = 'testecriado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";
+        ob_flush();
+        flush();
+        exit;
+    }
 }
 ?>
 
