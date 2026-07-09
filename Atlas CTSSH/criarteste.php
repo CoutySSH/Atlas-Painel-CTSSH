@@ -10,7 +10,6 @@ if (!$conn) {
 }
 set_include_path(get_include_path() . PATH_SEPARATOR . "lib2");
 include "Net/SSH2.php";
-include "vendor/event/autoload.php";
 $_GET["token"] = anti_sql($_GET["token"]);
 echo "\r\n\r\n\r\n<!DOCTYPE html>\r\n<html lang=\"pt-br\">\r\n  <head>\r\n    <!-- Required meta tags -->\r\n    <meta charset=\"utf-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">\r\n    ";
 if (isset($_GET["token"])) {
@@ -87,18 +86,17 @@ if (0 < $pesquisa_revenda->num_rows) {
         $senha = $usuario;
         $limite = 1;
         $validade = 120;
-        $loop = React\EventLoop\Factory::create();
+        
         while ($user_data = mysqli_fetch_assoc($result)) {
             $tentativas = 0;
             $conectado = false;
             while ($tentativas < 3 && !$conectado) {
                 $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
                 if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                    $loop->addTimer(0, function () use($ssh) {
+                    
                         $ssh->exec("clear");
                         $ssh->exec("./atlasteste.sh " . $usuario . " " . $senha . " " . $validade . " " . $limite . " > /dev/null 2>&1 &");
                         $ssh->exec("./atlasteste.sh " . $usuario . " " . $senha . " " . $validade . " " . $limite . " ");
-                    });
                     $criado = true;
                     $conectado = true;
                 } else {
@@ -127,7 +125,7 @@ if (0 < $pesquisa_revenda->num_rows) {
         } else {
             echo "<script>alert(\"Erro ao Criar Teste\");</script>";
         }
-        $loop->run();
+        
     }
     echo "            </div>\r\n        </div>\r\n    \r\n    <script src=\"../../../app-assets/vendors/js/vendors.min.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/pages/bootstrap-toast.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.tools.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.defaults.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.min.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/configs/vertical-menu-dark.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app-menu.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/components.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/footer.js\"></script>\r\n    \r\n</body>\r\n</html>";
 } else {

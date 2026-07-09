@@ -1,7 +1,6 @@
 <?php
 
 include_once "../atlas/conexao.php";
-include "../vendor/event/autoload.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
     exit("Connection failed: " . mysqli_connect_error());
@@ -19,7 +18,7 @@ if (0 < $result->num_rows) {
 }
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
-$loop = React\EventLoop\Factory::create();
+
 $servidores_com_erro = [];
 $sucess = false;
 $categoriaids = array_column($contasdell, "categoriaid");
@@ -36,7 +35,7 @@ if (0 < $result2->num_rows) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use ($ssh, $contasdell, $conn) {
+                
                     foreach ($contasdell as $conta) {
                         $login = $conta["login"];
                         $ssh->exec("./atlasremove.sh " . $login . " ");
@@ -44,7 +43,6 @@ if (0 < $result2->num_rows) {
                         $result3 = $conn->query($sql3);
                     }
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -56,5 +54,5 @@ if (0 < $result2->num_rows) {
         }
     }
 }
-$loop->run();
+
 ?>

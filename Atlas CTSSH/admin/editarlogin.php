@@ -10,7 +10,6 @@ set_time_limit(0);
 ignore_user_abort(true);
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
-include "../vendor/event/autoload.php";
 if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
     session_destroy();
     unset($_SESSION["login"]);
@@ -125,7 +124,7 @@ if (isset($_POST["editauser"])) {
     $data = strtotime("+" . $validadeedit . " days", $data);
     $data = date("Y-m-d H:i:s", $data);
     $validadeedit = $data;
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     $sucess_servers = [];
     $failed_servers = [];
@@ -136,11 +135,10 @@ if (isset($_POST["editauser"])) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("./atlasremove.sh " . $logineditar . "  || true && ./atlascreate.sh " . $usuarioedit . " " . $senhaedit . " " . $validade . " " . $limiteedit . " > /dev/null 2>&1");
                     $ssh->exec("rm -rf /etc/SSHPlus/userteste/" . $logineditar . ".sh > /dev/null 2>&1 || true > /dev/null 2>&1");
                     $ssh->disconnect();
-                });
                 $sucess_servers[] = $user_data["nome"];
                 $conectado = true;
                 $sucess = true;
@@ -162,10 +160,9 @@ if (isset($_POST["editauser"])) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("./atlasremove.sh " . $logineditar . "  || true && ./atlascreate.sh " . $usuarioedit . " " . $senhaedit . " " . $validade . " " . $limiteedit . "  || true && rm -rf /etc/SSHPlus/userteste/" . $logineditar . ".sh > /dev/null 2>&1 || true > /dev/null 2>&1");
                     $ssh->disconnect();
-                });
                 $sucess_servers[] = $user_data["nome"];
                 $conectado = true;
                 $sucess = true;
@@ -192,7 +189,7 @@ if (isset($_POST["editauser"])) {
     } else {
         echo "<script>alert('Erro ao editar usuario');</script>";
     }
-    $loop->run();
+    
 }
 echo "\r\n";
 function anti_sql($input)

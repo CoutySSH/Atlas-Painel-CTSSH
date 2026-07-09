@@ -14,7 +14,6 @@ include "atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 set_include_path(get_include_path() . PATH_SEPARATOR . "lib2");
 include "Net/SSH2.php";
-include "vendor/event/autoload.php";
 unlink("onlines.txt");
 $dellusers = [];
 $limiterativo = "SELECT * FROM configs WHERE id = 1";
@@ -53,14 +52,14 @@ if ($limiterativo == 1) {
 }
 $sql = "SELECT id, ip, porta, usuario, senha FROM servidores";
 $result = mysqli_query($conn, $sql);
-$loop = React\EventLoop\Factory::create();
+
 while ($user_data = mysqli_fetch_assoc($result)) {
     $tentativas = 0;
     $conectado = false;
     while ($tentativas < 2 && !$conectado) {
         $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
         if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 $output = $ssh->exec("ps -ef | grep -oP \"sshd: \\K\\w+(?= \\[priv\\])\" || true && nc -q0 127.0.0.1 7505 echo <<< \"status\" | grep -oP \".*?,\\K.*?(?=,)\" | sort | uniq | grep -v :");
                 $write = fopen("onlines.txt", "a");
                 fwrite($write, $output);
@@ -86,7 +85,6 @@ while ($user_data = mysqli_fetch_assoc($result)) {
                 mysqli_stmt_bind_param($stmt, "ii", $onlineserver, $user_data["id"]);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
-            });
             $conectado = true;
         } else {
             $tentativas++;
@@ -105,7 +103,7 @@ foreach ($servidores_com_erro as $ip) {
     while ($tentativas < 2 && !$conectado) {
         $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
         if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 $output = $ssh->exec("ps -ef | grep -oP \"sshd: \\K\\w+(?= \\[priv\\])\" && nc -q0 127.0.0.1 7505 echo <<< \"status\" | grep -oP \".*?,\\K.*?(?=,)\" | sort | uniq | grep -v :");
                 $write = fopen("onlines.txt", "a");
                 fwrite($write, $output);
@@ -131,7 +129,6 @@ foreach ($servidores_com_erro as $ip) {
                 mysqli_stmt_bind_param($stmt, "ii", $onlineserver, $user_data["id"]);
                 mysqli_stmt_execute($stmt);
                 mysqli_stmt_close($stmt);
-            });
             $conectado = true;
         } else {
             $tentativas++;
@@ -141,7 +138,7 @@ foreach ($servidores_com_erro as $ip) {
         echo "Servidor " . $user_data2["ip"] . " não está respondendo." . PHP_EOL;
     }
 }
-$loop->run();
+
 $sql22 = "DELETE FROM onlines";
 mysqli_query($conn, $sql22);
 $var = ler();

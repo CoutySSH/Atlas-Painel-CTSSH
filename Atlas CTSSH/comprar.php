@@ -9,7 +9,6 @@ if (!$conn) {
 error_reporting(0);
 set_include_path(get_include_path() . PATH_SEPARATOR . "lib2");
 include "Net/SSH2.php";
-include "vendor/event/autoload.php";
 date_default_timezone_set("America/Sao_Paulo");
 $create = "CREATE TABLE IF NOT EXISTS `bot` (\r\n    `id` int(6) unsigned NOT NULL AUTO_INCREMENT,\r\n    `app` text DEFAULT NULL,\r\n    `sender` text DEFAULT NULL,\r\n    `message` text DEFAULT NULL,\r\n    `data` text DEFAULT NULL,\r\n    `idpagamento` text DEFAULT NULL,\r\n    `access_token` text DEFAULT NULL,\r\n    `quantidadeuser` text DEFAULT NULL,\r\n    `status` text DEFAULT NULL,\r\n    PRIMARY KEY (`id`)\r\n  ) ENGINE=InnoDB AUTO_INCREMENT=129 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;";
 $conn->query($create);

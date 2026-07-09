@@ -16,7 +16,6 @@ $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
     exit("Connection failed: " . mysqli_connect_error());
 }
-include "../vendor/event/autoload.php";
 $sql5 = "SELECT * FROM atribuidos WHERE userid = '" . $_SESSION["iduser"] . "'";
 $sql5 = $conn->query($sql5);
 $row = $sql5->fetch_assoc();
@@ -91,7 +90,7 @@ if ($byid == $_SESSION["iduser"]) {
     $sucesso = 0;
     include "Net/SSH2.php";
     define("SSH_PORT", 22);
-    $loop = React\EventLoop\Factory::create();
+    
     $sql2 = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
     $result = $conn->query($sql2);
     $servidores_com_erro = [];
@@ -103,12 +102,11 @@ if ($byid == $_SESSION["iduser"]) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("rm -rf /etc/SSHPlus/userteste/" . $login . ".sh > /dev/null 2>&1 &");
                     $ssh->exec("./atlasdata.sh " . $login . " " . $dias . " > /dev/null 2>&1 &");
                     $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $dias . " " . $limite . " ");
                     $ssh->disconnect();
-                });
                 $sucess_servers[] = $user_data["nome"];
                 $conectado = true;
                 $sucess = true;
@@ -131,12 +129,11 @@ if ($byid == $_SESSION["iduser"]) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("rm -rf /etc/SSHPlus/userteste/" . $login . ".sh > /dev/null 2>&1 &");
                     $ssh->exec("./atlasdata.sh " . $login . " " . $dias . " > /dev/null 2>&1 &");
                     $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $dias . " " . $limite . " ");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess_servers[] = $user_data2["nome"];
                 $sucess = true;
@@ -165,7 +162,7 @@ if ($byid == $_SESSION["iduser"]) {
     if (!$sucess) {
         echo "Erro ao renovar!";
     }
-    $loop->run();
+    
 } else {
     echo "<script>sweetAlert('Oops...', 'Você não tem permissão para editar este usuário!', 'error').then(function(){window.location.href='../home.php'});</script>";
     unset($_POST["criaruser"]);

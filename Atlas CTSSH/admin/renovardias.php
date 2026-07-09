@@ -5,7 +5,6 @@ if (!isset($_SESSION)) {
     error_reporting(0);
     session_start();
 }
-include "../vendor/event/autoload.php";
 if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
     session_destroy();
     unset($_SESSION["login"]);
@@ -51,7 +50,7 @@ set_time_limit(0);
 ignore_user_abort(true);
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
-$loop = React\EventLoop\Factory::create();
+
 $servidores_com_erro = [];
 $sucess = false;
 $sucess_servers = [];
@@ -61,12 +60,11 @@ while ($user_data = mysqli_fetch_assoc($result)) {
     while ($tentativas < 2 && !$conectado) {
         $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
         if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 $ssh->exec("rm -rf /etc/SSHPlus/userteste/" . $login . ".sh > /dev/null 2>&1 &");
                 $ssh->exec("./atlasdata.sh " . $login . " " . $dias . " > /dev/null 2>&1 &");
                 $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $dias . " " . $limite . " ");
                 $ssh->disconnect();
-            });
             $sucess_servers[] = $user_data["nome"];
             $conectado = true;
             $sucess = true;
@@ -89,12 +87,11 @@ foreach ($servidores_com_erro as $ip) {
     while ($tentativas < 2 && !$conectado) {
         $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
         if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 $ssh->exec("rm -rf /etc/SSHPlus/userteste/" . $login . ".sh > /dev/null 2>&1 &");
                 $ssh->exec("./atlasdata.sh " . $login . " " . $dias . " > /dev/null 2>&1 &");
                 $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $dias . " " . $limite . " ");
                 $ssh->disconnect();
-            });
             $conectado = true;
             $sucess_servers[] = $user_data2["nome"];
             $sucess = true;
@@ -117,7 +114,7 @@ if ($sucess) {
 } else {
     echo json_encode(["sucesso" => false, "mensagem" => "Erro ao renovar dias!"]);
 }
-$loop->run();
+
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\\*|--|\\\\)/i", function ($match) {

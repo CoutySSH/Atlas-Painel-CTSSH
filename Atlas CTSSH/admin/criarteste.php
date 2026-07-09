@@ -7,7 +7,6 @@ set_time_limit(0);
 ignore_user_abort(true);
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
-include "../vendor/event/autoload.php";
 include "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 
@@ -64,7 +63,7 @@ if (isset($_POST["criaruser"])) {
 
     $sql4 = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
     $result4 = $conn->query($sql4);
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     define("SCRIPT_PATH", "./atlasteste.sh");
     $sucess_servers = [];
@@ -79,11 +78,10 @@ if (isset($_POST["criaruser"])) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
 
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     global $usuariofin, $senhafin, $validadefin, $limitefin;
                     $ssh->exec(SCRIPT_PATH . " " . $usuariofin . " " . $senhafin . " " . $validadefin . " " . $limitefin . " > /dev/null 2>&1 &");
                     $ssh->disconnect();
-                });
 
                 $sucess_servers[] = $user_data["nome"];
                 $conectado = true;
@@ -110,11 +108,10 @@ if (isset($_POST["criaruser"])) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
 
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     global $usuariofin, $senhafin, $validadefin, $limitefin;
                     $ssh->exec(SCRIPT_PATH . " " . $usuariofin . " " . $senhafin . " " . $validadefin . " " . $limitefin . " > /dev/null 2>&1 &");
                     $ssh->disconnect();
-                });
 
                 $sucess_servers[] = $user_data2["nome"];
                 $conectado = true;
@@ -150,7 +147,7 @@ if (isset($_POST["criaruser"])) {
         $sql10 = "INSERT INTO logs (revenda, validade, texto, userid) VALUES ('" . $_SESSION["login"] . "', '" . $datahoje . "', 'Criou um Teste " . $usuariofin . " de " . $validade . " minutos', '" . $_SESSION["iduser"] . "')";
         $result10 = mysqli_query($conn, $sql10);
 
-        $loop->run();
+        
         $sucess_servers_str = implode(", ", $sucess_servers);
         $failed_servers_str = implode(", ", $failed_servers);
         echo "<script>window.location.href = 'testecriado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";

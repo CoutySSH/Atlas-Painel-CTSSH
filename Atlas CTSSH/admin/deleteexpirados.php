@@ -19,7 +19,6 @@ if ($_SESSION["login"] == "admin") {
     if (!$conn) {
         exit("Connection failed: " . mysqli_connect_error());
     }
-    include "../vendor/event/autoload.php";
     set_time_limit(0);
     ignore_user_abort(true);
     set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
@@ -53,7 +52,7 @@ if ($_SESSION["login"] == "admin") {
     }
     $sql2 = "SELECT * FROM servidores WHERE subid = '" . $ssh_account["categoriaid"] . "'";
     $result = $conn->query($sql2);
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     $sucess = false;
     while ($user_data = mysqli_fetch_assoc($result)) {
@@ -62,14 +61,13 @@ if ($_SESSION["login"] == "admin") {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () {
+                
                     $local_file = $nome;
                     $limiter_content = file_get_contents($local_file);
                     $ssh->exec("echo \"" . $limiter_content . "\" > /root/" . $nome);
                     $ssh->exec("python3 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                     $ssh->exec("python2 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -90,14 +88,13 @@ if ($_SESSION["login"] == "admin") {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                $loop->addTimer(0, function () {
+                
                     $local_file = $nome;
                     $limiter_content = file_get_contents($local_file);
                     $ssh->exec("echo \"" . $limiter_content . "\" > /root/" . $nome);
                     $ssh->exec("python3 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                     $ssh->exec("python2 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -115,7 +112,7 @@ if ($_SESSION["login"] == "admin") {
         }
     }
     echo "<script>sweetAlert('Sucesso', 'Contas deletadas com sucesso!', 'success').then((value) => {\r\n    window.location.href = 'home.php';\r\n});</script>";
-    $loop->run();
+    
     unlink($nome);
 } else {
     echo "<script>alert('Você não tem permissão para acessar essa página!');window.location.href='../logout.php';</script>";

@@ -131,7 +131,6 @@ echo $notas;
 echo "\">\r\n                                                    </div>\r\n                                                    <div class=\"col-12 col-md-8 offset-md-4 form-group\">\r\n                                                        <fieldset>\r\n                                                            \r\n                                                        </fieldset>\r\n                                                        <code>";
 echo $tipo;
 echo "</code>\r\n                                                    </div>\r\n                                                    <div class=\"col-sm-12 d-flex justify-content-end\">\r\n                                                        <button type=\"submit\" class=\"btn btn-primary mr-1 mb-1\" name=\"editauser\">Editar</button>\r\n                                                        <button onclick=\"sair()\" type=\"button\" class=\"btn btn-light-secondary mr-1 mb-1\">Voltar</button>\r\n                                                    </div>\r\n                                                </div>\r\n                                            </div>\r\n                                        </form>\r\n                                    </div>\r\n                                </div>\r\n                            </div>\r\n                        </div>\r\n                        \r\n                        <script>\r\n                            function sair() {\r\n                                window.location.href = \"listarusuarios.php\";\r\n                            }\r\n                            function gerar() {\r\n                                var usuario = document.getElementsByName(\"usuariofin\")[0];\r\n                                var senha = document.getElementsByName(\"senhafin\")[0];\r\n                                var limite = document.getElementsByName(\"limitefin\")[0];\r\n                                var validade = document.getElementsByName(\"validadefin\")[0];\r\n                                var caracteres = \"0123456789abcdefghijklmnopqrstuvwxyz\";\r\n                                var caracteres_senha = \"0123456789abcdefghijklmnopqrstuvwxyz\";\r\n                                var usuario_gerado = \"\";\r\n                                var senha_gerada = \"\";\r\n                                for (var i = 0; i < 10; i++) {\r\n                                    usuario_gerado += caracteres.charAt(Math.floor(Math.random() * caracteres.length));\r\n                                }\r\n                                for (var i = 0; i < 10; i++) {\r\n                                    senha_gerada += caracteres_senha.charAt(Math.floor(Math.random() * caracteres_senha.length));\r\n                                }\r\n                                usuario.value = usuario_gerado;\r\n                                senha.value = senha_gerada;\r\n                                limite.value = 1;\r\n                                validade.value = 30;\r\n                            }\r\n                        </script> <script src=\"../app-assets/js/scripts/forms/number-input.js\"></script>\r\n\r\n";
-include "../vendor/event/autoload.php";
 if (isset($_POST["editauser"])) {
     $usuarioedit = $_POST["usuarioedit"];
     $senhaedit = $_POST["senhaedit"];
@@ -166,7 +165,7 @@ if (isset($_POST["editauser"])) {
     }
     $sql2 = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
     $result77 = $conn->query($sql2);
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     $sucess_servers = [];
     $failed_servers = [];
@@ -177,11 +176,10 @@ if (isset($_POST["editauser"])) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("./atlasremove.sh " . $logineditar . "  || true && ./atlascreate.sh " . $usuarioedit . " " . $senhaedit . " " . $validadeedit . " " . $limiteedit . " > /dev/null 2>&1");
                     $ssh->exec("rm -rf /etc/SSHPlus/userteste/" . $logineditar . ".sh > /dev/null 2>&1 || true > /dev/null 2>&1");
                     $ssh->disconnect();
-                });
                 $sucess_servers[] = $user_data["nome"];
                 $conectado = true;
                 $sucess = true;
@@ -220,7 +218,7 @@ if (isset($_POST["editauser"])) {
     if (!$sucess) {
         echo "<script>sweetAlert('Oops...', 'Erro ao Editar Usuario!', 'error').then(function(){window.location.href='editarlogin.php'});</script>";
     }
-    $loop->run();
+    
 }
 echo "\r\n";
 function anti_sql($input)

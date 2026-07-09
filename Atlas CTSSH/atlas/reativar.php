@@ -18,7 +18,6 @@ $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
     exit("Connection failed: " . mysqli_connect_error());
 }
-include "../vendor/event/autoload.php";
 $_GET["id"] = anti_sql($_GET["id"]);
 if (!empty($_GET["id"])) {
     $id = $_GET["id"];
@@ -47,7 +46,7 @@ if ($byid == $_SESSION["iduser"]) {
     $result = mysqli_query($conn, $sql2);
     set_time_limit(0);
     ignore_user_abort(true);
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     $sucess = false;
     while ($user_data = mysqli_fetch_assoc($result)) {
@@ -56,11 +55,10 @@ if ($byid == $_SESSION["iduser"]) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("./atlasremove.sh " . $login . " > /dev/null 2>/dev/null &");
                     $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $validade . " " . $limite . " ");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -81,11 +79,10 @@ if ($byid == $_SESSION["iduser"]) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("./atlasremove.sh " . $login . " ");
                     $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $validade . " " . $limite . " ");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -107,7 +104,7 @@ if ($byid == $_SESSION["iduser"]) {
             echo "reativado com sucesso";
         }
     }
-    $loop->run();
+    
 } else {
     echo "<script>sweetAlert('Oops...', 'Você não tem permissão para editar este usuário!', 'error').then(function(){window.location.href='../home.php'});</script>";
     unset($_POST["criaruser"]);

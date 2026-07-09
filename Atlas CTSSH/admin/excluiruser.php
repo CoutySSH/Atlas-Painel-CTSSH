@@ -5,7 +5,6 @@ if (!isset($_SESSION)) {
     error_reporting(0);
     session_start();
 }
-include "../vendor/event/autoload.php";
 if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
     session_destroy();
     unset($_SESSION["login"]);
@@ -34,7 +33,7 @@ set_time_limit(0);
 ignore_user_abort(true);
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
-$loop = React\EventLoop\Factory::create();
+
 $servidores_com_erro = [];
 $sucess = false;
 while ($user_data = mysqli_fetch_assoc($result)) {
@@ -45,11 +44,10 @@ while ($user_data = mysqli_fetch_assoc($result)) {
         $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
         if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
             error_log("Conexão SSH bem-sucedida para " . $user_data["ip"]);
-            $loop->addTimer(0, function () use ($ssh, $login) {
+            
                 error_log("Executando comando SSH");
                 $ssh->exec("./atlasremove.sh " . $login . " ");
                 $ssh->disconnect();
-            });
             $conectado = true;
             $sucess = true;
         } else {
@@ -72,11 +70,10 @@ while ($user_data = mysqli_fetch_assoc($result)) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
                 error_log("Conexão SSH bem-sucedida para " . $user_data2["ip"]);
-                $loop->addTimer(0, function () use ($ssh, $login) {
+                
                     error_log("Executando comando SSH");
                     $ssh->exec("./atlasremove.sh " . $login . " ");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -94,7 +91,7 @@ if ($sucess = true) {
     $sql3 = "DELETE FROM ssh_accounts WHERE id = '" . $id . "'";
     $result = mysqli_query($conn, $sql3);
 }
-$loop->run();
+
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\\*|--|\\\\)/i", function ($match) {

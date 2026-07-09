@@ -7,7 +7,6 @@ set_time_limit(0);
 ignore_user_abort(true);
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
-include "../vendor/event/autoload.php";
 include "conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
@@ -126,7 +125,7 @@ if (isset($_POST["criaruser"])) {
     }
     $sql = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
     $result = $conn->query($sql);
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     define("SCRIPT_PATH", "./atlascreate.sh");
     $sucess_servers = [];
@@ -138,10 +137,9 @@ if (isset($_POST["criaruser"])) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec(SCRIPT_PATH . " " . $usuariofin . " " . $senhafin . " " . $validadefin . " " . $limitefin . " ");
                     $ssh->disconnect();
-                });
                 $sucess_servers[] = $user_data["nome"];
                 $conectado = true;
                 $sucess = true;
@@ -163,10 +161,9 @@ if (isset($_POST["criaruser"])) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec(SCRIPT_PATH . " " . $usuariofin . " " . $senhafin . " " . $validadefin . " " . $limitefin . " > /dev/null 2>&1 &");
                     $ssh->disconnect();
-                });
                 $sucess_servers[] = $user_data2["nome"];
                 $conectado = true;
                 $sucess = true;
@@ -201,7 +198,7 @@ if (isset($_POST["criaruser"])) {
             $result11 = mysqli_query($conn, $sql11);
         }
         $_SESSION["validadefin"] = $validadefin;
-        $loop->run();
+        
         $sucess_servers_str = implode(", ", $sucess_servers);
         $failed_servers_str = implode(", ", $failed_servers);
         echo "<script>window.location.href = 'criado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";

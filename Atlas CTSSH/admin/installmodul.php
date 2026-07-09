@@ -17,6 +17,7 @@ if ($_SESSION["login"] != "admin") {
     exit;
 }
 include "Net/SSH2.php";
+include "Net/SCP.php";
 $_GET["id"] = anti_sql($_GET["id"]);
 $id = $_GET["id"];
 $sql = "SELECT * FROM servidores WHERE id = '" . $id . "'";
@@ -42,12 +43,17 @@ if (!$ssh->login($usuarioservidor, $senhaservidor)) {
 }
 echo "Servidor conectado com sucesso";
 $dominio = $_SERVER["HTTP_HOST"];
-$modulo = "rm atlasdata.sh || true && rm atlascreate.sh || true && rm atlasteste.sh || true && rm atlasremove.sh || true && rm delete.py || true && rm sincronizar.py || true &&\r\nwget https://painelpro.shop/modulos/atlascreate.sh && chmod 777 atlascreate.sh && wget https://painelpro.shop/modulos/atlasteste.sh && chmod 777 atlasteste.sh && wget https://painelpro.shop/modulos/atlasremove.sh && chmod 777 atlasremove.sh && wget https://painelpro.shop/modulos/delete.py && wget https://painelpro.shop/modulos/atlasdata.sh && chmod 777 atlasdata.sh && chmod 777 delete.py && wget https://painelpro.shop/modulos/sincronizar.py && chmod 777 sincronizar.py && pkill -f modulo.py > /dev/null 2>&1";
+
 $existingCrontab = $ssh->exec("crontab -l");
 if (strpos($existingCrontab, "*/10 * * * * python3 /root/modulo.py") == false) {
     $ssh->exec(" crontab -l | { cat; echo \"@reboot python3 /root/modulo.py\"; } | crontab - && crontab -l | { cat; echo \"*/10 * * * * python3 /root/modulo.py\"; } | crontab -");
 }
-$ssh->exec($modulo);
+$scp = new Net_SCP($ssh);
+foreach (glob('/var/www/html/modulos/*') as $m) {
+    $scp->put(basename($m), $m, NET_SCP_LOCAL_FILE);
+    $ssh->exec("chmod 777 " . basename($m));
+}
+
 $ssh->exec("apt-get install python3 -y > /dev/null 2>&1");
 $ssh->exec("echo \"" . $modulocreate . "\" > modulo.py && sudo pkill -f modulo.py || true");
 $ssh->exec("nohup python3 modulo.py > /dev/null 2>&1 &");

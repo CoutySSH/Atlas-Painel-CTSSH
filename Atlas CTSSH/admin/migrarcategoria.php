@@ -6,7 +6,6 @@ if (!isset($_SESSION)) {
     error_reporting(0);
     session_start();
 }
-include "../vendor/event/autoload.php";
 if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
     session_destroy();
     unset($_SESSION["login"]);
@@ -204,7 +203,7 @@ foreach ($ssh_accounts as $ssh_account) {
 $sql2 = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
 $result = $conn->query($sql2);
 if (0 < $result->num_rows) {
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     $sucess = false;
     while ($user_data = mysqli_fetch_assoc($result)) {
@@ -213,14 +212,13 @@ if (0 < $result->num_rows) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () {
+                
                     $local_file = $nome;
                     $limiter_content = file_get_contents($local_file);
                     $ssh->exec("echo \"" . $limiter_content . "\" > /root/" . $nome);
                     $ssh->exec("python3 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                     $ssh->exec("python2 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -244,7 +242,7 @@ if (0 < $result->num_rows) {
         $result6 = $conn->query($sql6);
     }
     echo "<script>location.href='reativarrevenda.php?id=" . $id . "';</script>";
-    $loop->run();
+    
 } else {
     foreach ($contas as $conta) {
         $sql5 = "UPDATE ssh_accounts SET categoriaid = '" . $idcategoria . "' WHERE byid = '" . $conta["id"] . "'";

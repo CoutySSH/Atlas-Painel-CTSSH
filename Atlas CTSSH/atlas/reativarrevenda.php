@@ -6,7 +6,6 @@ if (!isset($_SESSION)) {
     error_reporting(0);
     session_start();
 }
-include "../vendor/event/autoload.php";
 if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
     session_destroy();
     unset($_SESSION["login"]);
@@ -221,7 +220,7 @@ if ($byid == $_SESSION["iduser"]) {
     $sql2 = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
     $result = $conn->query($sql2);
     if (0 < $result->num_rows) {
-        $loop = React\EventLoop\Factory::create();
+        
         $servidores_com_erro = [];
         $sucess = false;
         while ($user_data = mysqli_fetch_assoc($result)) {
@@ -230,14 +229,13 @@ if ($byid == $_SESSION["iduser"]) {
             while ($tentativas < 2 && !$conectado) {
                 $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
                 if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                    $loop->addTimer(0, function () {
+                    
                         $local_file = $nome;
                         $limiter_content = file_get_contents($local_file);
                         $ssh->exec("echo \"" . $limiter_content . "\" > /root/" . $nome);
                         $ssh->exec("python3 /root/sincronizar.py " . $nome . " > /dev/null 2>/dev/null &");
                         $ssh->exec("python2 /root/sincronizar.py " . $nome . " > /dev/null 2>/dev/null &");
                         $ssh->disconnect();
-                    });
                     $conectado = true;
                     $sucess = true;
                 } else {
@@ -258,14 +256,13 @@ if ($byid == $_SESSION["iduser"]) {
             while ($tentativas < 2 && !$conectado) {
                 $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
                 if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                    $loop->addTimer(0, function () {
+                    
                         $local_file = $nome;
                         $limiter_content = file_get_contents($local_file);
                         $ssh->exec("echo \"" . $limiter_content . "\" > /root/" . $nome);
                         $ssh->exec("python3 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                         $ssh->exec("python2 /root/delete.py " . $nome . " > /dev/null 2>/dev/null &");
                         $ssh->disconnect();
-                    });
                     $conectado = true;
                     $sucess = true;
                 } else {
@@ -301,7 +298,7 @@ if ($byid == $_SESSION["iduser"]) {
     } else {
         echo "<script>swal('Erro!', 'Erro ao Reativar revendedor!', 'error').then(function() { window.location.href = 'listarrevendedores.php'; });</script>";
     }
-    $loop->run();
+    
     unlink($nome);
 } else {
     echo "<script>sweetAlert('Oops...', 'Você não tem permissão para editar este usuário!', 'error').then(function(){window.location.href='../home.php'});</script>";

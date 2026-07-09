@@ -5,7 +5,6 @@ if (!isset($_SESSION)) {
     error_reporting(0);
     session_start();
 }
-include "../vendor/event/autoload.php";
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
 if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
@@ -35,7 +34,7 @@ if ($byid == $_SESSION["iduser"]) {
     mysqli_stmt_bind_param($stmt2, "i", $categoria);
     mysqli_stmt_execute($stmt2);
     $result = mysqli_stmt_get_result($stmt2);
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     $sucess = false;
     while ($user_data = mysqli_fetch_assoc($result)) {
@@ -44,11 +43,10 @@ if ($byid == $_SESSION["iduser"]) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
             if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("./atlasremove.sh " . $login . " ");
                     $ssh->exec("./atlasremove.sh " . $login . "");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -69,11 +67,10 @@ if ($byid == $_SESSION["iduser"]) {
         while ($tentativas < 2 && !$conectado) {
             $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
             if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-                $loop->addTimer(0, function () use($ssh) {
+                
                     $ssh->exec("./atlasremove.sh " . $login . " ");
                     $ssh->exec("./atlasremove.sh " . $login . "");
                     $ssh->disconnect();
-                });
                 $conectado = true;
                 $sucess = true;
             } else {
@@ -96,7 +93,7 @@ if ($byid == $_SESSION["iduser"]) {
             mysqli_stmt_execute($stmt3);
         }
     }
-    $loop->run();
+    
 } else {
     echo "<script>sweetAlert('Oops...', 'Você não tem permissão para editar este usuário!', 'error').then(function(){window.location.href='../home.php'});</script>";
     unset($_POST["criaruser"]);

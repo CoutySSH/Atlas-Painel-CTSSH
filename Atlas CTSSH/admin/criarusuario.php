@@ -2,7 +2,6 @@
 session_start();
 error_reporting(0);
 include "../atlas/conexao.php";
-include "../vendor/event/autoload.php";
 set_time_limit(0);
 ignore_user_abort(true);
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
@@ -80,7 +79,7 @@ if (isset($_POST["criaruser"])) {
 
     $sql = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
     $result = $conn->query($sql);
-    $loop = React\EventLoop\Factory::create();
+    
     $servidores_com_erro = [];
     define("SCRIPT_PATH", "./atlascreate.sh");
     $sucess_servers = [];
@@ -95,7 +94,7 @@ if (isset($_POST["criaruser"])) {
 
         if ($socket) {
             fclose($socket);
-            $loop->addTimer(0, function () use($user_data, $usuariofin, $senhafin, $validadefin, $limitefin) {
+            
                 // Exemplo de escape usando escapeshellarg
                 $comando = "sudo ./atlascreate.sh " . escapeshellarg($usuariofin) . " " . escapeshellarg($senhafin) . " " . escapeshellarg($validadefin) . " " . escapeshellarg($limitefin);
 
@@ -110,7 +109,6 @@ if (isset($_POST["criaruser"])) {
                 curl_setopt($ch, CURLOPT_POSTFIELDS, "comando=" . $comando);
                 $output = curl_exec($ch);
                 curl_close($ch);
-            });
 
             $conectado = true;
             $sucess_servers[] = $user_data["nome"];
@@ -137,7 +135,7 @@ if (isset($_POST["criaruser"])) {
         $sql9 = "INSERT INTO ssh_accounts (login, senha, expira, limite, byid, categoriaid, lastview ,bycredit, mainid, status, whatsapp, valormensal) VALUES ('" . $usuariofin . "', '" . $senhafin . "', '" . $validadefin . "', '" . $limitefin . "', '" . $_SESSION["iduser"] . "', '" . $categoria . "', '" . $notas . "', '0', 'NULL', 'Offline', '" . $_SESSION["whatsapp"] . "', '" . $valormensal . "')";
         $result9 = mysqli_query($conn, $sql9);
         $_SESSION["validadefin"] = $validadefin;
-        $loop->run();
+        
         $sucess_servers_str = implode(", ", $sucess_servers);
         $failed_servers_str = implode(", ", $failed_servers);
         echo "<script>window.location.href = 'criado.php?sucess=" . $sucess_servers_str . "&failed=" . $failed_servers_str . "';</script>";

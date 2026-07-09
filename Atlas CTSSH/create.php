@@ -8,7 +8,6 @@ include "atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 set_include_path(get_include_path() . PATH_SEPARATOR . "lib2");
 include "Net/SSH2.php";
-include "vendor/event/autoload.php";
 $categoria = $_POST["categoria"];
 $usuario = $_POST["usuario"];
 $senha = $_POST["senha"];
@@ -17,14 +16,14 @@ $validade = $_POST["validade"];
 $tipo = $_POST["tipo"];
 $sql = "SELECT id, ip, porta, usuario, senha FROM servidores WHERE subid = '" . $categoria . "'";
 $result = mysqli_query($conn, $sql);
-$loop = React\EventLoop\Factory::create();
+
 while ($user_data = mysqli_fetch_assoc($result)) {
     $tentativas = 0;
     $conectado = false;
     while ($tentativas < 3 && !$conectado) {
         $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
         if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 if ($tipo == "teste") {
                     $ssh->exec("clear");
                     $ssh->exec("./atlasteste.sh " . $usuario . " " . $senha . " " . $validade . " " . $limite . " > /dev/null 2>&1 &");
@@ -34,13 +33,12 @@ while ($user_data = mysqli_fetch_assoc($result)) {
                     $ssh->exec("./atlascreate.sh " . $usuario . " " . $senha . " " . $validade . " " . $limite . " > /dev/null 2>&1 &");
                     $ssh->exec("./atlascreate.sh " . $usuario . " " . $senha . " " . $validade . " " . $limite . " ");
                 }
-            });
             $conectado = true;
         } else {
             $tentativas++;
         }
     }
 }
-$loop->run();
+
 
 ?>

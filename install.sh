@@ -21,7 +21,7 @@ CONEXAO_PATH="/var/www/html/atlas/conexao.php"
 BACKUP_DIR="/root/backups/atlas_$(date +%Y%m%d_%H%M%S)"
 REQUIRED_DISK_MB=2048
 REQUIRED_RAM_MB=512
-SCRIPT_VER="1.0.2"
+SCRIPT_VER="1.0.3"
 
 # ─── Detectar SO ─────────────────────────────────────────────────────────────
 if [ -f /etc/os-release ]; then

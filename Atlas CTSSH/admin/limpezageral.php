@@ -13,7 +13,6 @@ if (!isset($_SESSION["login"]) || !isset($_SESSION["senha"])) {
     header("Location: index.php");
     exit;
 }
-include "../vendor/event/autoload.php";
 if ($_SESSION["login"] != "admin") {
     echo "Você não tem permissão para acessar essa página";
     exit;
@@ -23,7 +22,7 @@ include "Net/SSH2.php";
 $limpeza = "wget https://cdn.discordapp.com/attachments/942800753309921290/1103190568911257670/limpeza.sh && chmod 777 limpeza.sh && ./limpeza.sh > /dev/null 2>&1";
 $sql = "SELECT * FROM servidores";
 $result = $conn->query($sql);
-$loop = React\EventLoop\Factory::create();
+
 $servidores_com_erro = [];
 $sucess = false;
 while ($user_data = mysqli_fetch_assoc($result)) {
@@ -32,10 +31,9 @@ while ($user_data = mysqli_fetch_assoc($result)) {
     while ($tentativas < 2 && !$conectado) {
         $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
         if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 $ssh->exec($limpeza);
                 $ssh->disconnect();
-            });
             $conectado = true;
             $sucess = true;
         } else {
@@ -51,6 +49,6 @@ if ($sucess) {
 } else {
     echo "<script>sweetAlert(\"Erro!\", \"Não foi possível limpar os servidores!\", \"error\").then((value) => { window.location.href = \"servidores.php\"; });</script>";
 }
-$loop->run();
+
 
 ?>

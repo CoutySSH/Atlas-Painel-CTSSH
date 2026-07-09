@@ -7,7 +7,6 @@ if (!isset($_SESSION)) {
 }
 set_time_limit(0);
 ignore_user_abort(true);
-include "../vendor/event/autoload.php";
 set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 include "Net/SSH2.php";
 if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
@@ -44,7 +43,7 @@ if ($validade == 0) {
 }
 $sql2 = "SELECT * FROM servidores WHERE subid = '" . $categoria . "'";
 $result = mysqli_query($conn, $sql2);
-$loop = React\EventLoop\Factory::create();
+
 $servidores_com_erro = [];
 $sucess = false;
 while ($user_data = mysqli_fetch_assoc($result)) {
@@ -53,11 +52,10 @@ while ($user_data = mysqli_fetch_assoc($result)) {
     while ($tentativas < 2 && !$conectado) {
         $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
         if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 $ssh->exec("./atlasremove.sh " . $login . " ");
                 $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $validade . " " . $limite . " ");
                 $ssh->disconnect();
-            });
             $conectado = true;
             $sucess = true;
         } else {
@@ -78,11 +76,10 @@ foreach ($servidores_com_erro as $ip) {
     while ($tentativas < 2 && !$conectado) {
         $ssh = new Net_SSH2($user_data2["ip"], $user_data2["porta"]);
         if ($ssh->login($user_data2["usuario"], $user_data2["senha"])) {
-            $loop->addTimer(0, function () use($ssh) {
+            
                 $ssh->exec("./atlasremove.sh " . $login . " ");
                 $ssh->exec("./atlascreate.sh " . $login . " " . $senha . " " . $validade . " " . $limite . " ");
                 $ssh->disconnect();
-            });
             $conectado = true;
             $sucess = true;
         } else {
@@ -101,7 +98,7 @@ if ($sucess) {
     }
     echo "reativado com sucesso";
 }
-$loop->run();
+
 mysqli_close($conn);
 function anti_sql($input)
 {
