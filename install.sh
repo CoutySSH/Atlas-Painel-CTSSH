@@ -21,8 +21,7 @@ CONEXAO_PATH="/var/www/html/atlas/conexao.php"
 BACKUP_DIR="/root/backups/atlas_$(date +%Y%m%d_%H%M%S)"
 REQUIRED_DISK_MB=2048
 REQUIRED_RAM_MB=512
-SCRIPT_VER="1.1"
-PHP_VER="8.1"
+SCRIPT_VER="1.0.2"
 
 # ─── Detectar SO ─────────────────────────────────────────────────────────────
 if [ -f /etc/os-release ]; then
@@ -30,6 +29,9 @@ if [ -f /etc/os-release ]; then
 elif [ -f /usr/lib/os-release ]; then
     . /usr/lib/os-release
 fi
+
+# ─── Detectar PHP ideal baseado na versão do SO ──
+PHP_VER="8.1"
 
 # ─── Funções Core ───────────────────────────────────────────────────────────
 
@@ -107,30 +109,51 @@ prepare_system() {
 
     check_requirements
     log "Iniciando preparação do sistema..."
+    log "SO: ${PRETTY_NAME:-${ID} ${VERSION_ID}} | PHP detectado: ${PHP_VER}"
     local total=8
 
     # ── 1/8: Repositório PHP ──
     progress_bar 1 $total "Repositórios PHP..."
-    if ! apt-cache show php${PHP_VER} &>/dev/null; then
-        local php_repo_added=false
+    local php_repo_added=false
+    if apt-cache show php${PHP_VER} &>/dev/null; then
+        php_repo_added=true
+    else
         if [ "$ID" = "ubuntu" ]; then
-            # Tenta via add-apt-repository
             if ! command -v add-apt-repository &>/dev/null; then
                 apt install -y software-properties-common >> "$LOG_FILE" 2>&1
             fi
+            # Método 1: add-apt-repository
             if command -v add-apt-repository &>/dev/null; then
-                add-apt-repository -y ppa:ondrej/php >> "$LOG_FILE" 2>&1 && php_repo_added=true
+                add-apt-repository -y ppa:ondrej/php >> "$LOG_FILE" 2>&1
+                if [ $? -eq 0 ]; then
+                    php_repo_added=true
+                fi
             fi
-            # Fallback manual se add-apt-repository não funcionou
+            # Método 2: fallback manual via sources.list
             if [ "$php_repo_added" = false ]; then
                 info "Adicionando PPA ondrej/php manualmente..."
                 local php_repo_keyring="/usr/share/keyrings/ondrej-php.gpg"
-                apt install -y gpg ca-certificates >> "$LOG_FILE" 2>&1
-                gpg --keyserver keyserver.ubuntu.com --recv-keys 14AA40EC0831756756D7F66C4F4EA0AAE5267A6C >> "$LOG_FILE" 2>&1 || \
-                    curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4F4EA0AAE5267A6C" 2>/dev/null | gpg --dearmor -o "$php_repo_keyring"
-                gpg --export 14AA40EC0831756756D7F66C4F4EA0AAE5267A6C > "$php_repo_keyring" 2>/dev/null || true
-                echo "deb [signed-by=$php_repo_keyring] http://ppa.launchpadcontent.net/ondrej/php/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ondrej-php.list
-                php_repo_added=true
+                apt install -y gpg ca-certificates curl >> "$LOG_FILE" 2>&1
+                mkdir -p /usr/share/keyrings
+                curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0x4F4EA0AAE5267A6C" 2>/dev/null \
+                    | gpg --dearmor -o "$php_repo_keyring" 2>> "$LOG_FILE"
+                if [ -s "$php_repo_keyring" ]; then
+                    echo "deb [signed-by=$php_repo_keyring] http://ppa.launchpadcontent.net/ondrej/php/ubuntu $(lsb_release -sc) main" \
+                        > /etc/apt/sources.list.d/ondrej-php.list
+                    php_repo_added=true
+                fi
+            fi
+            # Método 3: mirror alternativo
+            if [ "$php_repo_added" = false ]; then
+                info "Tentando mirror alternativo..."
+                local php_repo_keyring="/usr/share/keyrings/ondrej-php.gpg"
+                curl -fsSL "https://packages.sury.org/php/apt.gpg" 2>/dev/null \
+                    | gpg --dearmor -o "$php_repo_keyring" 2>> "$LOG_FILE"
+                if [ -s "$php_repo_keyring" ]; then
+                    echo "deb [signed-by=$php_repo_keyring] https://ppa.launchpadcontent.net/ondrej/php/ubuntu $(lsb_release -sc) main" \
+                        > /etc/apt/sources.list.d/ondrej-php.list
+                    php_repo_added=true
+                fi
             fi
         elif [ "$ID" = "debian" ]; then
             apt install -y apt-transport-https lsb-release ca-certificates curl >> "$LOG_FILE" 2>&1
@@ -138,16 +161,22 @@ prepare_system() {
             echo "deb [signed-by=/usr/share/keyrings/sury-php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/sury-php.list
             php_repo_added=true
         fi
-        if [ "$php_repo_added" = true ]; then
-            ok "Repositório PHP configurado"
-        else
-            warn "Não foi possível configurar repositório PHP. A instalação pode falhar."
-        fi
     fi
 
     # ── 2/8: apt update ──
     progress_bar 2 $total "Atualizando lista de pacotes..."
-    apt update -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt update."
+    if [ "$php_repo_added" = true ]; then
+        apt update -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt update."
+    else
+        warn "Repositório PHP não adicionado. Tentando atualizar..."
+        apt update -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt update."
+    fi
+
+    # Verificar se PHP ficou disponível após update
+    if ! apt-cache show php${PHP_VER} &>/dev/null; then
+        error_exit "PHP ${PHP_VER} não encontrado nos repositórios. Verifique a VPS e tente novamente."
+    fi
+    ok "Repositório PHP configurado"
 
     # ── 3/8: apt upgrade ──
     progress_bar 3 $total "Atualizando pacotes instalados..."
