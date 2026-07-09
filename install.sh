@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ===========================================================================
-#  install01.sh - Atlas Web 2026 - Instalador Otimizado
+#  install.sh - Atlas Web 2026 - Instalador Otimizado
 # ===========================================================================
 #  Requer: Ubuntu 20.04+ / Debian 11+ | RAM >= 512MB | Disco >= 2GB livre
 #  Modo de uso:
@@ -12,7 +12,7 @@
 # ─── Cores ──────────────────────────────────────────────────────────────────
 VERDE='\033[0;32m'; AZUL='\033[0;34m'; AMARELO='\033[1;33m'
 VERMELHO='\033[0;31m'; CIANO='\033[0;36m'; BRANCO='\033[1;37m'
-NEGRITO='\033[1m'; NC='\033[0m'
+NEGRITO='\033[1m'; NC='\033[0m'; BG_VERDE='\033[42m'
 
 # ─── Config Globais ─────────────────────────────────────────────────────────
 LOG_FILE="/var/log/atlas_install01.log"
@@ -21,7 +21,8 @@ CONEXAO_PATH="/var/www/html/atlas/conexao.php"
 BACKUP_DIR="/root/backups/atlas_$(date +%Y%m%d_%H%M%S)"
 REQUIRED_DISK_MB=2048
 REQUIRED_RAM_MB=512
-SCRIPT_VER="1.0"
+SCRIPT_VER="1.1"
+PHP_VER="8.1"
 
 # ─── Detectar SO ─────────────────────────────────────────────────────────────
 if [ -f /etc/os-release ]; then
@@ -85,15 +86,17 @@ backup_file() {
     fi
 }
 
-restore_backup() {
-    local file="$1"
-    local base="$(basename "$file")"
-    local bak="$BACKUP_DIR/$base.bak"
-    if [ -f "$bak" ]; then
-        cp "$bak" "$file"
-        ok "Restaurado: $file"
-    else
-        warn "Backup não encontrado: $bak"
+# ─── Checagem de Pré-requisitos ─────────────────────────────────────────────
+
+check_requirements() {
+    local ram_mb disk_mb
+    ram_mb=$(free -m 2>/dev/null | awk '/^Mem:/ {print $2}')
+    disk_mb=$(df -m / 2>/dev/null | awk 'NR==2 {print $4}')
+    if [ -n "$ram_mb" ] && [ "$ram_mb" -lt "$REQUIRED_RAM_MB" ]; then
+        warn "RAM detectada: ${ram_mb}MB (mínimo recomendado: ${REQUIRED_RAM_MB}MB)"
+    fi
+    if [ -n "$disk_mb" ] && [ "$disk_mb" -lt "$REQUIRED_DISK_MB" ]; then
+        warn "Disco livre: ${disk_mb}MB (mínimo recomendado: ${REQUIRED_DISK_MB}MB)"
     fi
 }
 
@@ -102,12 +105,13 @@ restore_backup() {
 prepare_system() {
     titulo "01" "PREPARANDO O SISTEMA"
 
+    check_requirements
     log "Iniciando preparação do sistema..."
     local total=8
 
     # ── 1/8: Repositório PHP ──
     progress_bar 1 $total "Repositórios PHP..."
-    if ! apt-cache show php8.3 &>/dev/null; then
+    if ! apt-cache show php${PHP_VER} &>/dev/null; then
         local php_repo_added=false
         if [ "$ID" = "ubuntu" ]; then
             # Tenta via add-apt-repository
@@ -150,12 +154,12 @@ prepare_system() {
     apt upgrade -y >> "$LOG_FILE" 2>&1 || warn "Falha no apt upgrade."
 
     # ── 4/8: Instalar dependências ──
-    progress_bar 4 $total "Instalando Apache + PHP 8.3..."
+    progress_bar 4 $total "Instalando Apache + PHP ${PHP_VER}..."
     local deps=(
         apache2 mariadb-server certbot python3-certbot-apache
         curl wget unzip git openssl cron sudo
-        php8.3 php8.3-mysql php8.3-curl php8.3-zip php8.3-xml
-        php8.3-mbstring php8.3-cli php8.3-common php8.3-fpm php-ssh2
+        php${PHP_VER} php${PHP_VER}-mysql php${PHP_VER}-curl php${PHP_VER}-zip php${PHP_VER}-xml
+        php${PHP_VER}-mbstring php${PHP_VER}-cli php${PHP_VER}-common php${PHP_VER}-fpm php${PHP_VER}-ssh2
     )
     DEBIAN_FRONTEND=noninteractive apt install -y "${deps[@]}" >> "$LOG_FILE" 2>&1
     if [ $? -ne 0 ]; then
@@ -166,15 +170,15 @@ prepare_system() {
     progress_bar 5 $total "Ativando módulos do Apache..."
     a2dismod -f mpm_prefork > /dev/null 2>&1 || true
     a2enmod rewrite ssl proxy_fcgi setenvif headers mpm_event > /dev/null 2>&1
-    a2enconf php8.3-fpm > /dev/null 2>&1
+    a2enconf php${PHP_VER}-fpm > /dev/null 2>&1
 
     # ── 6/8: Habilitar serviços ──
     progress_bar 6 $total "Habilitando serviços..."
-    systemctl enable apache2 mariadb php8.3-fpm cron > /dev/null 2>&1
+    systemctl enable apache2 mariadb php${PHP_VER}-fpm cron > /dev/null 2>&1
 
     # ── 7/8: Reiniciar serviços ──
     progress_bar 7 $total "Reiniciando serviços..."
-    systemctl restart apache2 mariadb php8.3-fpm cron > /dev/null 2>&1
+    systemctl restart apache2 mariadb php${PHP_VER}-fpm cron > /dev/null 2>&1
     sleep 2
 
     # ── 8/8: Firewall ──
@@ -561,7 +565,7 @@ install_panel() {
         systemctl start mariadb >> "$LOG_FILE" 2>&1 || error_exit "MariaDB não inicia. Verifique: journalctl -xeu mariadb"
         sleep 2
     fi
-    if ! command -v php8.3 &>/dev/null && ! command -v php &>/dev/null; then
+    if ! command -v php${PHP_VER} &>/dev/null && ! command -v php &>/dev/null; then
         error_exit "PHP não encontrado. Execute a opção 01 primeiro."
     fi
 
@@ -680,10 +684,13 @@ MYCNF
     fi
 
     # ── Senha admin ──
+    # O painel (index.php) autentica comparando a senha em plaintext
+    # (SELECT ... WHERE login = ? AND senha = ?), portanto a senha
+    # É gravada como texto puro, nunca com password_hash().
     progress_bar 7 $total "Configurando senha do admin..."
     local admin_senha=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 14)
     [ ${#admin_senha} -lt 8 ] && admin_senha=$(openssl rand -hex 8)
-    local admin_hash="$admin_senha"
+    local admin_pass="$admin_senha"
 
     # Detectar automaticamente a tabela e colunas de usuários
     local user_table="" login_col="" pass_col=""
@@ -737,11 +744,11 @@ PHPSET
         if [ "$admin_exists" = "0" ]; then
             # Tenta inserir um admin padrão
             mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e \
-                "INSERT INTO \`${user_table}\` (\`${login_col}\`, \`${pass_col}\`) VALUES ('admin', '${admin_hash}');" >> "$LOG_FILE" 2>&1
+                "INSERT INTO \`${user_table}\` (\`${login_col}\`, \`${pass_col}\`) VALUES ('admin', '${admin_pass}');" >> "$LOG_FILE" 2>&1
             ok "Usuário admin criado"
         else
             mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e \
-                "UPDATE \`${user_table}\` SET \`${pass_col}\` = '${admin_hash}' WHERE \`${login_col}\` = 'admin' LIMIT 1;" >> "$LOG_FILE" 2>&1
+                "UPDATE \`${user_table}\` SET \`${pass_col}\` = '${admin_pass}' WHERE \`${login_col}\` = 'admin' LIMIT 1;" >> "$LOG_FILE" 2>&1
             ok "Senha do admin atualizada"
         fi
         salvar_meta "PAINEL_SENHA" "$admin_senha"
@@ -807,128 +814,6 @@ HTACCESS
 }
 
 # ─── Utilitários ───────────────────────────────────────────────────────────
-
-limpar_sistema() {
-    titulo "00" "LIMPAR SISTEMA COMPLETAMENTE"
-
-    echo -e ""
-    warn "${VERMELHO}ATENÇÃO: Isso removerá TUDO relacionado ao painel.${NC}"
-    warn "${VERMELHO}Apache, MariaDB, PHP 8.3, SSL, banco, arquivos.${NC}"
-    echo -e ""
-    read -p " Digite CONFIRMAR para prosseguir: " confirm
-    [ "$confirm" != "CONFIRMAR" ] && { info "Cancelado."; pause; return; }
-
-    local total=10
-
-    # ── 1/10: Backup do banco ──
-    progress_bar 1 $total "Backup do banco de dados..."
-    load_config
-    if [ -n "$DB_PASS" ] && mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -e "SELECT 1;" > /dev/null 2>&1; then
-        local dump="${BACKUP_DIR}/banco_dump_pre_limpeza.sql"
-        mkdir -p "$BACKUP_DIR"
-        mysqldump -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" > "$dump" 2>/dev/null
-        ok "Backup salvo em: $dump"
-    else
-        info "Banco não configurado, pulando backup"
-    fi
-
-    # ── 2/10: Parar serviços ──
-    progress_bar 2 $total "Parando serviços..."
-    systemctl stop apache2 2>/dev/null
-    systemctl stop mariadb 2>/dev/null
-    systemctl stop php8.3-fpm 2>/dev/null
-    ok "Serviços parados"
-
-    # ── 3/10: Desabilitar serviços ──
-    progress_bar 3 $total "Desabilitando serviços..."
-    systemctl disable apache2 2>/dev/null
-    systemctl disable mariadb 2>/dev/null
-    systemctl disable php8.3-fpm 2>/dev/null
-    ok "Serviços desabilitados"
-
-    # ── 4/10: Remover pacotes ──
-    progress_bar 4 $total "Removendo pacotes..."
-    DEBIAN_FRONTEND=noninteractive apt remove --purge -y \
-        apache2* mariadb-server* mariadb-client* mariadb-common* \
-        php8.3* php-* libapache2-mod-php* \
-        certbot* python3-certbot* python3-certbot-apache \
-        > /dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt autoremove --purge -y > /dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt autoclean -y > /dev/null 2>&1
-    DEBIAN_FRONTEND=noninteractive apt clean -y > /dev/null 2>&1
-    ok "Pacotes removidos"
-
-    # ── 5/10: Remover arquivos e configs ──
-    progress_bar 5 $total "Removendo arquivos e configurações..."
-    rm -rf /var/www/html
-    rm -rf /etc/apache2
-    rm -rf /etc/mysql /etc/my.cnf /etc/my.cnf.d
-    rm -rf /etc/letsencrypt
-    rm -rf /etc/php /etc/php8.3
-    rm -f /root/.my.cnf
-    rm -f /root/.atlas_meta
-    rm -f /var/log/atlas_install01.log
-    rm -rf /tmp/atlas_painel_*
-    rm -rf /var/log/mysql /var/lib/mysql
-    ok "Arquivos removidos"
-
-    # ── 6/10: Limpar repositórios adicionados ──
-    progress_bar 6 $total "Limpando repositórios..."
-    rm -f /etc/apt/sources.list.d/ondrej-php.list
-    rm -f /etc/apt/sources.list.d/sury-php.list
-    rm -f /usr/share/keyrings/ondrej-php.gpg
-    rm -f /usr/share/keyrings/sury-php.gpg
-    rm -f /etc/apt/sources.list.d/apache2.list
-    rm -f /etc/apt/sources.list.d/certbot.list
-    ok "Repositórios limpos"
-
-    # ── 7/10: Limpar crontabs ──
-    progress_bar 7 $total "Limpando crontabs..."
-    crontab -r 2>/dev/null
-    ok "Crontabs limpos"
-
-    # ── 8/10: Resetar firewall ──
-    progress_bar 8 $total "Resetando firewall..."
-    if command -v ufw &>/dev/null; then
-        ufw --force reset > /dev/null 2>&1
-        ufw --force disable > /dev/null 2>&1
-    fi
-    iptables -F 2>/dev/null
-    iptables -X 2>/dev/null
-    netfilter-persistent flush 2>/dev/null
-    ok "Firewall resetado"
-
-    # ── 9/10: Limpar processos residuais ──
-    progress_bar 9 $total "Limpando processos..."
-    pkill -9 -f apache2 2>/dev/null
-    pkill -9 -f mysql 2>/dev/null
-    pkill -9 -f mariadb 2>/dev/null
-    pkill -9 -f php-fpm 2>/dev/null
-    pkill -9 -f certbot 2>/dev/null
-    sleep 1
-    ok "Processos limpos"
-
-    # ── 10/10: Atualizar apt ──
-    progress_bar 10 $total "Atualizando listas de pacotes..."
-    apt update -y > /dev/null 2>&1
-    ok "Sistema limpo e pronto para nova instalação"
-
-    echo -e ""
-    echo -e "${VERDE}${NEGRITO}╔═══════════════════════════════════════════════════════╗${NC}"
-    echo -e "${VERDE}${NEGRITO}║   SISTEMA 100% LIMPO - PRONTO PARA REINSTALAÇÃO       ║${NC}"
-    echo -e "${VERDE}${NEGRITO}║   Execute a opção 01 para começar do zero.           ║${NC}"
-    echo -e "${VERDE}${NEGRITO}╚═══════════════════════════════════════════════════════╝${NC}"
-    echo -e ""
-
-    read -p " Reiniciar o sistema agora? (s/N): " reboot_now
-    if [ "$reboot_now" = "s" ] || [ "$reboot_now" = "S" ]; then
-        info "Reiniciando em 5 segundos..."
-        sleep 5
-        reboot
-    fi
-
-    pause
-}
 
 reparar_banco() {
     titulo "04" "REPARAR BANCO DE DADOS"
@@ -1005,7 +890,8 @@ reset_admin() {
     progress_bar 1 $total "Gerando nova senha..."
     local nova_senha=$(openssl rand -base64 12 | tr -dc 'A-Za-z0-9' | head -c 14)
     [ ${#nova_senha} -lt 8 ] && nova_senha=$(openssl rand -hex 8)
-    local hash="$nova_senha"
+    # Painel autentica em plaintext -> senha gravada como texto puro
+    local admin_pass="$nova_senha"
 
     progress_bar 2 $total "Atualizando banco de dados..."
     # Detectar estrutura automaticamente
@@ -1037,7 +923,7 @@ reset_admin() {
 
     local update_status
     mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" \
-        -e "UPDATE \`${user_table}\` SET \`${pass_col}\` = '${hash}' WHERE \`${login_col}\` = 'admin' LIMIT 1;" >> "$LOG_FILE" 2>&1
+        -e "UPDATE \`${user_table}\` SET \`${pass_col}\` = '${admin_pass}' WHERE \`${login_col}\` = 'admin' LIMIT 1;" >> "$LOG_FILE" 2>&1
     update_status=$?
 
     # Verificação real: testa se a senha bate com o que está no banco
@@ -1045,7 +931,7 @@ reset_admin() {
         "SELECT \`${pass_col}\` FROM \`${user_table}\` WHERE \`${login_col}\` = 'admin' LIMIT 1;" 2>/dev/null)
 
     progress_bar 3 $total "Salvando configuração..."
-    if [ $update_status -eq 0 ] && [ "$stored_hash" = "$hash" ]; then
+    if [ $update_status -eq 0 ] && [ "$stored_hash" = "$admin_pass" ]; then
         salvar_meta "PAINEL_SENHA" "$nova_senha"
         echo -e ""
         ok "Senha do admin redefinida com sucesso!"
@@ -1087,11 +973,11 @@ desinstalar() {
     ok "Banco de dados removido"
 
     progress_bar 3 $total "Parando serviços..."
-    systemctl stop apache2 mariadb php8.3-fpm 2>/dev/null
-    systemctl disable apache2 mariadb php8.3-fpm 2>/dev/null
+    systemctl stop apache2 mariadb php${PHP_VER}-fpm 2>/dev/null
+    systemctl disable apache2 mariadb php${PHP_VER}-fpm 2>/dev/null
 
     progress_bar 4 $total "Removendo pacotes..."
-    apt remove --purge -y apache2 mariadb-server php8.3* certbot python3-certbot-apache 2>/dev/null
+    apt remove --purge -y apache2 mariadb-server php${PHP_VER}* certbot python3-certbot-apache 2>/dev/null
     apt autoremove --purge -y 2>/dev/null
 
     progress_bar 5 $total "Removendo diretórios..."
@@ -1115,7 +1001,7 @@ status_sistema() {
 
     linha "${CIANO}"
     echo -e " ${CIANO}▸ Serviços${NC}"
-    for svc in apache2 mariadb php8.3-fpm; do
+    for svc in apache2 mariadb php${PHP_VER}-fpm; do
         if systemctl is-active --quiet "$svc" 2>/dev/null; then
             echo -e "   $svc : ${VERDE}ATIVO${NC}"
         else
@@ -1236,13 +1122,13 @@ reinstalar_painel() {
 
     # ── 4/8: Remover arquivos antigos (preservar atlas/) ──
     progress_bar 4 $total "Removendo arquivos antigos..."
-    cd /var/www/html
-    shopt -s dotglob 2>/dev/null
+    cd /var/www/html || { fail_ "Não foi possível acessar /var/www/html"; pause; return; }
+    shopt -s dotglob nullglob 2>/dev/null
     for item in *; do
         [ "$item" = "atlas" ] && continue
         rm -rf "$item"
     done
-    shopt -u dotglob 2>/dev/null
+    shopt -u dotglob nullglob 2>/dev/null
     ok "Arquivos antigos removidos (atlas/ preservado)"
 
     # ── 5/8: Copiar novos arquivos ──
@@ -1331,7 +1217,7 @@ reiniciar_servicos() {
     titulo "09" "REINICIAR SERVIÇOS"
 
     load_config
-    local servicos=("apache2" "mariadb" "php8.3-fpm" "cron")
+    local servicos=("apache2" "mariadb" "php${PHP_VER}-fpm" "cron")
     local total=5
 
     # ── 1/5: Status atual ──
@@ -1417,337 +1303,6 @@ reiniciar_servicos() {
         echo -e "${AMARELO}${NEGRITO}╚═══════════════════════════════════════════════════════╝${NC}"
     fi
     echo -e ""
-    pause
-}
-
-# ─── Instalar/Reinstalar Drivers em Servidor Remoto ────────────────────────
-
-DRIVERS_DIR="/root/atlas_drivers"
-DRIVERS_BASE_URL="https://raw.githubusercontent.com/atlaspaineL/atlasPainel/main"
-DRIVERS_FILES=(
-    "atlascreate.sh"
-    "atlasteste.sh"
-    "atlasremove.sh"
-    "atlasdata.sh"
-    "add.sh"
-    "rem.sh"
-    "addteste.sh"
-    "addsinc.sh"
-    "remsinc.sh"
-    "delete.py"
-    "sincronizar.py"
-    "verificador.py"
-    "modulosinstall.sh"
-)
-
-drivers_download() {
-    # Garante que os drivers estao baixados localmente
-    mkdir -p "$DRIVERS_DIR"
-    if [ ! -f "$DRIVERS_DIR/atlascreate.sh" ]; then
-        info "Baixando drivers do GitHub..."
-        local f
-        for f in "${DRIVERS_FILES[@]}"; do
-            curl -sk --max-time 15 "$DRIVERS_BASE_URL/$f" -o "$DRIVERS_DIR/$f" 2>/dev/null
-        done
-        chmod +x "$DRIVERS_DIR"/*.sh "$DRIVERS_DIR"/*.py 2>/dev/null
-    fi
-    if [ ! -s "$DRIVERS_DIR/atlascreate.sh" ]; then
-        fail_ "Falha ao baixar drivers do GitHub"
-        return 1
-    fi
-    return 0
-}
-
-drivers_upload_one() {
-    # $1 = ssh handle, $2 = nome do arquivo
-    local ssh="$1" fname="$2"
-    local src="$DRIVERS_DIR/$fname"
-    [ ! -f "$src" ] && return 1
-    # Usa base64 para transferencia binaria segura
-    local b64
-    b64=$(base64 -w0 "$src" 2>/dev/null)
-    [ -z "$b64" ] && { echo "ERR:base64"; return 1; }
-    # Envia o conteudo decodificado para o servidor remoto
-    echo "$b64" | base64 -d > "/tmp/upload_$fname"
-    # Usa o proprio SSH para gravar
-    $ssh exec "cat > /root/$fname << 'ATLAS_EOF'
-$(cat "/tmp/upload_$fname")
-ATLAS_EOF"
-    rm -f "/tmp/upload_$fname"
-    # Verifica se gravou
-    if $ssh exec "test -s /root/$fname" >/dev/null 2>&1; then
-        return 0
-    fi
-    # Fallback: usa echo piped (para scripts sem chars problematicos)
-    echo "WARN: fallback para $fname"
-    cat "$src" | $ssh exec "cat > /root/$fname"
-    $ssh exec "test -s /root/$fname" >/dev/null 2>&1 && return 0 || return 1
-}
-
-drivers_check_remote() {
-    # $1 = ssh handle -> imprime "PRESENTE" ou lista de ausentes
-    local ssh="$1"
-    local missing=()
-    local f
-    for f in "${DRIVERS_FILES[@]}"; do
-        if [ "$f" = "modulosinstall.sh" ]; then continue; fi
-        if ! $ssh exec "test -s /root/$f" >/dev/null 2>&1; then
-            missing+=("$f")
-        fi
-    done
-    if [ ${#missing[@]} -eq 0 ]; then
-        echo "PRESENTE"
-    else
-        printf '%s\n' "${missing[@]}"
-    fi
-}
-
-drivers_test_create() {
-    # $1 = ssh handle -> testa se o atlascreate.sh funciona
-    local ssh="$1"
-    local test_user="atlastest$$"
-    local test_pass="TestPass123!"
-    local out
-    out=$($ssh exec "bash /root/atlascreate.sh $test_user $test_pass 1 1 2>&1; echo EXIT=\$?" 2>/dev/null)
-    if echo "$out" | grep -q "EXIT=0\|EXIT=\$?"; then
-        # Verifica se o usuario foi criado
-        if $ssh exec "id $test_user" >/dev/null 2>&1; then
-            # Limpa o usuario de teste
-            $ssh exec "userdel -f $test_user 2>/dev/null; sed -i '/^${test_user} /d' /root/usuarios.db 2>/dev/null; rm -f /etc/SSHPlus/senha/$test_user 2>/dev/null" >/dev/null 2>&1
-            echo "OK"
-        else
-            echo "FAIL: usuario nao foi criado. Saida: $out"
-        fi
-    else
-        echo "FAIL: $out"
-    fi
-}
-
-instalar_drivers_servidor() {
-    titulo "11" "INSTALAR/REINSTALAR DRIVERS EM SERVIDOR REMOTO"
-
-    load_config
-
-    # ── Checar dependencias locais ──
-    if ! command -v sshpass &>/dev/null; then
-        info "Instalando sshpass..."
-        DEBIAN_FRONTEND=noninteractive apt install -y sshpass >> "$LOG_FILE" 2>&1 || warn "Falha ao instalar sshpass"
-    fi
-    if ! command -v expect &>/dev/null; then
-        info "Instalando expect..."
-        DEBIAN_FRONTEND=noninteractive apt install -y expect >> "$LOG_FILE" 2>&1 || warn "Falha ao instalar expect"
-    fi
-
-    if ! drivers_download; then
-        pause
-        return
-    fi
-    ok "Drivers locais disponiveis em $DRIVERS_DIR"
-
-    # ── Listar servidores do banco ──
-    if [ -z "$DB_PASS" ]; then
-        fail_ "Banco nao configurado. Instale o painel primeiro."
-        pause
-        return
-    fi
-    local servidores
-    servidores=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
-        "SELECT id, nome, ip, porta, usuario, subid FROM servidores ORDER BY id;" 2>/dev/null)
-    if [ -z "$servidores" ]; then
-        warn "Nenhum servidor cadastrado. Adicione um servidor pelo painel primeiro."
-        pause
-        return
-    fi
-
-    echo -e ""
-    echo -e " ${CIANO}▸ Servidores cadastrados:${NC}"
-    echo -e "   ${CIANO}ID${NC}  ${CIANO}NOME${NC}                    ${CIANO}IP${NC}                ${CIANO}PORTA${NC}  ${CIANO}USER${NC}    ${CIANO}CAT${NC}"
-    linha "$CIANO"
-    local srv_ids=()
-    while IFS=$'\t' read -r sid snome sip sporta suser ssub; do
-        [ -z "$sid" ] && continue
-        srv_ids+=("$sid")
-        printf "   %-4s %-24s %-18s %-7s %-10s %s\n" "$sid" "$snome" "$sip" "$sportal" "$suser" "$ssub"
-    done <<< "$servidores"
-
-    echo -e ""
-    echo -e -n " ${BRANCO}ID do servidor para reinstalar drivers (0=voltar):${NC} "; read srv_id
-    if [ -z "$srv_id" ] || [ "$srv_id" = "0" ]; then return; fi
-
-    # Buscar dados
-    local srv_data
-    srv_data=$(mysql -u"$DB_USER" -p"$DB_PASS" -h"$DB_HOST" "$DB_NAME" -Nse \
-        "SELECT nome, ip, porta, usuario, senha FROM servidores WHERE id = '$srv_id' LIMIT 1;" 2>/dev/null)
-    if [ -z "$srv_data" ]; then
-        fail_ "Servidor id=$srv_id nao encontrado."
-        pause
-        return
-    fi
-    local srv_nome srv_ip srv_porta srv_user srv_pass
-    IFS=$'\t' read -r srv_nome srv_ip srv_porta srv_user srv_pass <<< "$srv_data"
-
-    echo -e ""
-    echo -e " ${CIANO}▸ Alvo:${NC} ${BRANCO}$srv_nome${NC} ($srv_ip:$srv_porta como $srv_user)"
-    linha "$AZUL"
-
-    # ── Teste de conexao SSH ──
-    info "Testando conexao SSH..."
-    if ! command -v sshpass &>/dev/null; then
-        fail_ "sshpass nao disponivel. Instale: apt install -y sshpass"
-        pause
-        return
-    fi
-
-    local ssh_test
-    ssh_test=$(sshpass -p "$srv_pass" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null \
-        -p "$srv_porta" "$srv_user@$srv_ip" "echo OK-CONNECTED" 2>&1)
-    if ! echo "$ssh_test" | grep -q "OK-CONNECTED"; then
-        fail_ "Falha no SSH: $ssh_test"
-        pause
-        return
-    fi
-    ok "SSH OK"
-
-    # ── Definir funcao de execucao remota ──
-    # Usa expect para lidar com senha de forma confiavel
-    info "Preparando executor remoto via expect..."
-    local exec_helper="/tmp/atlas_remote_exec_$$.sh"
-    cat > "$exec_helper" <<'EXPECT_EOF'
-#!/bin/bash
-# Uso: atlas_remote_exec.sh <porta> <user> <ip> <comando...>
-PORT="$1"; shift
-USER="$1"; shift
-IP="$1"; shift
-CMD="$*"
-# Codifica o comando em base64 para evitar problemas com aspas
-B64=$(echo -n "$CMD" | base64 -w0)
-sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null \
-    -p "$PORT" "$USER@$IP" "echo $B64 | base64 -d | bash"
-EXPECT_EOF
-    chmod +x "$exec_helper"
-
-    # Para upload de arquivos, usa scp
-    export PASS="$srv_pass"
-    REMOTE_SSH() {
-        # $@ = comando remoto
-        "$exec_helper" "$srv_porta" "$srv_user" "$srv_ip" "$*"
-    }
-    REMOTE_SCP() {
-        # $1 = local, $2 = remoto
-        sshpass -p "$srv_pass" scp -o StrictHostKeyChecking=no -o ConnectTimeout=10 -o UserKnownHostsFile=/dev/null \
-            -P "$srv_porta" "$1" "$srv_user@$srv_ip:$2"
-    }
-
-    # ── Verificar drivers atuais ──
-    info "Verificando drivers instalados no servidor..."
-    local status_atual
-    status_atual=$(REMOTE_SSH "for f in atlascreate.sh atlasteste.sh atlasremove.sh atlasdata.sh add.sh rem.sh addteste.sh addsinc.sh remsinc.sh delete.py sincronizar.py verificador.py; do if [ -s /root/\$f ]; then echo \"OK \$f\"; else echo \"FALTA \$f\"; fi; done")
-    echo "$status_atual" | sed 's/^/     /'
-
-    local tem_todos="sim"
-    if echo "$status_atual" | grep -q "FALTA"; then
-        tem_todos="nao"
-    fi
-
-    # ── Instalar cron se faltar ──
-    info "Garantindo cron instalado no servidor..."
-    if ! REMOTE_SSH "command -v crontab >/dev/null 2>&1 && echo TEM-CRON || echo SEM-CRON" | grep -q "TEM-CRON"; then
-        warn "Servidor SEM crontab. Instalando..."
-        REMOTE_SSH "DEBIAN_FRONTEND=noninteractive apt-get update -qq && DEBIAN_FRONTEND=noninteractive apt-get install -y cron >/dev/null 2>&1 && systemctl enable cron >/dev/null 2>&1 && systemctl start cron >/dev/null 2>&1 && echo INSTALADO || echo FALHOU"
-        if REMOTE_SSH "command -v crontab >/dev/null 2>&1" | grep -q ""; then
-            ok "Cron instalado no servidor"
-        else
-            warn "Nao foi possivel instalar cron (pode nao ser necessario)"
-        fi
-    else
-        ok "Cron ja disponivel no servidor"
-    fi
-
-    # ── Criar diretorios necessarios ──
-    info "Criando diretorios..."
-    REMOTE_SSH "mkdir -p /etc/SSHPlus/senha /etc/SSHPlus/userteste /etc/usuarios /root >/dev/null 2>&1; touch /root/usuarios.db; chmod 777 /root/usuarios.db"
-    ok "Diretorios OK"
-
-    # ── Upload de cada driver ──
-    local total_files=0 uploaded=0 failed=()
-    for f in atlascreate.sh atlasteste.sh atlasremove.sh atlasdata.sh \
-             add.sh rem.sh addteste.sh addsinc.sh remsinc.sh \
-             delete.py sincronizar.py verificador.py; do
-        total_files=$((total_files+1))
-        if REMOTE_SCP "$DRIVERS_DIR/$f" "/root/$f" 2>/dev/null; then
-            uploaded=$((uploaded+1))
-        else
-            failed+=("$f")
-        fi
-    done
-
-    if [ $uploaded -ne $total_files ]; then
-        warn "Upload parcial: $uploaded/$total_files. Tentando metodo alternativo..."
-        for f in "${failed[@]}"; do
-            local src="$DRIVERS_DIR/$f"
-            local b64
-            b64=$(base64 -w0 "$src" 2>/dev/null)
-            if REMOTE_SSH "echo '$b64' | base64 -d > /root/$f && chmod +x /root/$f && echo OK || echo FAIL" 2>/dev/null | grep -q "OK"; then
-                uploaded=$((uploaded+1))
-                ok "Recuperado: $f"
-            else
-                fail_ "Falha no upload de: $f"
-            fi
-        done
-    fi
-    ok "Drivers enviados: $uploaded/$total_files"
-
-    # ── Permissoes e dos2unix ──
-    info "Aplicando permissoes..."
-    REMOTE_SSH "chmod +x /root/*.sh /root/*.py 2>/dev/null; which dos2unix >/dev/null 2>&1 && dos2unix /root/*.sh /root/*.py 2>/dev/null; echo OK"
-    ok "Permissoes OK"
-
-    # ── Verificar usuarios.db ──
-    info "Verificando /root/usuarios.db..."
-    local dbcheck
-    dbcheck=$(REMOTE_SSH "if [ -s /root/usuarios.db ]; then wc -l < /root/usuarios.db; else echo 0; fi")
-    ok "usuarios.db tem $dbcheck linha(s)"
-
-    # ── Teste real: criar usuario de teste ──
-    info "Testando criacao de usuario de teste..."
-    local test_result
-    test_result=$(REMOTE_SSH "bash /root/atlascreate.sh testdriver\$\$ TestDrv123! 1 1 2>&1; echo \"---\"; id testdriver\$\$ 2>&1; echo \"---\"; userdel -f testdriver\$\$ 2>/dev/null; sed -i '/^testdriver/d' /root/usuarios.db 2>/dev/null; rm -f /etc/SSHPlus/senha/testdriver\$\$ 2>/dev/null; echo DONE")
-    if echo "$test_result" | grep -q "uid="; then
-        ok "Teste de criacao passou! (usuario foi criado e removido)"
-    else
-        warn "Teste inconclusive: $test_result"
-    fi
-
-    # ── Configurar crontab do verificador ──
-    info "Configurando crontab do verificador..."
-    REMOTE_SSH "(crontab -l 2>/dev/null | grep -v 'verificador.py' | grep -v 'modulo.py' ; echo '* * * * * python3 /root/verificador.py' ; echo '@reboot python3 /root/modulo.py' ; echo '*/10 * * * * python3 /root/modulo.py') | crontab -"
-    ok "Crontab configurado"
-
-    # ── Reiniciar modulo.py ──
-    info "Reiniciando modulo.py..."
-    REMOTE_SSH "pkill -f modulo.py 2>/dev/null; sleep 1; nohup python3 /root/modulo.py >/dev/null 2>&1 & echo REINICIADO"
-    ok "modulo.py reiniciado"
-
-    # ── Limpar arquivo temporario ──
-    rm -f "$exec_helper"
-    unset PASS
-
-    # ── Resumo ──
-    echo -e ""
-    linha "$VERDE"
-    echo -e " ${VERDE}${NEGRITO}✔ DRIVERS REINSTALADOS EM: $srv_nome ($srv_ip)${NC}"
-    echo -e ""
-    echo -e " ${BRANCO}Drivers instalados:${NC}"
-    for f in atlascreate.sh atlasteste.sh atlasremove.sh atlasdata.sh \
-             add.sh rem.sh addteste.sh addsinc.sh remsinc.sh \
-             delete.py sincronizar.py verificador.py; do
-        echo -e "   ${VERDE}✔${NC} $f"
-    done
-    echo -e ""
-    echo -e " ${BRANCO}Agora o painel ja pode criar usuarios neste servidor.${NC}"
-    echo -e " ${BRANCO}Volte ao painel e tente criar um usuario ou teste.${NC}"
-    linha "$VERDE"
-
     pause
 }
 
@@ -2057,7 +1612,7 @@ show_menu() {
     systemctl is-active --quiet apache2  2>/dev/null && apache_icon="${VERDE}ATIVO${NC}"  || apache_icon="${VERMELHO}INATIVO${NC}"
     systemctl is-active --quiet mariadb  2>/dev/null && mariadb_icon="${VERDE}ATIVO${NC}" || mariadb_icon="${VERMELHO}INATIVO${NC}"
     local php_ok=0
-    systemctl is-active --quiet php8.3-fpm 2>/dev/null && php_ok=1
+    systemctl is-active --quiet php${PHP_VER}-fpm 2>/dev/null && php_ok=1
     apachectl -M 2>/dev/null | grep -qE "proxy_fcgi|php_module" && php_ok=1
     [ "$php_ok" -eq 1 ] && php_icon="${VERDE}ATIVO${NC}" || php_icon="${VERMELHO}INATIVO${NC}"
     if [ "$DOMINIO" != "Nao configurado" ] && [ -d "/etc/letsencrypt/live/$DOMINIO" ]; then
@@ -2088,7 +1643,6 @@ show_menu() {
     echo -e "${AZUL}+----------------------------------------------------------------+${NC}"
 
     local opcoes=(
-        "00:Limpar Sistema (reinstalacao do zero)"
         "01:Preparar Sistema (repos, deps, firewall)"
         "02:Configurar Dominio e SSL (com validacao DNS)"
         "03:Instalar Painel Atlas (GitHub + BD + permissoes)"
@@ -2099,7 +1653,6 @@ show_menu() {
         "08:Reinstalar Painel (atualiza arquivos, mantem banco)"
         "09:Reiniciar Servicos (Apache/MariaDB/PHP-FPM)"
         "10:Gerenciar Crons (listar/ativar/desativar/reaplicar)"
-        "11:Reinstalar Drivers em Servidor Remoto (SSH)"
         "99:Sair"
     )
     for item in "${opcoes[@]}"; do
@@ -2117,7 +1670,6 @@ while true; do
     show_menu
     echo -e -n " ${BRANCO}Selecione uma opção:${NC} "; read OPCAO
     case $OPCAO in
-        0|00)             limpar_sistema  ;;
         1|01)             prepare_system  ;;
         2|02)             setup_ssl       ;;
         3|03)             install_panel   ;;
@@ -2127,9 +1679,8 @@ while true; do
          7|07)             status_sistema  ;;
          8|08)             reinstalar_painel  ;;
           9|09)             reiniciar_servicos ;;
-         10|10)             gerenciar_crons   ;;
-         11|11)             instalar_drivers_servidor ;;
-        99)
+          10|10)             gerenciar_crons   ;;
+         99)
             echo -e "\n${VERDE} Saindo...${NC}\n"
             exit 0
             ;;
