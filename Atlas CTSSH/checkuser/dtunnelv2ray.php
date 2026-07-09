@@ -13,11 +13,6 @@ ini_set('session.cookie_secure', 0);
 ini_set('session.cookie_httponly', 0);
 ini_set('session.use_only_cookies', 0);
 ini_set('session.use_strict_mode', 0);
-if (!file_exists("../admin/suspenderrev.php")) {
-    echo ("O código levou 1.0 segundos para ser executado");
-    exit;
-}
-
 $mysqli = new mysqli($dbhost, $dbuser, $dbpass, $dbname);
 
 foreach ($_REQUEST as $key => $value) {

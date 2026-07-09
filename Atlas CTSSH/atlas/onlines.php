@@ -1,350 +1,57 @@
- <?php    error_reporting(0);
+<?php
+
+
+error_reporting(0);
 session_start();
-include('../atlas/conexao.php');
-include('header2.php');
+include "../atlas/conexao.php";
+include "header2.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
+$sql = "SELECT * FROM ssh_accounts WHERE byid = '" . $_SESSION["iduser"] . "' AND status = 'Online'";
+$result = $conn->query($sql);
+echo "<script src=\"https://code.jquery.com/jquery-3.5.1.js\"></script>\r\n<script src=\"https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js\"></script>\r\n<script src=\"https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js\"></script>\r\n\r\n<body class=\"vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  \" data-open=\"click\" data-menu=\"vertical-menu-modern\" data-col=\"2-columns\" data-layout=\"dark-layout\">\r\n<div class=\"app-content content\">\r\n    <div class=\"content-overlay\"></div>\r\n    <div class=\"content-wrapper\">\r\n        <section id=\"basic-datatable\">\r\n            <div class=\"row\">\r\n             \r\n                <div class=\"col-12\">\r\n                    <div class=\"card\">\r\n                        <div class=\"card-header\">\r\n                            <h4 class=\"card-title\">Lista de Onlines</h4>\r\n                        </div>\r\n                        <script>\r\n\r\n\r\nif (window.innerWidth < 678) {\r\n\r\n    document.write('<div class=\"alert alert-warning\" role=\"alert\"> <strong>Atenção!</strong> Mova para lado para Fazer Alguma Ação! </div>');\r\n    window.setTimeout(function() {\r\n        \$(\".alert\").fadeTo(500, 0).slideUp(500, function(){\r\n            \$(this).remove(); \r\n        });\r\n    }, 3000);\r\n}\r\n\r\n</script>\r\n                        <div class=\"card-content\">\r\n                            <div class=\"card-body card-dashboard\">\r\n                                <!-- nao mostar o sroll -->\r\n                                <div class=\"table-responsive\" style=\" overflow: auto; overflow-y: hidden;\">\r\n                                    <table class=\"table zero-configuration\" id=\"myTable\">\r\n                                                <thead>\r\n                                                    <tr>\r\n                                                        <th>Usuario</th>\r\n                                                        <th>Senha</th>\r\n                                                        <th>Limite</th>\r\n                                                        <th>categoria</th>\r\n                                                        <th>Validade</th>\r\n                                                        <th>Status</th>\r\n                                                        <th>Notas</th>\r\n                                                        <th>Editar</th>\r\n                                                    </tr>\r\n                                                </thead>\r\n                                                <tbody>\r\n                                                ";
+if (0 < $result->num_rows) {
+    while ($row = $result->fetch_assoc()) {
+        $id = $row["id"];
+        $login = $row["login"];
+        $senha = $row["senha"];
+        $limite = $row["limite"];
+        $validade = $row["expira"];
+        $status = $row["status"];
+        $deviceid = $row["deviceid"];
+        $deviceativo = $row["deviceativo"];
+        $categoria = $row["categoriaid"];
+        $suspenso = $row["mainid"];
+        $notas = $row["lastview"];
+        $data = date("Y-m-d");
+        $diferenca = strtotime($validade) - strtotime($data);
+        $dias = floor($diferenca / 86400);
+        if ($dias < 0) {
+            $dias = "Expirado";
+        } else {
+            $dias = $dias . " Restantes";
+        }
+        if ($deviceativo == "1") {
+            $deviceativo = "Sim";
+        } else {
+            $deviceativo = "Não";
+        }
+        if ($deviceid == "") {
+            $deviceid = "Nenhum";
+        }
+        echo "<tr>\r\n                                                        <td>" . $login . "</td>\r\n                                                        <td>" . $senha . "</td>\r\n                                                        <td>" . $limite . "</td>\r\n                                                        <td>" . $categoria . "</td>\r\n                                                        <td>" . $dias . "</td>\r\n                                                        ";
+        if ($suspenso == "Suspenso") {
+            echo "<td class='text-danger'>Suspenso</td>";
+        } else {
+            if ($status == "Online") {
+                echo "<td class='text-success'>Online</td>";
+            } else {
+                echo "<td class='text-alert'>Offline</td>";
+            }
+        }
+        echo "<td>" . $notas . "</td>";
+        echo "\r\n                                                        <td><div class=\"btn-group mb-1\">\r\n                                                        <div class=\"dropdown\">\r\n                                                            <button class=\"btn btn-primary dropdown-toggle mr-1\" type=\"button\" id=\"dropdownMenuButton\" data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">\r\n                                                                Ações\r\n                                                            </button>\r\n                                                            <div class=\"dropdown-menu\">\r\n                                                                <a class=\"dropdown-item\" href=\"editarlogin.php?id=" . $id . "\">Editar</a>\r\n                                                                <a class=\"dropdown-item\" onclick=\"limpardeviceids(" . $id . ")\">Limpar Device ID</a>\r\n                                                                <a class=\"dropdown-item\" onclick=\"renovardias(" . $id . ")\">Renovar Dias</a>\r\n                                                                <a class=\"dropdown-item\" onclick=\"reativar(" . $id . ")\">Reativar</a>\r\n                                                                <a class=\"dropdown-item\" onclick=\"suspender(" . $id . ")\">Suspender</a>\r\n                                                                <a class=\"dropdown-item\" onclick=\"excluir(" . $id . ")\">Excluir</a>\r\n                                                            </div>\r\n                                                        </div>\r\n                                                    </div>\r\n                                                    </td>\r\n                                                    </tr>";
+    }
+}
+echo "                                                <script>\r\n    function limpardeviceids(\$id) {\r\n    /* confirma */\r\n    swal({\r\n    title: \"Tem certeza?\",\r\n    text: \"Você deseja limpar o Device ID do usuário?\",\r\n    icon: \"warning\",\r\n    buttons: true,\r\n    dangerMode: true,\r\n    })\r\n  .then((willDelete) => {\r\n    if (willDelete) {\r\n      /* faz uma requisiçao com ajax */\r\n        \$.ajax({\r\n            url: 'deviceid.php?id='+\$id,\r\n            type: 'GET',\r\n            success: function(data){\r\n               if (data == 'deletado com sucesso') {\r\n                swal(\"Sucesso!\", \"Device ID limpo com sucesso!\", \"success\");\r\n               }else{\r\n                swal(\"Erro!\", \"Erro ao limpar Device ID!\", \"error\");\r\n               }\r\n            }\r\n        });\r\n    } else {\r\n      swal(\"Cancelado!\");\r\n    }\r\n  });\r\n  }\r\n    function renovardias(\$id) {\r\n        /* confirma */\r\n        swal({\r\n        title: \"Tem certeza?\",\r\n        text: \"Você deseja renovar os dias do usuário?\",\r\n        icon: \"warning\",\r\n        buttons: true,\r\n        dangerMode: true,\r\n        })\r\n        .then((willDelete) => {\r\n        if (willDelete) {\r\n            \$.ajax({\r\n                url: 'renovardias.php?id='+\$id,\r\n                type: 'GET',\r\n                success: function(data){\r\n                    if (data == 'renovado com sucesso') {\r\n                        /* ao clicar atualiza pagina */\r\n                        swal(\"Sucesso!\", \"Dias renovados com sucesso!\", \"success\").then(function() {\r\n                            location.reload();\r\n                        });\r\n                    }else{\r\n                        swal(\"Erro!\", \"Erro ao renovar dias!\", \"error\");\r\n                    }\r\n                }\r\n            });\r\n        } else {\r\n            swal(\"Cancelado!\");\r\n        }\r\n        });\r\n    }\r\n    function reativar(\$id) {\r\n        /* confirma */\r\n        swal({\r\n        title: \"Tem certeza?\",\r\n        text: \"Você deseja reativar o usuário?\",\r\n        icon: \"warning\",\r\n        buttons: true,\r\n        dangerMode: true,\r\n        })\r\n        .then((willDelete) => {\r\n        if (willDelete) {\r\n            \$.ajax({\r\n                url: 'reativar.php?id='+\$id,\r\n                type: 'GET',\r\n                success: function(data){\r\n                    if (data == 'reativado com sucesso') {\r\n                        /* ao clicar atualiza pagina */\r\n                        swal(\"Sucesso!\", \"Usuário reativado com sucesso!\", \"success\").then(function() {\r\n                            location.reload();\r\n                        });\r\n                    }else{\r\n                        swal(\"Erro!\", \"Erro ao reativar usuário!\", \"error\");\r\n                    }\r\n                }\r\n            });\r\n        } else {\r\n            swal(\"Cancelado!\");\r\n        }\r\n        });\r\n    }\r\n    function suspender(\$id) {\r\n        /* confirma */\r\n        swal({\r\n        title: \"Tem certeza?\",\r\n        text: \"Você deseja suspender o usuário?\",\r\n        icon: \"warning\",\r\n        buttons: true,\r\n        dangerMode: true,\r\n        })\r\n        .then((willDelete) => {\r\n        if (willDelete) {\r\n            \$.ajax({\r\n                url: 'suspender.php?id='+\$id,\r\n                type: 'GET',\r\n                success: function(data){\r\n                    if (data == 'erro no servidor') {\r\n                        /* ao clicar atualiza pagina */\r\n                        swal(\"Erro!\", \"Erro no servidor, verifique se o servidor está online ou se a senha está correta!\", \"error\");\r\n                    }else{\r\n\r\n                    if (data == 'suspenso com sucesso') {\r\n                        /* ao clicar atualiza pagina */\r\n                        swal(\"Sucesso!\", \"Usuário suspenso com sucesso!\", \"success\").then(function() {\r\n                            location.reload();\r\n                        });\r\n                    }else{\r\n                        swal(\"Erro!\", \"Erro ao suspender usuário!\", \"error\");\r\n                    }\r\n                }\r\n                }\r\n            });\r\n        } else {\r\n            swal(\"Cancelado!\");\r\n        }\r\n    });\r\n}\r\nfunction excluir(\$id) {\r\n        /* confirma */\r\n        swal({\r\n        title: \"Tem certeza?\",\r\n        text: \"Você deseja excluir o usuário?\",\r\n        icon: \"warning\",\r\n        buttons: true,\r\n        dangerMode: true,\r\n        })\r\n        .then((willDelete) => {\r\n        if (willDelete) {\r\n            \$.ajax({\r\n                url: 'excluiruser.php?id='+\$id,\r\n                type: 'GET',\r\n                success: function(data){\r\n                    if (data == 'excluido') {\r\n                        /* ao clicar atualiza pagina */\r\n                        swal(\"Sucesso!\", \"Usuário excluido com sucesso!\", \"success\").then(function() {\r\n                            location.reload();\r\n                        });\r\n                    }else{\r\n                        swal(\"Erro!\", \"Erro ao excluir usuário!\", \"error\");\r\n                    }\r\n                }\r\n            });\r\n        } else {\r\n            swal(\"Cancelado!\");\r\n        }\r\n        });\r\n    }\r\n  </script>\r\n  </tbody>\r\n    </table>\r\n    </div>\r\n    </div>\r\n    </div>\r\n    \r\n\r\n                                        \r\n                    \r\n                          \r\n                                        \r\n                        \r\n    <!-- END: Content-->\r\n    <script src=\"cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js\"></script>\r\n    <script src=\"../app-assets/js/scripts/datatables/datatable.js\"></script>\r\n    <script>\r\n    \$('#myTable').DataTable({\r\n\r\n        /* traduzir somente */\r\n        \"language\": {\r\n            \"lengthMenu\": \"Mostrar _MENU_ registros por página\",\r\n            \"zeroRecords\": \"Nenhum registro encontrado\",\r\n            \"info\": \"Mostrando página _PAGE_ de _PAGES_\",\r\n            \"infoEmpty\": \"Nenhum registro disponível\",\r\n            \"infoFiltered\": \"(filtrado de _MAX_ registros no total)\",\r\n            \"search\": \"Pesquisar:\",\r\n            \"paginate\": {\r\n                \"first\": \"\",\r\n                \"last\": \"\",\r\n                \"next\": \"\",\r\n                \"previous\": \"\"\r\n            }\r\n        }\r\n    \r\n    });\r\n\r\n</script>\r\n<script src=\"../app-assets/sweetalert.min.js\"></script>\r\n<!-- ajax -->\r\n<script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js\" integrity=\"sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==\" crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\"></script>\r\n";
 
-/*  $sql = "SELECT * FROM ssh_accounts WHERE byid = '$_SESSION[iduser]'";
-          $result = $conn -> query($sql); */
-          $sql = "SELECT * FROM ssh_accounts WHERE byid = '$_SESSION[iduser]' AND status = 'Online'";
-          $result = $conn -> query($sql);
-          $sql5 = "SELECT * FROM atribuidos WHERE userid = '$_SESSION[iduser]'";
-$sql5 = $conn->query($sql5);
-$row = $sql5->fetch_assoc();
-$validade = $row['expira'];
-$tipo = $row['tipo'];
-$_SESSION['tipodeconta'] = $row['tipo'];
-//time zone
-date_default_timezone_set('America/Sao_Paulo');
-$hoje = date('Y-m-d H:i:s');
-if ($_SESSION['tipodeconta'] == 'Credito') {
-}else{
-if ($validade < $hoje) {
-    echo "<script>alert('Sua conta estÃ¡ vencida')</script>";
-    echo "<script>window.location.href = '../home.php'</script>";
-    unset($_POST['criaruser']);
-    unset($_POST['usuariofin']);
-    unset($_POST['senhafin']);
-    unset($_POST['validadefin']);
-}
-}
-include_once '../admin/suspenderrev.php';
 ?>
-<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-<script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
-
-<body class="vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  " data-open="click" data-menu="vertical-menu-modern" data-col="2-columns" data-layout="dark-layout">
-<div class="app-content content">
-    <div class="content-overlay"></div>
-    <div class="content-wrapper">
-        <section id="basic-datatable">
-            <div class="row">
-             
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Lista de Onlines</h4>
-                        </div>
-                        <script>
-
-
-if (window.innerWidth < 678) {
-
-    document.write('<div class="alert alert-warning" role="alert"> <strong>AtenÃ§Ã£o!</strong> Mova para lado para Fazer Alguma AÃ§Ã£o! </div>');
-    window.setTimeout(function() {
-        $(".alert").fadeTo(500, 0).slideUp(500, function(){
-            $(this).remove(); 
-        });
-    }, 3000);
-}
-
-</script>
-                        <div class="card-content">
-                            <div class="card-body card-dashboard">
-                                <!-- nao mostar o sroll -->
-                                <div class="table-responsive" style=" overflow: auto; overflow-y: hidden;">
-                                    <table class="table zero-configuration" id="myTable">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Usuario</th>
-                                                        <th>Senha</th>
-                                                        <th>Limite</th>
-                                                        <th>categoria</th>
-                                                        <th>Validade</th>
-                                                        <th>Status</th>
-                                                        <th>Notas</th>
-                                                        <th>Editar</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php
-                                                if ($result->num_rows > 0) {
-                                                    while($row = $result->fetch_assoc()) {
-                                                        $id = $row['id'];
-                                                        $login = $row['login'];
-                                                        $senha = $row['senha'];
-                                                        $limite = $row['limite'];
-                                                        $validade = $row['expira'];
-                                                        $status = $row['status'];
-                                                        $deviceid = $row['deviceid'];
-                                                        $deviceativo = $row['deviceativo'];
-                                                        $categoria = $row['categoriaid'];
-                                                        $suspenso = $row['mainid'];
-                                                        $notas = $row['lastview'];
-                                                        $data = date('Y-m-d');
-                                                        $diferenca = strtotime($validade) - strtotime($data);
-                                                        $dias = floor($diferenca / (60 * 60 * 24));
-                                                        if ($dias < 0) {
-                                                            $dias = "Expirado";
-                                                        }else{
-                                                            $dias = $dias." Restantes";
-                                                        }
-                                                        
-                                                        if ($deviceativo == "1") {
-                                                            $deviceativo = "Sim";
-                                                        }else{
-                                                            $deviceativo = "NÃ£o";
-                                                        }
-                                                        if ($deviceid == "") {
-                                                            $deviceid = "Nenhum";
-                                                        }
-                                                        echo "<tr>
-                                                        <td>$login</td>
-                                                        <td>$senha</td>
-                                                        <td>$limite</td>
-                                                        <td>$categoria</td>
-                                                        <td>$dias</td>
-                                                        ";
-                                                        if ($suspenso == 'Suspenso') {
-                                                            echo "<td class='text-danger'>Suspenso</td>";
-                                                          }else{
-                                                            if ($status == 'Online'){
-                                                              echo "<td class='text-success'>Online</td>";
-                                                            }else{
-                                                              echo "<td class='text-alert'>Offline</td>";
-                                                            }
-
-                                                          }
-                                                        echo "<td>$notas</td>";
-
-                                                        echo '
-                                                        <td><div class="btn-group mb-1">
-                                                        <div class="dropdown">
-                                                            <button class="btn btn-primary dropdown-toggle mr-1" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                                AÃ§Ãµes
-                                                            </button>
-                                                            <div class="dropdown-menu">
-                                                                <a class="dropdown-item" href="editarlogin.php?id='.$id.'">Editar</a>
-                                                                <a class="dropdown-item" onclick="limpardeviceids('.$id.')">Limpar Device ID</a>
-                                                                <a class="dropdown-item" onclick="renovardias('.$id.')">Renovar Dias</a>
-                                                                <a class="dropdown-item" onclick="reativar('.$id.')">Reativar</a>
-                                                                <a class="dropdown-item" onclick="suspender('.$id.')">Suspender</a>
-                                                                <a class="dropdown-item" onclick="excluir('.$id.')">Excluir</a>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    </td>
-                                                    </tr>';
-                                                    }
-
-                                                }
-                                                ?>
-                                                <script>
-    function limpardeviceids($id) {
-    /* confirma */
-    swal({
-    title: "Tem certeza?",
-    text: "VocÃª deseja limpar o Device ID do usuÃ¡rio?",
-    icon: "warning",
-    buttons: true,
-    dangerMode: true,
-    })
-  .then((willDelete) => {
-    if (willDelete) {
-      /* faz uma requisiÃ§ao com ajax */
-        $.ajax({
-            url: 'deviceid.php?id='+$id,
-            type: 'GET',
-            success: function(data){
-                data = data.replace(/(\r\n|\n|\r)/gm, "");
-
-               if (data == 'deletado com sucesso') {
-                swal("Sucesso!", "Device ID limpo com sucesso!", "success");
-               }else{
-                swal("Erro!", "Erro ao limpar Device ID!", "error");
-               }
-            }
-        });
-    } else {
-      swal("Cancelado!");
-    }
-  });
-  }
-    function renovardias($id) {
-        /* confirma */
-        swal({
-        title: "Tem certeza?",
-        text: "VocÃª deseja renovar os dias do usuÃ¡rio?",
-        icon: "warning",
-        buttons: true,
-        dangerMode: true,
-        })
-        .then((willDelete) => {
-        if (willDelete) {
-            $.ajax({
-                url: 'renovardias.php?id='+$id,
-                type: 'GET',
-                success: function(data){
-                    if (data == 'renovado com sucesso') {
-                        /* ao clicar atualiza pagina */
-                        swal("Sucesso!", "Dias renovados com sucesso!", "success").then(function() {
-                            location.reload();
-                        });
-                    }else{
-                        swal("Erro!", "Erro ao renovar dias!", "error");
-                    }
-                }
-            });
-        } else {
-            swal("Cancelado!");
-        }
-        });
-    }
-    function reativar($id) {
-        /* confirma */
-        swal({
-        title: "Tem certeza?",
-        text: "VocÃª deseja reativar o usuÃ¡rio?",
-        icon: "warning",
-        buttons: true,
-        dangerMode: true,
-        })
-        .then((willDelete) => {
-        if (willDelete) {
-            $.ajax({
-                url: 'reativar.php?id='+$id,
-                type: 'GET',
-                success: function(data){
-                    if (data == 'reativado com sucesso') {
-                        /* ao clicar atualiza pagina */
-                        swal("Sucesso!", "UsuÃ¡rio reativado com sucesso!", "success").then(function() {
-                            location.reload();
-                        });
-                    }else{
-                        swal("Erro!", "Erro ao reativar usuÃ¡rio!", "error");
-                    }
-                }
-            });
-        } else {
-            swal("Cancelado!");
-        }
-        });
-    }
-    function suspender($id) {
-        /* confirma */
-        swal({
-        title: "Tem certeza?",
-        text: "VocÃª deseja suspender o usuÃ¡rio?",
-        icon: "warning",
-        buttons: true,
-        dangerMode: true,
-        })
-        .then((willDelete) => {
-        if (willDelete) {
-            $.ajax({
-                url: 'suspender.php?id='+$id,
-                type: 'GET',
-                success: function(data){
-                    if (data == 'erro no servidor') {
-                        /* ao clicar atualiza pagina */
-                        swal("Erro!", "Erro no servidor, verifique se o servidor estÃ¡ online ou se a senha estÃ¡ correta!", "error");
-                    }else{
-
-                    if (data == 'suspenso com sucesso') {
-                        /* ao clicar atualiza pagina */
-                        swal("Sucesso!", "UsuÃ¡rio suspenso com sucesso!", "success").then(function() {
-                            location.reload();
-                        });
-                    }else{
-                        swal("Erro!", "Erro ao suspender usuÃ¡rio!", "error");
-                    }
-                }
-                }
-            });
-        } else {
-            swal("Cancelado!");
-        }
-    });
-}
-function excluir($id) {
-        /* confirma */
-        swal({
-        title: "Tem certeza?",
-        text: "VocÃª deseja excluir o usuÃ¡rio?",
-        icon: "warning",
-        buttons: true,
-        dangerMode: true,
-        })
-        .then((willDelete) => {
-        if (willDelete) {
-            $.ajax({
-                url: 'excluiruser.php?id='+$id,
-                type: 'GET',
-                success: function(data){
-                    if (data == 'excluido') {
-                        /* ao clicar atualiza pagina */
-                        swal("Sucesso!", "UsuÃ¡rio excluido com sucesso!", "success").then(function() {
-                            location.reload();
-                        });
-                    }else{
-                        swal("Erro!", "Erro ao excluir usuÃ¡rio!", "error");
-                    }
-                }
-            });
-        } else {
-            swal("Cancelado!");
-        }
-        });
-    }
-  </script>
-  </tbody>
-    </table>
-    </div>
-    </div>
-    </div>
-    
-
-                                        
-                    
-                          
-                                        
-                        
-    <!-- END: Content-->
-    <script src="cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js"></script>
-    <script src="../app-assets/js/scripts/datatables/datatable.js"></script>
-    <script>
-    $('#myTable').DataTable({
-
-        /* traduzir somente */
-        "language": {
-            "lengthMenu": "Mostrar _MENU_ registros por pÃ¡gina",
-            "zeroRecords": "Nenhum registro encontrado",
-            "info": "Mostrando pÃ¡gina _PAGE_ de _PAGES_",
-            "infoEmpty": "Nenhum registro disponÃ­vel",
-            "infoFiltered": "(filtrado de _MAX_ registros no total)",
-            "search": "Pesquisar:",
-            "paginate": {
-                "first": "",
-                "last": "",
-                "next": "",
-                "previous": ""
-            }
-        }
-    
-    });
-
-</script>
-<script src="../app-assets/sweetalert.min.js"></script>
-<!-- ajax -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>

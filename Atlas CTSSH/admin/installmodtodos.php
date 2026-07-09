@@ -1,139 +1,62 @@
-<script src="../app-assets/sweetalert.min.js"></script>
 <?php
-error_reporting(0);
+
+
+echo "<script src=\"../app-assets/sweetalert.min.js\"></script>\r\n";
 session_start();
-include('../atlas/conexao.php');
-set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
-
+include "../atlas/conexao.php";
+set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
-
-// Verifica se o usuÃ¡rio estÃ¡ autenticado
-if (!isset($_SESSION['login']) || !isset($_SESSION['senha'])) {
+if (!isset($_SESSION["login"]) || !isset($_SESSION["senha"])) {
     session_destroy();
-    unset($_SESSION['login']);
-    unset($_SESSION['senha']);
-    header('Location: index.php');
+    unset($_SESSION["login"]);
+    unset($_SESSION["senha"]);
+    header("Location: index.php");
     exit;
 }
-include('../vendor/event/autoload.php');
-use React\EventLoop\Factory;
-
-if ($_SESSION['login'] !== 'admin') {
-    //header('Location: index.php');
-    echo 'VocÃª nÃ£o tem permissÃ£o para acessar essa pÃ¡gina';
+include "../vendor/event/autoload.php";
+if ($_SESSION["login"] != "admin") {
+    echo "Você não tem permissão para acessar essa página";
     exit;
 }
-include_once 'suspenderrev.php';
-include('headeradmin2.php');
-include('Net/SSH2.php');
-
-$cpu = 'grep -c cpu[0-9] /proc/stat';
-$memoria = "free -h | grep -i mem | awk {'print $2'}";
-$senha = $_SESSION['token'];
-$senha = md5($senha);
-$modulocreate = "# -*- coding: utf-8 -*-
-
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import cgi
-import subprocess
-
-# Senha de autenticaÃ§Ã£o
-senha_autenticacao = '$senha'
-
-# Classe de manipulador de solicitaÃ§Ãµes
-class MyRequestHandler(BaseHTTPRequestHandler):
-    def do_POST(self):
-        # Verifica se a senha de autenticaÃ§Ã£o estÃ¡ presente no cabeÃ§alho da requisiÃ§Ã£o
-        if 'Senha' in self.headers and self.headers['Senha'] == senha_autenticacao:
-            # Analisa os dados da solicitaÃ§Ã£o POST
-            form = cgi.FieldStorage(
-                fp=self.rfile,
-                headers=self.headers,
-                environ={'REQUEST_METHOD': 'POST'}
-            )
-            comando = form.getvalue('comando')
-
-            # Executa o comando e captura a saÃ­da
-            try:
-                resultado = subprocess.check_output(comando, shell=True, stderr=subprocess.STDOUT)
-            except subprocess.CalledProcessError as e:
-                resultado = e.output
-
-            # Envia a resposta de volta para o cliente
-            self.send_response(200)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            self.wfile.write(resultado)
-        else:
-            # Senha de autenticaÃ§Ã£o invÃ¡lida
-            self.send_response(401)
-            self.send_header('Content-type', 'text/plain')
-            self.end_headers()
-            self.wfile.write('NÃ£o autorizado!'.encode())
-
-# ConfiguraÃ§Ãµes do servidor
-host = '0.0.0.0'
-port = 6969
-
-# Cria o servidor HTTP
-server = HTTPServer((host, port), MyRequestHandler)
-
-# Inicia o servidor
-print('Servidor iniciado em {}:{}'.format(host, port))
-server.serve_forever()
-";
-$modulo = 'wget -O modulosinstall.sh "https://raw.githubusercontent.com/atlaspaineL/atlasPainel/main/modulosinstall.sh" && chmod 777 modulosinstall.sh && dos2unix modulosinstall.sh && ./modulosinstall.sh && pkill -f modulo.py > /dev/null 2>&1';
+include "headeradmin2.php";
+include "Net/SSH2.php";
+$cpu = "grep -c cpu[0-9] /proc/stat";
+$memoria = "free -h | grep -i mem | awk {'print \$2'}";
+$modulo = "rm atlasdata.sh || true && rm atlascreate.sh || true && rm atlasteste.sh || true && rm atlasremove.sh || true && rm delete.py || true && rm sincronizar.py || true &&\r\nwgethttps://cdn.discordapp.com/attachments/469054518823223296/1211606992242614272/atlascreate.sh?ex=65eecff1&is=65dc5af1&hm=0a88fb365e9d3f227c468df7670fcaf0cfe8120d64c4b67d7e3cac33e5fe620f& && chmod 777 atlascreate.sh && wget https://cdn.discordapp.com/attachments/469054518823223296/1211607519839911936/atlasteste.sh?ex=65eed06f&is=65dc5b6f&hm=9eca2c04fff5812e64134d26b18039155e80b4c84bd960a4fdf79cf6022f32fa& && chmod 777 atlasteste.sh && wget https://cdn.discordapp.com/attachments/469054518823223296/1211607519408037969/atlasremove.sh?ex=65eed06f&is=65dc5b6f&hm=7e0da9fa5d8a90719e36dff85fca24ad0906e4eebd6758f40ccbcb18ec47ee99& && chmod 777 atlasremove.sh && wget https://cdn.discordapp.com/attachments/469054518823223296/1211607520188043284/delete.py?ex=65eed06f&is=65dc5b6f&hm=f12d21efaf0d5a1a53ed1c3a4e5a5ca37a1e863737494a3613096aa118075954& && wget https://cdn.discordapp.com/attachments/469054518823223296/1211607518883880970/atlasdata.sh?ex=65eed06f&is=65dc5b6f&hm=f394e72a7eff815f599e88f332b25e481fcc496de61ef2d951bc3f1fc7ad340c& && chmod 777 atlasdata.sh && chmod 777 delete.py && wget https://cdn.discordapp.com/attachments/469054518823223296/1211607522033803346/sincronizar.py?ex=65eed06f&is=65dc5b6f&hm=9569e023d58616bf441709801235774d91bbb69a1feeaa4683e5f616bf07419f& && chmod 777 sincronizar.py > /dev/null 2>&1";
 $sql = "SELECT * FROM servidores";
 $result = $conn->query($sql);
-
-$loop = Factory::create();
-    $servidores_com_erro = [];
-    $sucess = false;         
-
-    while ($user_data = mysqli_fetch_assoc($result)) {
-      $tentativas = 0;
-      $conectado = false;
-  
-      while ($tentativas < 2 && !$conectado) {
-          $ssh = new Net_SSH2($user_data['ip'], $user_data['porta']);
-  
-          if ($ssh->login($user_data['usuario'], $user_data['senha'])) {
-              $loop->addTimer(0.001, function () use ($ssh, $user_data, $conn, $modulo, $cpu, $memoria, $modulocreate) {
-                        $existingCrontab = $ssh->exec('crontab -l');
-                        if (strpos($existingCrontab, '*/10 * * * * python3 /root/modulo.py') !== false) {
-                        } else {
-                            // Adiciona a tarefa cron ao crontab
-                            $ssh->exec(' crontab -l | { cat; echo "@reboot python3 /root/modulo.py"; } | crontab - && crontab -l | { cat; echo "*/10 * * * * python3 /root/modulo.py"; } | crontab -');
-                        
-                        }
-                    $ssh->exec($modulo);
-                    $ssh->exec('apt-get install python3 -y > /dev/null 2>&1');
-                    $ssh->exec('echo "' . $modulocreate . '" > modulo.py && sudo pkill -f modulo.py || true');
-                    $ssh->exec('nohup python3 modulo.py > /dev/null 2>&1 &');
-                    $quantidadecpu = $ssh->exec($cpu);
-                    $quantidadememoria = $ssh->exec($memoria);
-                    $sql = "UPDATE servidores SET servercpu = '$quantidadecpu', serverram = '$quantidadememoria' WHERE ip = '$ipservidor'";
-                    $result = $conn->query($sql);
-                  $ssh->disconnect();
-              });
-              $conectado = true;
-              $sucess = true;
-          } else {
-              $tentativas++;
-          }
-      }
-  
-      if (!$conectado) {
-          $servidores_com_erro[] = $user_data['ip'];
-      }
-  }
-  if ($sucess) {
-      echo '<script>sweetAlert("Sucesso!", "Modulos instalados com sucesso!", "success").then((value) => { window.location.href = "servidores.php"; });</script>';
-    } else {
-        echo '<script>sweetAlert("Erro!", "NÃ£o foi possÃ­vel instalar os modulos!", "error").then((value) => { window.location.href = "servidores.php"; });</script>';
+$loop = React\EventLoop\Factory::create();
+$servidores_com_erro = [];
+$sucess = false;
+while ($user_data = mysqli_fetch_assoc($result)) {
+    $tentativas = 0;
+    $conectado = false;
+    while ($tentativas < 2 && !$conectado) {
+        $ssh = new Net_SSH2($user_data["ip"], $user_data["porta"]);
+        if ($ssh->login($user_data["usuario"], $user_data["senha"])) {
+            $loop->addTimer(0, function () use($ssh) {
+                $ssh->exec($modulo);
+                $quantidadecpu = $ssh->exec($cpu);
+                $quantidadememoria = $ssh->exec($memoria);
+                $sql = "UPDATE servidores SET servercpu = '" . $quantidadecpu . "', serverram = '" . $quantidadememoria . "' WHERE ip = '" . $ipservidor . "'";
+                $result = $conn->query($sql);
+                $ssh->disconnect();
+            });
+            $conectado = true;
+            $sucess = true;
+        } else {
+            $tentativas++;
         }
-  $loop->run();
-
-
+    }
+    if (!$conectado) {
+        $servidores_com_erro[] = $user_data["ip"];
+    }
+}
+if ($sucess) {
+    echo "<script>sweetAlert(\"Sucesso!\", \"Modulos instalados com sucesso!\", \"success\").then((value) => { window.location.href = \"servidores.php\"; });</script>";
+} else {
+    echo "<script>sweetAlert(\"Erro!\", \"Não foi possível instalar os modulos!\", \"error\").then((value) => { window.location.href = \"servidores.php\"; });</script>";
+}
+$loop->run();
 
 ?>

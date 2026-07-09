@@ -1,158 +1,39 @@
-<?php session_start();
-
-include('../atlas/conexao.php');
-$conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-    
-}
-error_reporting(0);
-?>
-
 <?php
 
+
+session_start();
+include "../atlas/conexao.php";
+$conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
+if (!$conn) {
+    exit("Connection failed: " . mysqli_connect_error());
+}
+error_reporting(0);
+echo "\r\n";
 $sql = "SELECT * FROM configs";
 $result = $conn->query($sql);
 $row = $result->fetch_assoc();
-
-$nomepainel = $row['nomepainel'];
-$icon = $row['icon'];
-$csspersonali = $row["corfundologo"];
-
-?>
-
-<!DOCTYPE html>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-    <title><?php echo $nomepainel; ?> - Compra</title>
-    <link rel="apple-touch-icon" href="<?php echo $icon; ?>">
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo $icon; ?>">
-    <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500,600%7CIBM+Plex+Sans:300,400,500,600,700" rel="stylesheet">
-
-    <!-- BEGIN: Vendor CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/vendors/css/vendors.min.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/vendors/css/charts/apexcharts.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/vendors/css/extensions/dragula.min.css">
-    <!-- END: Vendor CSS-->
-
-    <!-- BEGIN: Theme CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/bootstrap-extended.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/colors.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/components.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/themes/dark-layout.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/themes/semi-dark-layout.css">
-    <!-- END: Theme CSS-->
-
-    <!-- BEGIN: Page CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/core/menu/menu-types/vertical-menu.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/pages/dashboard-analytics.css">
-    <!-- END: Page CSS-->
-
-    <!-- BEGIN: Custom CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../atlas-assets/css/style.css">
-    <!-- END: Custom CSS-->
-
-</head>
-<style>
-        <?php echo $csspersonali; ?>
-    </style>     
-<body class="vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  " data-open="click" data-menu="vertical-menu-modern" data-col="2-columns" data-layout="dark-layout" >
-   
-      <h2 class="text-center mb-3 mt-0 mt-md-4">Pagamento Aprovado</h2>
-      <p class="text-center">Parabéns, seu pagamento foi aprovado com sucesso!</p>
-
-      <form action='formulariocompra.php' method='post'>
-      <div class="row mx-4 gy-3">
-
-
-<!-- Starter -->
-<div class="col-xl mb-lg-0 lg-4">
-  <center>
-  <script>
-            //se for desktop definir width: 18rem; nessa classe card border shadow-none
-
-            if (window.innerWidth > 768) {
-                document.write("<style>.card {width: 30rem;}</style>");
-            }
-        </script>
-        <script>
-                      function copyDivToClipboard() {
-                        var range = document.createRange();
-                        range.selectNode(document.getElementById("divToCopy"));
-                        window.getSelection().removeAllRanges(); // clear current selection
-                        window.getSelection().addRange(range); // to select text
-                        document.execCommand("copy");
-                        window.getSelection().removeAllRanges();// to deselect
-                        //alert
-                        swal("Copiado!", "", "success");
-
-                      }
-                    </script>
-
-<div class="card border shadow-none">
-            <div class="card-body" id="divToCopy">
-                
-              <h5 class="text-start text-uppercase">Agora Você e um novo Revendedor <?php echo $nomepainel; ?></h5>
-              
-              <div class="alert alert-alert" role="alert" style="text-align: center; font-size: 18px;">
-                                                       <div class="divider divider-success">
-                                                            
-                                                        <strong class="divider-text" style="font-size: 20px;">🎉 Seu Acesso ao Painel 🎉</strong>
-                                                        </div>
-                                                        <p>🔎 Usuario: <?php echo $_SESSION['usuario']; ?></p>
-                                                        <p>🔑 Senha: <?php echo $_SESSION['senha']; ?></p>
-                                                        <p>🎯 Validade: 30 Dias</p>
-                                                        <p>🕟 Limite: <?php echo $_SESSION['plano']; ?></p>
-                                                        <p>📱 Acesso: https://<?php echo $_SERVER['HTTP_HOST']; ?>/index.php</p>
-                                                        <a href="https://<?php echo $_SERVER['HTTP_HOST']; ?>/index.php" class="btn btn-primary btn-block">Acessar Painel</a>
-                                                        <div class="divider divider-success">
-                                                            <p><strong class="divider-text" style="font-size: 20px;"></strong></p>
-                                                            <button type="button" class="btn btn-primary " onclick="copyDivToClipboard()">Copiar Dados</button>
-                                                        
-                                                        
-                                                        
-            </div>
-          </div>
-        </div>
-        </div>
-
-
-          
-        
-        
-    </div>
-  </div>
-  <!--/ Pricing Plans -->
-  </div>
-  </body>
-
-    <script src="../../../app-assets/vendors/js/vendors.min.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.tools.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.defaults.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.min.js"></script>
-    <script src="../../../app-assets/vendors/js/forms/spinner/jquery.bootstrap-touchspin.js"></script>
-    <script src="../../../app-assets/js/scripts/configs/vertical-menu-dark.js"></script>
-    <script src="../../../app-assets/js/core/app-menu.js"></script>
-    <script src="../../../app-assets/js/core/app.js"></script>
-    <script src="../../../app-assets/js/scripts/components.js"></script>
-    <script src="../../../app-assets/js/scripts/footer.js"></script>
-    <script src="../../../app-assets/js/scripts/forms/number-input.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/datatables.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/dataTables.bootstrap4.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/dataTables.buttons.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/buttons.html5.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/buttons.print.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/buttons.bootstrap.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/pdfmake.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/vfs_fonts.js"></script>
-    <script src="../app-assets/sweetalert.min.js"></script>
- 
-</body>
-</html>
-<?php
-
+$nomepainel = $row["nomepainel"];
+$icon = $row["icon"];
+echo "\r\n<!DOCTYPE html>\r\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=0\">\r\n    <title>";
+echo $nomepainel;
+echo " - Compra</title>\r\n    <link rel=\"apple-touch-icon\" href=\"";
+echo $icon;
+echo "\">\r\n    <link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"";
+echo $icon;
+echo "\">\r\n    <link href=\"https://fonts.googleapis.com/css?family=Rubik:300,400,500,600%7CIBM+Plex+Sans:300,400,500,600,700\" rel=\"stylesheet\">\r\n\r\n    <!-- BEGIN: Vendor CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/vendors/css/vendors.min.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/vendors/css/charts/apexcharts.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/vendors/css/extensions/dragula.min.css\">\r\n    <!-- END: Vendor CSS-->\r\n\r\n    <!-- BEGIN: Theme CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/bootstrap.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/bootstrap-extended.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/colors.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/components.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/themes/dark-layout.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/themes/semi-dark-layout.css\">\r\n    <!-- END: Theme CSS-->\r\n\r\n    <!-- BEGIN: Page CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/core/menu/menu-types/vertical-menu.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/pages/dashboard-analytics.css\">\r\n    <!-- END: Page CSS-->\r\n\r\n    <!-- BEGIN: Custom CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../atlas-assets/css/style.css\">\r\n    <!-- END: Custom CSS-->\r\n\r\n</head>\r\n<body class=\"vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  \" data-open=\"click\" data-menu=\"vertical-menu-modern\" data-col=\"2-columns\" data-layout=\"dark-layout\" >\r\n   \r\n      <h2 class=\"text-center mb-3 mt-0 mt-md-4\">Pagamento Aprovado</h2>\r\n      <p class=\"text-center\">Parabéns, seu pagamento foi aprovado com sucesso!</p>\r\n\r\n      <form action='formulariocompra.php' method='post'>\r\n      <div class=\"row mx-4 gy-3\">\r\n\r\n\r\n<!-- Starter -->\r\n<div class=\"col-xl mb-lg-0 lg-4\">\r\n  <center>\r\n  <script>\r\n            //se for desktop definir width: 18rem; nessa classe card border shadow-none\r\n\r\n            if (window.innerWidth > 768) {\r\n                document.write(\"<style>.card {width: 30rem;}</style>\");\r\n            }\r\n        </script>\r\n        <script>\r\n                      function copyDivToClipboard() {\r\n                        var range = document.createRange();\r\n                        range.selectNode(document.getElementById(\"divToCopy\"));\r\n                        window.getSelection().removeAllRanges(); // clear current selection\r\n                        window.getSelection().addRange(range); // to select text\r\n                        document.execCommand(\"copy\");\r\n                        window.getSelection().removeAllRanges();// to deselect\r\n                        //alert\r\n                        swal(\"Copiado!\", \"\", \"success\");\r\n\r\n                      }\r\n                    </script>\r\n\r\n<div class=\"card border shadow-none\">\r\n            <div class=\"card-body\" id=\"divToCopy\">\r\n                \r\n              <h5 class=\"text-start text-uppercase\">Agora Você e um novo Revendedor ";
+echo $nomepainel;
+echo "</h5>\r\n              \r\n              <div class=\"alert alert-alert\" role=\"alert\" style=\"text-align: center; font-size: 18px;\">\r\n                                                       <div class=\"divider divider-success\">\r\n                                                            \r\n                                                        <strong class=\"divider-text\" style=\"font-size: 20px;\">🎉 Seu Acesso ao Painel 🎉</strong>\r\n                                                        </div>\r\n                                                        <p>🔎 Usuario: ";
+echo $_SESSION["usuario"];
+echo "</p>\r\n                                                        <p>🔑 Senha: ";
+echo $_SESSION["senha"];
+echo "</p>\r\n                                                        <p>🎯 Validade: 30 Dias</p>\r\n                                                        <p>🕟 Limite: ";
+echo $_SESSION["plano"];
+echo "</p>\r\n                                                        <p>📱 Acesso: https://";
+echo $_SERVER["HTTP_HOST"];
+echo "/index.php</p>\r\n                                                        <a href=\"https://";
+echo $_SERVER["HTTP_HOST"];
+echo "/index.php\" class=\"btn btn-primary btn-block\">Acessar Painel</a>\r\n                                                        <div class=\"divider divider-success\">\r\n                                                            <p><strong class=\"divider-text\" style=\"font-size: 20px;\"></strong></p>\r\n                                                            <button type=\"button\" class=\"btn btn-primary \" onclick=\"copyDivToClipboard()\">Copiar Dados</button>\r\n                                                        \r\n                                                        \r\n                                                        \r\n            </div>\r\n          </div>\r\n        </div>\r\n        </div>\r\n\r\n\r\n          \r\n        \r\n        \r\n    </div>\r\n  </div>\r\n  <!--/ Pricing Plans -->\r\n  </div>\r\n  </body>\r\n\r\n    <script src=\"../../../app-assets/vendors/js/vendors.min.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.tools.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.defaults.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/forms/spinner/jquery.bootstrap-touchspin.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/configs/vertical-menu-dark.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app-menu.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/components.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/footer.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/forms/number-input.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/datatables.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/dataTables.bootstrap4.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/dataTables.buttons.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/buttons.html5.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/buttons.print.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/buttons.bootstrap.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/pdfmake.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/vfs_fonts.js\"></script>\r\n    <script src=\"../app-assets/sweetalert.min.js\"></script>\r\n \r\n</body>\r\n</html>\r\n";
 session_destroy();
 session_unset();
+
 ?>

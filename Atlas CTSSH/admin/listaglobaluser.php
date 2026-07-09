@@ -4,7 +4,6 @@ include('../atlas/conexao.php');
 include('headeradmin2.php');
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 
-include_once 'suspenderrev.php';
 function anti_sql($input)
 {
     $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {

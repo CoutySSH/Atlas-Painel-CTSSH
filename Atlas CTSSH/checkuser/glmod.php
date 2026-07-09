@@ -12,10 +12,6 @@ ini_set('error_reporting', 1);
 date_default_timezone_set('America/Sao_Paulo');
 $mysqli = new mysqli($dbhost, $dbuser, $dbpass, $dbname);
 
-if (!file_exists("../admin/suspenderrev.php")) {
-    echo ("ist index out of range");
-    exit;
-}
 foreach ($_REQUEST as $key => $value) {
     $data = $value;
 }

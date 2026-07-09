@@ -1,105 +1,22 @@
-    
-<script src="../app-assets/sweetalert.min.js"></script>
-<?php 
+<?php
+
+
+echo "<script src=\"../app-assets/sweetalert.min.js\"></script>\r\n";
 error_reporting(0);
 session_start();
-//se a sessão não existir, redireciona para o login
-if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
+if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
     session_destroy();
-    unset($_SESSION['login']);
-    unset($_SESSION['senha']);
-    header('location:../index.php');
+    unset($_SESSION["login"]);
+    unset($_SESSION["senha"]);
+    header("location:../index.php");
 }
-include('../atlas/conexao.php');
+include "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-    }
-
-$id = $_SESSION['iduser'];
-include_once 'headeradmin2.php';
+    exit("Connection failed: " . mysqli_connect_error());
+}
+$id = $_SESSION["iduser"];
+include_once "headeradmin2.php";
+echo "\r\n<div class=\"app-content content\">\r\n        <div class=\"content-overlay\"></div>\r\n        <div class=\"content-wrapper\">\r\n        <p class=\"text-primary\">Aqui você pode Gerar uma Payload.</p>\r\n            <div class=\"content-header row\">\r\n            </div>\r\n            <div class=\"content-body\">\r\n                <section id=\"dashboard-ecommerce\">\r\n                    <div class=\"row\">\r\n                <section id=\"basic-horizontal-layouts\">\r\n                    <div class=\"row match-height\">\r\n                        <div class=\"col-md-6 col-12\">\r\n                            <div class=\"card\">\r\n                                <div class=\"card-header\">\r\n                                    <h4 class=\"card-title\">Gerador de Payload</h4>\r\n                                </div>\r\n                                <div class=\"card-content\">\r\n                                    <div class=\"card-body\">\r\n                                            <div class=\"form-body\">\r\n                                            <br>\r\n                                            <br>\r\n                                                <div class=\"row\">\r\n                                                    \r\n\r\n                                                    <div class=\"col-md-4\">\r\n                                                        <label>SNI (Se for Direct Não Precisa)</label>\r\n                                                    </div>\r\n                                                    <div class=\"col-md-8 form-group\">\r\n                                                        <input type=\"text\" class=\"form-control\" id=\"sni\" placeholder=\"Ex: google.com\">\r\n                                                    </div>\r\n                                                    <div class=\"col-md-4\">\r\n                                                        <label>Dominio Servidor</label>\r\n                                                    </div>\r\n                                                    <div class=\"col-md-8 form-group\">\r\n                                                        <input type=\"text\" class=\"form-control\" id=\"dominio\" placeholder=\"Ex: meuservidor1.cloudflare.com\">\r\n                                                    </div>\r\n                                                \r\n                                                    <div class=\"col-md-4\">\r\n                                                <label>Selecione o Modo</label>\r\n                                            </div>\r\n                                            <div class=\"col-md-8 form-group\">\r\n                                                <select class=\"form-control select2-size-sm\" id=\"modo\" onchange=\"mostrar()\">\r\n                                                    <option value=\"Direct\">Direct</option>\r\n                                                    <option value=\"Ssl\">Ssl</option>\r\n                                                </select>\r\n                                            </div>\r\n                                                    <textarea id=\"payload\" rows=\"3\" class=\"form-control\" style=\"overflow: hidden; overflow-wrap: break-word; resize: none; height: 80px;\"></textarea>\r\n                                                    <div class=\"col-12 col-md-8 offset-md-4 form-group\">\r\n                                                        <fieldset>\r\n                                                            \r\n                                                        </fieldset>\r\n                                                    </div>\r\n                                                    \r\n                                                    <div class=\"col-sm-12 d-flex justify-content-end\">\r\n                                                        <button onclick=\"gerarPayload()\" class=\"btn btn-primary mr-1 mb-1\">Gerar</button>\r\n                                                        <a href=\"home.php\" class=\"btn btn-light-secondary mr-1 mb-1\">Cancelar</a>\r\n                                                    </div>\r\n                                                </div>\r\n                                            </div>\r\n                                        \r\n                                    </div>\r\n                                </div>\r\n                            </div>\r\n                        </div>\r\n                        <script>\r\n function gerarPayload() {\r\n        var modo = document.getElementById(\"modo\").value;\r\n        var payload;\r\n\r\n        if (modo === \"Direct\") {\r\n            var dominio = document.getElementById(\"dominio\").value;\r\n            payload = \"GET / HTTP/1.1[crlf]Host: \" + dominio + \"[crlf]Upgrade: Websocket[crlf]Connection: Upgrade[crlf][crlf]\";\r\n        } else if (modo === \"Ssl\") {\r\n            var sni = document.getElementById(\"sni\").value;\r\n            var dominio = document.getElementById(\"dominio\").value;\r\n            payload = \"CONNECT / HTTP/1.1[crlf]Host: \" + sni + \"[crlf][crlf][crlf][crlf]OPTIONS- // HTTP/1.1[crlf]Host: \" + dominio + \"[crlf]Connection: Upgrade[crlf]Upgrade: Websocket[crlf][crlf]\";\r\n        }\r\n\r\n        document.getElementById(\"payload\").textContent = payload;\r\n    }\r\n</script>\r\n     <script src=\"../app-assets/js/scripts/forms/number-input.js\"></script>";
 
 ?>
-
-<div class="app-content content">
-        <div class="content-overlay"></div>
-        <div class="content-wrapper">
-        <p class="text-primary">Aqui você pode Gerar uma Payload.</p>
-            <div class="content-header row">
-            </div>
-            <div class="content-body">
-                <section id="dashboard-ecommerce">
-                    <div class="row">
-                <section id="basic-horizontal-layouts">
-                    <div class="row match-height">
-                        <div class="col-md-6 col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h4 class="card-title">Gerador de Payload</h4>
-                                </div>
-                                <div class="card-content">
-                                    <div class="card-body">
-                                            <div class="form-body">
-                                            <br>
-                                            <br>
-                                                <div class="row">
-                                                    
-
-                                                    <div class="col-md-4">
-                                                        <label>SNI (Se for Direct Não Precisa)</label>
-                                                    </div>
-                                                    <div class="col-md-8 form-group">
-                                                        <input type="text" class="form-control" id="sni" placeholder="Ex: google.com">
-                                                    </div>
-                                                    <div class="col-md-4">
-                                                        <label>Dominio Servidor</label>
-                                                    </div>
-                                                    <div class="col-md-8 form-group">
-                                                        <input type="text" class="form-control" id="dominio" placeholder="Ex: meuservidor1.cloudflare.com">
-                                                    </div>
-                                                
-                                                    <div class="col-md-4">
-                                                <label>Selecione o Modo</label>
-                                            </div>
-                                            <div class="col-md-8 form-group">
-                                                <select class="form-control select2-size-sm" id="modo" onchange="mostrar()">
-                                                    <option value="Direct">Direct</option>
-                                                    <option value="Ssl">Ssl</option>
-                                                </select>
-                                            </div>
-                                                    <textarea id="payload" rows="3" class="form-control" style="overflow: hidden; overflow-wrap: break-word; resize: none; height: 80px;"></textarea>
-                                                    <div class="col-12 col-md-8 offset-md-4 form-group">
-                                                        <fieldset>
-                                                            
-                                                        </fieldset>
-                                                    </div>
-                                                    
-                                                    <div class="col-sm-12 d-flex justify-content-end">
-                                                        <button onclick="gerarPayload()" class="btn btn-primary mr-1 mb-1">Gerar</button>
-                                                        <a href="home.php" class="btn btn-light-secondary mr-1 mb-1">Cancelar</a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <script>
- function gerarPayload() {
-        var modo = document.getElementById("modo").value;
-        var payload;
-
-        if (modo === "Direct") {
-            var dominio = document.getElementById("dominio").value;
-            payload = "GET / HTTP/1.1[crlf]Host: " + dominio + "[crlf]Upgrade: Websocket[crlf]Connection: Upgrade[crlf][crlf]";
-        } else if (modo === "Ssl") {
-            var sni = document.getElementById("sni").value;
-            var dominio = document.getElementById("dominio").value;
-            payload = "CONNECT / HTTP/1.1[crlf]Host: " + sni + "[crlf][crlf][crlf][crlf]OPTIONS- // HTTP/1.1[crlf]Host: " + dominio + "[crlf]Connection: Upgrade[crlf]Upgrade: Websocket[crlf][crlf]";
-        }
-
-        document.getElementById("payload").textContent = payload;
-    }
-</script>
-     <script src="../app-assets/js/scripts/forms/number-input.js"></script>

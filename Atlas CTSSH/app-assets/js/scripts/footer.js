@@ -5,7 +5,7 @@
 Item Name: Atlas Painel
     Version: 1.0
     Author: Atlas
-    Author URL: https://atlaspainel.shop
+    Author URL: https://api.painelpro.shop
 ==========================================================================================*/
 
 //Check to see if the window is top if not then display button

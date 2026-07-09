@@ -1,274 +1,115 @@
-<?php error_reporting(0);
+<?php
+
+
+echo "\r\n";
+error_reporting(0);
 session_start();
-include_once("../atlas/conexao.php");
+include_once "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
-if(! $conn ) {
-
-  echo $conn->connect_error;
-        }
-        $sqlvezesuso = "SELECT * FROM cupons";
-    $resultvezesuso = $conn->query($sqlvezesuso);
-    
-    if ($resultvezesuso->num_rows > 0) {
-        while ($rowvezesuso = $resultvezesuso->fetch_assoc()) {
-            $vezesuso[] = $rowvezesuso;
-        }
-    
-        foreach ($vezesuso as $cupom) {
-            if ($cupom['usado'] >= $cupom['vezesuso']) {
-                $cupomId = $cupom['id'];
-                $sqlDelete = "DELETE FROM cupons WHERE id = $cupomId";
-                $conn->query($sqlDelete);
-            }
-        }
-    }
-
-    function anti_sql($input)
-{
-    $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {
-        return '';
-    }, $input);
-    $seg = trim($seg);
-    $seg = strip_tags($seg);
-    $seg = addslashes($seg);
-    return $seg;
+if (!$conn) {
+    echo $conn->connect_error;
 }
-
-$sql = "SELECT * FROM accounts WHERE id = '$_SESSION[byid]'";
+$sql = "SELECT * FROM accounts WHERE id = '" . $_SESSION["byid"] . "'";
 $result = $conn->query($sql);
-if ($result->num_rows > 0) {
+if (0 < $result->num_rows) {
     while ($row = $result->fetch_assoc()) {
-        $_SESSION['tokenaccess'] = $row['accesstoken'];
-        $_SESSION['valorusuario'] = $row['valorusuario'];
-        $_SESSION['acesstokenpaghiper'] = $row['acesstokenpaghiper'];
+        $_SESSION["tokenaccess"] = $row["accesstoken"];
+        $_SESSION["valorusuario"] = $row["valorusuario"];
+        $_SESSION["acesstokenpaghiper"] = $row["acesstokenpaghiper"];
     }
 }
-include_once '../admin/suspenderrev.php';
-
-              if (isset($_POST['cupom'])) {
-                isset($_POST['cupom']);
-                isset($_SESSION['cupom']);
-              }
-
-    $sql = "SELECT * FROM configs";
-    $result = mysqli_query($conn, $sql);
-    while ($row = mysqli_fetch_assoc($result)) {
-        $nomepainel = $row['nomepainel'];
-        $logopainel = $row['logo'];
-        $logopainelmini = $row['icon'];
-        $csspersonali = $row["corfundologo"];
-
-    }
-   
-//se nao existir o tokenacess
-if($_SESSION['tokenaccess'] == "" && $_SESSION['acesstokenpaghiper'] == ""){
-    echo "<script>alert('Revendedor nÃ£o Cadrastado!');</script>";
-    echo "<script>window.location.href = '../renovar.php';</script>";
+if (isset($_POST["cupom"])) {
+    isset($_POST["cupom"]);
+    isset($_SESSION["cupom"]);
+}
+$sql = "SELECT * FROM configs";
+$result = mysqli_query($conn, $sql);
+while ($row = mysqli_fetch_assoc($result)) {
+    $nomepainel = $row["nomepainel"];
+    $logopainel = $row["logo"];
+    $logopainelmini = $row["icon"];
+}
+if ($_SESSION["tokenaccess"] == "" && $_SESSION["acesstokenpaghiper"] == "") {
+    echo "<script>alert('Revendedor não Cadrastado!');</script><script>window.location.href = '../renovar.php';</script>";
     exit;
 }
-//print do cupom
-$_SESSION['valor'] = $_SESSION['valorusuario'] * $_SESSION['limite'];
-
-$_SESSION['vencimento'] = date('d/m/Y', strtotime($_SESSION['expira']));
-$login = anti_sql($_SESSION['login']);
-$senha = anti_sql($_SESSION['senha']);
-
-
-$sql = "SELECT * FROM ssh_accounts WHERE login = '$login' AND senha = '$senha'";
+$_SESSION["valor"] = $_SESSION["valorusuario"] * $_SESSION["limite"];
+$_SESSION["vencimento"] = date("d/m/Y", strtotime($_SESSION["expira"]));
+$login = $_SESSION["login"];
+$senha = $_SESSION["senha"];
+$sql = "SELECT * FROM ssh_accounts WHERE login = '" . $login . "' AND senha = '" . $senha . "'";
 $result = mysqli_query($conn, $sql);
-              if (mysqli_num_rows($result) > 0) {
-                  $row = mysqli_fetch_assoc($result);
-                  $_SESSION['id'] = $row['id'];
-                  $_SESSION['login'] = $row['login'];
-                  $_SESSION['senha'] = $row['senha'];
-                  $_SESSION['byid'] = $row['byid'];
-                  $_SESSION['limite'] = $row['limite'];
-                  $_SESSION['expira'] = $row['expira'];
-                  $_SESSION['categoria'] = $row['categoriaid'];
-                  $valormensal = $row['valormensal'];
-                  
-              }
-
-              $sql = "SELECT * FROM atribuidos WHERE userid = '$_SESSION[byid]'";
-              $result = $conn->query($sql);
-              if ($result->num_rows > 0) {
-                  while ($row = $result->fetch_assoc()) {
-                      $_SESSION['limitedono'] = $row['limite'];
-                      $_SESSION['tipo'] = $row['tipo'];
-                  }
-              }
-              if ($_SESSION['byid'] == 1) {
-                  $_SESSION['limitedono'] = 10000000000;
-              }
-              if ($_SESSION['limitedono'] < $_SESSION['limite']) {
-                  echo "<script>alert('Revendedor nÃ£o Tem Limite!');</script>";
-                  echo "<script>window.location.href = '../renovar.php';</script>";
-                  exit;
-                
-              }
-              $_SESSION['valor'] = $_SESSION['valorusuario'] * $_SESSION['limite'];
-              //echo "<script>alert('O Valor Ã© de R$ $_SESSION[valorusuario]');</script>";
-              //se valor mensal nao for nulo se nao for 0
-              if ($valormensal != "" && $valormensal != 0) {
-                  $_SESSION['valor'] = $valormensal;  
-                  $_SESSION['valormensal'] = $valormensal;
-              }
-
-
-?>
-
-<!DOCTYPE html>
-<html lang="pt-br">
-  <head>
-    <!-- Required meta tags -->
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <?php
-     $sql = "SELECT * FROM configs";
-     $result = $conn -> query($sql);
-     if ($result->num_rows > 0) {
-         while($row = $result->fetch_assoc()) {
-             $nomepainel = $row["nomepainel"];
-             $logo = $row["logo"];
-             $icon = $row["icon"];
-         }
-     }
-    ?>
-<!DOCTYPE html>
-<html class="loading" lang="pt-br" data-textdirection="ltr">
-
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-    <meta name="author" content="Thomas">
-    <title><?php echo $nomepainel; ?> - RenovaÃ§Ã£o</title>
-    <link rel="apple-touch-icon" href="<?php echo $icon; ?>">
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo $icon; ?>">
-    <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500,600%7CIBM+Plex+Sans:300,400,500,600,700" rel="stylesheet">
-
-
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/vendors/css/vendors.min.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/bootstrap-extended.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/colors.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/components.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/themes/dark-layout.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/themes/semi-dark-layout.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/core/menu/menu-types/vertical-menu.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/pages/authentication.css">
-    <link rel="stylesheet" type="text/css" href="../../../atlas-assets/css/style.css">
-    <script src="../app-assets/sweetalert.min.js"></script>
-
-</head>
-<style>
-        <?php echo $csspersonali; ?>
-    </style>     
-<body class="vertical-layout vertical-menu-modern dark-layout 1-column  navbar-sticky footer-static bg-full-screen-image  blank-page blank-page" data-open="click" data-menu="vertical-menu-modern" data-col="1-column" data-layout="dark-layout">
-    <div class="app-content content">
-        <div class="content-overlay"></div>
-        <div class="content-wrapper">
-            <div class="content-header row">
-            </div>
-            <div class="content-body">
-                <section id="auth-login" class="row flexbox-container">
-                    <div class="col-xl-8 col-11">
-                        
-                            
-                               
-                                    <div class="card disable-rounded-right mb-0 p-2 h-100 d-flex justify-content-center">
-                                        <div class="card-header pb-1">
-                                            <div class="card-title">
-                                                <h4 class="text-center mb-2">Seja Bem Vindo(a) <?php echo $_SESSION['login']?></h4>
-                                            </div>
-                                        </div>
-                                        <div class="card-content">
-                                            <div class="card-body">
-                                            <div class="col-xl mb-lg-0 lg-4">
-          <div class="card border border-2 border-primary">
-            <div class="card-body">
-              <div class="d-flex justify-content-between flex-wrap mb-3">
-              </div>
-
-              <div class="text-center position-relative mb-4 pb-1">
-                <div class="mb-2 d-flex">
-                  </div>
-                  <h1 class="price-toggle text-primary price-yearly mb-0" style="text-align: center;"><?php echo $_SESSION['valor']?> R$ Mensal </h1>
-              </div>
-              <center>
-              <p>Renove seu plano para continuar usando nossos serviÃ§os.</p>
-              </center>
-              <hr>
-
-              <ul class="list-unstyled pt-2 pb-1">
-                <li class="mb-2">
-                  <span class="badge badge-center w-px-20 h-px-20 rounded-pill bg-label-primary me-2">
-                    <i class="bx bx-check bx-xs"></i>
-                  </span>
-                  O Seu Limite Ã© <?php echo $_SESSION['limite']?>
-                </li>
-                <li class="mb-2">
-                  <span class="badge badge-center w-px-20 h-px-20 rounded-pill bg-label-primary me-2">
-                    <i class="bx bx-check bx-xs"></i>
-                  </span>
-                  O Seu Vencimento Ã© <?php echo $_SESSION['vencimento']?>
-                </li>
-                <center>
-                <p>Tem um Cupom?</p>
-                </center>        
-                <form action="index.php" method="POST">
-                        <input type="text" name="cupom" placeholder="Codigo do Cupom" class="form-control">
-              </ul>
-              
-              <input type="submit" class="btn btn-primary d-grid w-100" value="Renovar"></input>
-            </div>
-            </form>
-          </div>
-        </div>
-        <?php 
-if (isset($_POST['cupom'])) {
-    $cupom = anti_sql($_POST['cupom']);
-    $_SESSION['cupom'] = $cupom;
-    
-    $sql = "SELECT * FROM cupons WHERE cupom = '$cupom'";
-    $result = mysqli_query($conn, $sql);
-    if (mysqli_num_rows($result) > 0) {
-        $row = mysqli_fetch_assoc($result);
-        $_SESSION['cupom'] = $row['cupom'];
-        $_SESSION['desconto'] = $row['desconto'];
-        echo "<script>swal('Cupom Aplicado Com Sucesso!', 'Desconto de $_SESSION[desconto]%', 'success');</script>";
-        echo "<script>setTimeout(\"location.href = 'processando.php';\",1500);</script>";
-        exit;
-    } else {
-        echo "<script>window.location.href = 'processando.php';</script>";
+if (0 < mysqli_num_rows($result)) {
+    $row = mysqli_fetch_assoc($result);
+    $_SESSION["id"] = $row["id"];
+    $_SESSION["login"] = $row["login"];
+    $_SESSION["senha"] = $row["senha"];
+    $_SESSION["byid"] = $row["byid"];
+    $_SESSION["limite"] = $row["limite"];
+    $_SESSION["expira"] = $row["expira"];
+    $_SESSION["categoria"] = $row["categoriaid"];
+    $valormensal = $row["valormensal"];
+}
+$sql = "SELECT * FROM atribuidos WHERE userid = '" . $_SESSION["byid"] . "'";
+$result = $conn->query($sql);
+if (0 < $result->num_rows) {
+    while ($row = $result->fetch_assoc()) {
+        $_SESSION["limitedono"] = $row["limite"];
+        $_SESSION["tipo"] = $row["tipo"];
     }
 }
-    
+if ($_SESSION["byid"] == 1) {
+    $_SESSION["limitedono"] = 0;
+}
+if ($_SESSION["limitedono"] < $_SESSION["limite"]) {
+    echo "<script>alert('Revendedor não Tem Limite!');</script><script>window.location.href = '../renovar.php';</script>";
+    exit;
+}
+$_SESSION["valor"] = $_SESSION["valorusuario"] * $_SESSION["limite"];
+if ($valormensal != "" && $valormensal != 0) {
+    $_SESSION["valor"] = $valormensal;
+    $_SESSION["valormensal"] = $valormensal;
+}
+echo "\r\n\r\n\r\n\r\n<!DOCTYPE html>\r\n<html lang=\"pt-br\">\r\n  <head>\r\n    <!-- Required meta tags -->\r\n    <meta charset=\"utf-8\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\">\r\n    ";
+$sql = "SELECT * FROM configs";
+$result = $conn->query($sql);
+if (0 < $result->num_rows) {
+    while ($row = $result->fetch_assoc()) {
+        $nomepainel = $row["nomepainel"];
+        $logo = $row["logo"];
+        $icon = $row["icon"];
+    }
+}
+echo "<!DOCTYPE html>\r\n<html class=\"loading\" lang=\"pt-br\" data-textdirection=\"ltr\">\r\n\r\n<head>\r\n    <meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=0\">\r\n    <meta name=\"author\" content=\"Thomas\">\r\n    <title>";
+echo $nomepainel;
+echo " - Renovação</title>\r\n    <link rel=\"apple-touch-icon\" href=\"";
+echo $icon;
+echo "\">\r\n    <link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"";
+echo $icon;
+echo "\">\r\n    <link href=\"https://fonts.googleapis.com/css?family=Rubik:300,400,500,600%7CIBM+Plex+Sans:300,400,500,600,700\" rel=\"stylesheet\">\r\n\r\n\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/vendors/css/vendors.min.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/bootstrap.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/bootstrap-extended.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/colors.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/components.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/themes/dark-layout.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/themes/semi-dark-layout.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/core/menu/menu-types/vertical-menu.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/pages/authentication.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../atlas-assets/css/style.css\">\r\n    <script src=\"../app-assets/sweetalert.min.js\"></script>\r\n\r\n</head>\r\n\r\n<body class=\"vertical-layout vertical-menu-modern dark-layout 1-column  navbar-sticky footer-static bg-full-screen-image  blank-page blank-page\" data-open=\"click\" data-menu=\"vertical-menu-modern\" data-col=\"1-column\" data-layout=\"dark-layout\">\r\n    <div class=\"app-content content\">\r\n        <div class=\"content-overlay\"></div>\r\n        <div class=\"content-wrapper\">\r\n            <div class=\"content-header row\">\r\n            </div>\r\n            <div class=\"content-body\">\r\n                <section id=\"auth-login\" class=\"row flexbox-container\">\r\n                    <div class=\"col-xl-8 col-11\">\r\n                        \r\n                            \r\n                               \r\n                                    <div class=\"card disable-rounded-right mb-0 p-2 h-100 d-flex justify-content-center\">\r\n                                        <div class=\"card-header pb-1\">\r\n                                            <div class=\"card-title\">\r\n                                                <h4 class=\"text-center mb-2\">Seja Bem Vindo(a) ";
+echo $_SESSION["login"];
+echo "</h4>\r\n                                            </div>\r\n                                        </div>\r\n                                        <div class=\"card-content\">\r\n                                            <div class=\"card-body\">\r\n                                            <div class=\"col-xl mb-lg-0 lg-4\">\r\n          <div class=\"card border border-2 border-primary\">\r\n            <div class=\"card-body\">\r\n              <div class=\"d-flex justify-content-between flex-wrap mb-3\">\r\n              </div>\r\n\r\n              <div class=\"text-center position-relative mb-4 pb-1\">\r\n                <div class=\"mb-2 d-flex\">\r\n                  </div>\r\n                  <h1 class=\"price-toggle text-primary price-yearly mb-0\" style=\"text-align: center;\">";
+echo $_SESSION["valor"];
+echo " R\$ Mensal </h1>\r\n              </div>\r\n              <center>\r\n              <p>Renove seu plano para continuar usando nossos serviços.</p>\r\n              </center>\r\n              <hr>\r\n\r\n              <ul class=\"list-unstyled pt-2 pb-1\">\r\n                <li class=\"mb-2\">\r\n                  <span class=\"badge badge-center w-px-20 h-px-20 rounded-pill bg-label-primary me-2\">\r\n                    <i class=\"bx bx-check bx-xs\"></i>\r\n                  </span>\r\n                  O Seu Limite é ";
+echo $_SESSION["limite"];
+echo "                </li>\r\n                <li class=\"mb-2\">\r\n                  <span class=\"badge badge-center w-px-20 h-px-20 rounded-pill bg-label-primary me-2\">\r\n                    <i class=\"bx bx-check bx-xs\"></i>\r\n                  </span>\r\n                  O Seu Vencimento é ";
+echo $_SESSION["vencimento"];
+echo "                </li>\r\n                <center>\r\n                <p>Tem um Cupom?</p>\r\n                </center>        \r\n                <form action=\"index.php\" method=\"POST\">\r\n                        <input type=\"text\" name=\"cupom\" placeholder=\"Codigo do Cupom\" class=\"form-control\">\r\n              </ul>\r\n              \r\n              <input type=\"submit\" class=\"btn btn-primary d-grid w-100\" value=\"Renovar\"></input>\r\n            </div>\r\n            </form>\r\n          </div>\r\n        </div>\r\n        ";
+if (isset($_POST["cupom"])) {
+    $cupom = $_POST["cupom"];
+    $_SESSION["cupom"] = $cupom;
+    $sql = "SELECT * FROM cupons WHERE cupom = '" . $cupom . "'";
+    $result = mysqli_query($conn, $sql);
+    if (0 < mysqli_num_rows($result)) {
+        $row = mysqli_fetch_assoc($result);
+        $_SESSION["cupom"] = $row["cupom"];
+        $_SESSION["desconto"] = $row["desconto"];
+        echo "<script>swal('Cupom Aplicado Com Sucesso!', 'Desconto de " . $_SESSION["desconto"] . "%', 'success');</script>";
+        echo "<script>setTimeout(\"location.href = 'processando.php';\",1500);</script>";
+        exit;
+    }
+    echo "<script>window.location.href = 'processando.php';</script>";
+}
+echo "\r\n                                                <hr>\r\n\r\n                                            </div>\r\n                                        </div>\r\n                                    </div>\r\n                                </div>\r\n                                \r\n                            </div>\r\n                        </div>\r\n                    </div>\r\n                </section>\r\n            </div>\r\n        </div>\r\n    </div>\r\n    <script src=\"../../../app-assets/vendors/js/vendors.min.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.tools.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.defaults.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.min.js\"></script>\r\n    <script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/configs/vertical-menu-dark.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app-menu.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/components.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/footer.js\"></script>\r\n</body>\r\n</html>";
+
 ?>
-
-                                                <hr>
-
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </div>
-        </div>
-    </div>
-    <script src="../../../app-assets/vendors/js/vendors.min.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.tools.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.defaults.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="../../../app-assets/js/scripts/configs/vertical-menu-dark.js"></script>
-    <script src="../../../app-assets/js/core/app-menu.js"></script>
-    <script src="../../../app-assets/js/core/app.js"></script>
-    <script src="../../../app-assets/js/scripts/components.js"></script>
-    <script src="../../../app-assets/js/scripts/footer.js"></script>
-</body>
-</html>

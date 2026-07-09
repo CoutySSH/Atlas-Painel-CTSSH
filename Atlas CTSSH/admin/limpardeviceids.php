@@ -1,20 +1,20 @@
-<?php session_start();
-include('../atlas/conexao.php');
+<?php
+
+
+echo "<script src=\"../app-assets/sweetalert.min.js\"></script>\r\n\r\n";
+session_start();
+include "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
-include('headeradmin2.php');
-//limpar tabela deviceid
-if ($_SESSION['login'] !== 'admin') {
-    // Se não for, destrói a sessão e redireciona para a página de login
+include "headeradmin2.php";
+if ($_SESSION["login"] != "admin") {
     session_destroy();
-    header('Location: index.php');
-    exit();
+    header("Location: index.php");
+    exit;
 }
 $sql = "DELETE FROM atlasdeviceid";
-$result = $conn -> query($sql);
-//limpar tabela userlimiter
+$result = $conn->query($sql);
 $sql2 = "DELETE FROM userlimiter";
-$result2 = $conn -> query($sql2);
-echo "<script>swal('Sucesso!', 'Todos os DeviceIDs foram resetados com sucesso!', 'success');</script>";
-echo "<script>setTimeout(\"location.href = 'listarusuarios.php';\",1500);</script>";
+$result2 = $conn->query($sql2);
+echo "<script>swal('Sucesso!', 'Todos os DeviceIDs foram resetados com sucesso!', 'success');</script><script>setTimeout(\"location.href = 'listarusuarios.php';\",1500);</script>";
 
 ?>

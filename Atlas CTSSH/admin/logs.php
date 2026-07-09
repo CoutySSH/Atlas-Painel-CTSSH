@@ -1,126 +1,32 @@
-<script src="../app-assets/sweetalert.min.js"></script>
-<?php error_reporting(0);
-if (session_status() == PHP_SESSION_NONE) { session_start(); }
-include 'headeradmin2.php';
-include('../atlas/conexao.php');
+<?php
+
+
+echo "<script src=\"../app-assets/sweetalert.min.js\"></script>\r\n";
+error_reporting(0);
+session_start();
+include "headeradmin2.php";
+include "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-    
+    exit("Connection failed: " . mysqli_connect_error());
 }
-
-    $sql2 = "SELECT * FROM logs";
-    $result = mysqli_query($conn, $sql2);
+$sql2 = "SELECT * FROM logs";
+$result = mysqli_query($conn, $sql2);
+echo "\r\n<script src=\"https://code.jquery.com/jquery-3.5.1.js\"></script>\r\n<script src=\"https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js\"></script>\r\n<script src=\"https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js\"></script>\r\n\r\n<body class=\"vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  \" data-open=\"click\" data-menu=\"vertical-menu-modern\" data-col=\"2-columns\" data-layout=\"dark-layout\">\r\n<div class=\"app-content content\">\r\n    <div class=\"content-overlay\"></div>\r\n    <div class=\"content-wrapper\">\r\n        <section id=\"basic-datatable\">\r\n            <div class=\"row\">\r\n             \r\n                <div class=\"col-12\">\r\n                    <div class=\"card\">\r\n                        <div class=\"card-header\">\r\n                            <h4 class=\"card-title\">Logs</h4>\r\n                        </div>\r\n                        <script>\r\n\r\n\r\nif (window.innerWidth < 678) {\r\n\r\n    document.write('<div class=\"alert alert-warning\" role=\"alert\"> <strong>Atenção!</strong> Mova para lado para ver mais detalhes! </div>');\r\n    window.setTimeout(function() {\r\n        \$(\".alert\").fadeTo(500, 0).slideUp(500, function(){\r\n            \$(this).remove(); \r\n        });\r\n    }, 3000);\r\n}\r\n\r\n</script>\r\n                        <div class=\"card-content\">\r\n                            <div class=\"card-body card-dashboard\">\r\n                            <form action='logs.php' method='POST'>\r\n                                <button type='submit' name='limparlogs' class='btn btn-danger mr-1 mb-1'>Limpar Todas Logs</button>\r\n                                </form>";
+if (isset($_POST["limparlogs"])) {
+    $sql = "TRUNCATE TABLE logs";
+    $result = $conn->query($sql);
+    echo "<script>alert('Logs apagados com sucesso!');</script>";
+}
+echo "                                <!-- nao mostar o sroll -->\r\n                                <div class=\"table-responsive\" style=\" overflow: auto; overflow-y: hidden;\">\r\n                                    <table class=\"table zero-configuration\" id=\"myTable\">\r\n                                                <thead>\r\n                                                    <tr>\r\n                                                    <th> Revendedor </th>\r\n                                                    <th> Detalhes </th>\r\n                                                    <th> Data </th>\r\n                                                    </tr>\r\n                                                </thead>\r\n                                                <tbody>\r\n                                                ";
+while ($user_data = mysqli_fetch_assoc($result)) {
+    if ($user_data["revenda"] != "Servidor") {
+        echo "<td>" . $user_data["revenda"] . "</td>";
+        echo "<td>" . $user_data["texto"] . "</td>";
+        echo "<td>" . $user_data["validade"] . "</td>";
+    }
+    echo "</tr>";
+}
+echo "  </tbody>\r\n    </table>\r\n    </div>\r\n    </div>\r\n    </div>\r\n    \r\n\r\n                                        \r\n                    \r\n                          \r\n                                        \r\n                        \r\n    <!-- END: Content-->\r\n    <script src=\"cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js\"></script>\r\n    <script src=\"../app-assets/js/scripts/datatables/datatable.js\"></script>\r\n    <script>\r\n    \$('#myTable').DataTable({\r\n\r\n        /* traduzir somente */\r\n        \"language\": {\r\n            \"lengthMenu\": \"Mostrar _MENU_ registros por página\",\r\n            \"zeroRecords\": \"Nenhum registro encontrado\",\r\n            \"info\": \"Mostrando página _PAGE_ de _PAGES_\",\r\n            \"infoEmpty\": \"Nenhum registro disponível\",\r\n            \"infoFiltered\": \"(filtrado de _MAX_ registros no total)\",\r\n            \"search\": \"Pesquisar:\",\r\n            \"paginate\": {\r\n                \"first\": \"\",\r\n                \"last\": \"\",\r\n                \"next\": \"\",\r\n                \"previous\": \"\"\r\n            }\r\n        }\r\n    \r\n    });\r\n\r\n</script>\r\n<script src=\"../app-assets/sweetalert.min.js\"></script>\r\n<!-- ajax -->\r\n<script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js\" integrity=\"sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==\" crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\"></script>\r\n";
 
 ?>
-
-<script src="https://code.jquery.com/jquery-3.5.1.js"></script>
-<script src="https://cdn.datatables.net/1.10.22/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.10.22/js/dataTables.bootstrap4.min.js"></script>
-
-<body class="vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  " data-open="click" data-menu="vertical-menu-modern" data-col="2-columns" data-layout="dark-layout">
-<div class="app-content content">
-    <div class="content-overlay"></div>
-    <div class="content-wrapper">
-        <section id="basic-datatable">
-            <div class="row">
-             
-                <div class="col-12">
-                    <div class="card">
-                        <div class="card-header">
-                            <h4 class="card-title">Logs</h4>
-                        </div>
-                        <script>
-
-
-if (window.innerWidth < 678) {
-
-    document.write('<div class="alert alert-warning" role="alert"> <strong>Atenção!</strong> Mova para lado para ver mais detalhes! </div>');
-    window.setTimeout(function() {
-        $(".alert").fadeTo(500, 0).slideUp(500, function(){
-            $(this).remove(); 
-        });
-    }, 3000);
-}
-
-</script>
-                        <div class="card-content">
-                            <div class="card-body card-dashboard">
-                            <?php 
-                                echo "<form action='logs.php' method='POST'>
-                                <button type='submit' name='limparlogs' class='btn btn-danger mr-1 mb-1'>Limpar Todas Logs</button>
-                                </form>";
-                                if (isset($_POST['limparlogs'])) {
-                                    $sql = "TRUNCATE TABLE logs";
-                                    $result = $conn -> query($sql);
-                                    echo "<script>alert('Logs apagados com sucesso!');</script>";
-                                }
-                                ?>
-                                <!-- nao mostar o sroll -->
-                                <div class="table-responsive" style=" overflow: auto; overflow-y: hidden;">
-                                    <table class="table zero-configuration" id="myTable">
-                                                <thead>
-                                                    <tr>
-                                                    <th> Revendedor </th>
-                                                    <th> Detalhes </th>
-                                                    <th> Data </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                <?php
-                          //result e result2
-                          while ($user_data = mysqli_fetch_assoc($result)) {
-                            if ($user_data['revenda'] == 'Servidor') {
-                            } else {
-                            echo "<td>".$user_data['revenda']."</td>";
-                            echo "<td>".$user_data['texto']."</td>";
-                            echo "<td>".$user_data['validade']."</td>";
-                            }
-                            
-                            
-                            echo "</tr>";
-                          }
-                          
-                          ?>
-  </tbody>
-    </table>
-    </div>
-    </div>
-    </div>
-    
-
-                                        
-                    
-                           
-                                        
-        
-    <!-- END: Content-->
-    <script src="cdn.datatables.net/1.13.2/js/jquery.dataTables.min.js"></script>
-    <script src="../app-assets/js/scripts/datatables/datatable.js"></script>
-    <script>
-    $('#myTable').DataTable({
-
-        /* traduzir somente */
-        "language": {
-            "lengthMenu": "Mostrar _MENU_ registros por página",
-            "zeroRecords": "Nenhum registro encontrado",
-            "info": "Mostrando página _PAGE_ de _PAGES_",
-            "infoEmpty": "Nenhum registro disponível",
-            "infoFiltered": "(filtrado de _MAX_ registros no total)",
-            "search": "Pesquisar:",
-            "paginate": {
-                "first": "",
-                "last": "",
-                "next": "",
-                "previous": ""
-            }
-        }
-    
-    });
-
-</script>
-<script src="../app-assets/sweetalert.min.js"></script>
-<!-- ajax -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-                       

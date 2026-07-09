@@ -1,73 +1,52 @@
-<?php if (!isset($_SESSION)){
+<?php
+
+
+if (!isset($_SESSION)) {
     error_reporting(0);
-session_start();
-
+    session_start();
 }
-
-//se a sessão não existir, redireciona para o login
-if(!isset($_SESSION['login']) and !isset($_SESSION['senha'])){
+if (!isset($_SESSION["login"]) && !isset($_SESSION["senha"])) {
     session_destroy();
-    unset($_SESSION['login']);
-    unset($_SESSION['senha']);
-    header('location:index.php');
+    unset($_SESSION["login"]);
+    unset($_SESSION["senha"]);
+    header("location:index.php");
 }
-include('../atlas/conexao.php');
+include "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-    
+    exit("Connection failed: " . mysqli_connect_error());
 }
-
-if ($_SESSION['login'] == 'admin') {
-}else{
-  echo "<script>alert('Você não tem permissão para acessar essa página!');window.location.href='../logout.php';</script>";
-  exit();
+if ($_SESSION["login"] == "admin") {
+    if (!empty($_POST["id"])) {
+        $id = $_POST["id"];
+        $comando = $_POST["comando"];
+    }
+    set_time_limit(0);
+    ignore_user_abort(true);
+    set_include_path(get_include_path() . PATH_SEPARATOR . "../lib2");
+    include "Net/SSH2.php";
+    $sql2 = "SELECT * FROM servidores WHERE id = '" . $id . "'";
+    $result = $conn->query($sql2);
+    $row = mysqli_fetch_assoc($result);
+    $login = $row["usuario"];
+    $senha = $row["senha"];
+    $porta = $row["porta"];
+    $ip = $row["ip"];
+    try {
+        $ssh = new Net_SSH2($ip, $porta);
+        if (!$ssh->login($login, $senha)) {
+            echo "Não foi possível autenticar";
+        } else {
+            $ssh->exec($comando . " > /dev/null 2>&1 &");
+            $ssh->disconnect();
+            echo "Comando enviado com sucesso";
+        }
+    } catch (Exception $ex) {
+        echo "Não foi possível conectar ao servidor";
+    }
+} else {
+    echo "<script>alert('Você não tem permissão para acessar essa página!');window.location.href='../logout.php';</script>";
+    exit;
 }
-function anti_sql($input)
-{
-    $seg = preg_replace_callback("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/i", function($match) {
-        return '';
-    }, $input);
-    $seg = trim($seg);
-    $seg = strip_tags($seg);
-    $seg = addslashes($seg);
-    return $seg;
-}
-
-
-if (!empty($_POST['id'])) {
-    $id = anti_sql($_POST['id']);
-    $comando = anti_sql($_POST['comando']);
-}
-
-  
-          set_time_limit(0); // Limite de tempo de execução: 2h. Deixe 0 (zero) para sem limite
-          ignore_user_abort(true); // Continua a execução mesmo que o usuário cancele o download
-          
-          set_include_path(get_include_path() . PATH_SEPARATOR . '../lib2');
-          include ('Net/SSH2.php');
-            //pegar senha e login do servidor
-            $sql2 = "SELECT * FROM servidores WHERE id = '$id'";
-            $result = $conn -> query($sql2);
-            $row = mysqli_fetch_assoc($result);
-            $login = $row['usuario'];
-            $senha = $row['senha'];
-            $porta = $row['porta'];
-            $ip = $row['ip'];
-
-
-            try {
-                $ssh = new Net_SSH2($ip, $porta);
-                if (!$ssh->login($login, $senha)) {
-                    echo "Não foi possível autenticar";
-                } else {
-                    $ssh->exec("$comando > /dev/null 2>&1 &");
-                    $ssh->disconnect();
-                    echo "Comando enviado com sucesso";
-                }
-            } catch (Exception $e) {
-                echo "Não foi possível conectar ao servidor";
-            }
-             
 
 ?>

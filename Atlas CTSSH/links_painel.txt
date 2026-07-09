@@ -1,0 +1,62 @@
+==================================================
+ LINKS EXTERNOS DO PAINEL - ATLAS PAINEL CTSSH
+==================================================
+
+--- API DE WHATSAPP DO PAINEL ---
+Nome: apiwhats.atlaspainel.com.br (servidor de WhatsApp/API do painel)
+1. https://apiwhats.atlaspainel.com.br/message/sendText/{sessao}   (envio de mensagens WhatsApp)
+2. https://apiwhats.atlaspainel.com.br/instance/connectionState/{chave}   (status da conexao WhatsApp)
+Arquivos que usam: atlas/criado.php, criado.php, atlas/testecriado.php, atlas/whatsconect.php,
+                   atlas/criarrevenda.php, admin/criado.php, admin/criarrevenda.php, admin/notific.php
+
+--- GATEWAY DE PAGAMENTO ---
+Nome: Mercado Pago (verificacao de pagamentos)
+1. https://api.mercadopago.com/v1/payments/{id}   (consulta status do pagamento)
+Arquivos: checkpag.php, usuario/verifica.php, usuario/processando.php, revenda/verifica.php,
+          atlas/processando.php, atlas/processandoadd.php, admin/cancelarpag.php
+
+Nome: PIX PagHiper (emissao e status de PIX)
+1. https://pix.paghiper.com/invoice/create/   (criar cobranca PIX)
+2. https://pix.paghiper.com/invoice/status/   (consultar status do PIX)
+3. https://mysite.com/notification/paghiper/   (URL de notificacao - placeholder exemplo)
+Arquivos: usuario/processando.php, usuario/verifica.php (status), revenda/processapag.php, revenda/verifica.php,
+          checkpag.php, atlas/processando.php, atlas/processandoadd.php
+
+--- APIs DE COMPARTILHAMENTO ---
+Nome: WhatsApp (compartilhar link)
+1. https://api.whatsapp.com/send?text=   (compartilhar texto)
+Arquivos: atlas/criarrevenda.php, atlas/criado.php, atlas/editarrevenda.php,
+          admin/criarrevenda.php, admin/criado.php, admin/editarrevenda.php
+
+Nome: Telegram (compartilhar link)
+1. https://t.me/share/url?url=   (compartilhar texto)
+Arquivos: mesmos acima
+
+--- HOSPEDAGEM DE ARQUIVOS (Discord CDN) ---
+Nome: cdn.discordapp.com (imagens, APK, scripts e logo do painel)
+1. https://cdn.discordapp.com/attachments/942800753309921290/1160108187719049216/...png   (img aprovado - usuario/aprovado.php)
+2. https://cdn.discordapp.com/attachments/1051302877987086437/1070571617891131432/dddddd.png   (admin/checkuserconf.php)
+3. https://cdn.discordapp.com/attachments/1051302877987086437/1072314999583801456/Screenshot_1.png   (admin/checkuserconf.php)
+4. https://cdn.discordapp.com/attachments/1051302877987086437/1070581060821340250/logo.png   (logo padrao - admin/configpainel.php)
+5. https://cdn.discordapp.com/attachments/1051302877987086437/1070581061014274088/logo-mini.png   (icon padrao - admin/configpainel.php)
+6. https://cdn.discordapp.com/attachments/968040569769181194/1077873044296585216/whatsapp.png   (btn whatsapp - varios arquivos)
+7. https://cdn.discordapp.com/attachments/942800753309921290/1114098973972639804/configs.json   (config AnyVPN - admin/geradorany.php)
+8. https://cdn.discordapp.com/attachments/942800753309921290/1114039536117362718/ANYVPN_Mod.apk   (download APK - admin/geradorany.php)
+9. https://cdn.discordapp.com/attachments/942800753309921290/1146462066673197089/limpeza.sh   (script limpeza - admin/limpeza.php, admin/limpezageral.php)
+
+--- OUTROS ---
+Nome: RedeCanais (embed de video de teste)
+1. https://redecanais.zip/for-all-mankind-1a-temporada-episodio-01-lua-vermelha_139ece054.html   (teste.php)
+
+Nome: Telegram Canal (link de compra)
+1. https://t.me/CarequinhaOFC   (admin/geradorany.php)
+
+--- SERVIDOR LOCAL (stats SSH) ---
+Nome: Servidor do cliente (stats via IP)
+1. http://{ip}:6969   (admin/atualizar_stats.php - IP do servidor do usuario)
+
+==================================================
+ OBS: Os links internos do proprio painel (https://{dominio}/renovar.php,
+ /criarteste.php, /revenda.php etc.) usam o dominio atual em tempo de execucao
+ ($_SERVER['HTTP_HOST']) e nao sao fixos.
+==================================================

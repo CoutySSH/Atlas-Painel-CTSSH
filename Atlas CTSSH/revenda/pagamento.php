@@ -1,187 +1,31 @@
-<?php session_start();
+<?php
+
+
+session_start();
 error_reporting(0);
-include('../atlas/conexao.php');
+include "../atlas/conexao.php";
 $conn = mysqli_connect($dbhost, $dbuser, $dbpass, $dbname);
 if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-    
+    exit("Connection failed: " . mysqli_connect_error());
 }
-$sql = "SELECT * FROM configs";
-$result = $conn->query($sql);
-$row = $result->fetch_assoc();
-
-$csspersonali = $row["corfundologo"];
-
-$expiracaopix = $_SESSION['expiracaopix'];
-$valor = $_SESSION['valor'];
-if ($_SESSION['formadepag'] == 1) {
-    $expiracaopix = $_SESSION['expiracaopix'];
-    echo "<script>
-    function atualizarTempoRestante() {
-        var agora = new Date();
-        var expira = new Date('$expiracaopix');
-        var diferenca = expira - agora;
-        var minutos = Math.floor((diferenca / 1000) / 60);
-        var segundos = Math.floor((diferenca / 1000) % 60);
-
-        if (diferenca > 0) {
-            document.getElementById('tempo-restante').innerHTML = 'Tempo restante : ' + minutos + 'm ' + segundos + 's';
-        } else {
-            document.getElementById('tempo-restante').innerHTML = 'Tempo expirado';
-        }
-    }
-
-    setInterval(atualizarTempoRestante, 1000);
-</script>";
+$expiracaopix = $_SESSION["expiracaopix"];
+$valor = $_SESSION["valor"];
+if ($_SESSION["formadepag"] == 1) {
+    $expiracaopix = $_SESSION["expiracaopix"];
+    echo "<script>\r\n    function atualizarTempoRestante() {\r\n        var agora = new Date();\r\n        var expira = new Date('" . $expiracaopix . "');\r\n        var diferenca = expira - agora;\r\n        var minutos = Math.floor((diferenca / 1000) / 60);\r\n        var segundos = Math.floor((diferenca / 1000) % 60);\r\n\r\n        if (diferenca > 0) {\r\n            document.getElementById('tempo-restante').innerHTML = 'Tempo restante : ' + minutos + 'm ' + segundos + 's';\r\n        } else {\r\n            document.getElementById('tempo-restante').innerHTML = 'Tempo expirado';\r\n        }\r\n    }\r\n\r\n    setInterval(atualizarTempoRestante, 1000);\r\n</script>";
 }
+echo "\r\n<!DOCTYPE html>\r\n<meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\r\n    <meta http-equiv=\"X-UA-Compatible\" content=\"IE=edge\">\r\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=0\">\r\n    <title> Pagamento</title>\r\n    <link rel=\"apple-touch-icon\" href=\"";
+echo $icon;
+echo "\">\r\n    <link rel=\"shortcut icon\" type=\"image/x-icon\" href=\"";
+echo $icon;
+echo "\">\r\n    <link href=\"https://fonts.googleapis.com/css?family=Rubik:300,400,500,600%7CIBM+Plex+Sans:300,400,500,600,700\" rel=\"stylesheet\">\r\n\r\n    <!-- BEGIN: Vendor CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/vendors/css/vendors.min.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/vendors/css/charts/apexcharts.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/vendors/css/extensions/dragula.min.css\">\r\n    <!-- END: Vendor CSS-->\r\n\r\n    <!-- BEGIN: Theme CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/bootstrap.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/bootstrap-extended.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/colors.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/components.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/themes/dark-layout.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/themes/semi-dark-layout.css\">\r\n    <!-- END: Theme CSS-->\r\n\r\n    <!-- BEGIN: Page CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/core/menu/menu-types/vertical-menu.css\">\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../app-assets/css/pages/dashboard-analytics.css\">\r\n    <!-- END: Page CSS-->\r\n\r\n    <!-- BEGIN: Custom CSS-->\r\n    <link rel=\"stylesheet\" type=\"text/css\" href=\"../../../atlas-assets/css/style.css\">\r\n    <!-- END: Custom CSS-->\r\n\r\n</head>\r\n<body class=\"vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  \" data-open=\"click\" data-menu=\"vertical-menu-modern\" data-col=\"2-columns\" data-layout=\"dark-layout\" >\r\n   \r\n      <h2 class=\"text-center mb-3 mt-0 mt-md-4\">Pagamento</h2>\r\n      <p class=\"text-center\">Faça o Pagamento via pix Qrcode ou Copia e Cola.</p>\r\n\r\n      <form action='formulariocompra.php' method='post'>\r\n      <div class=\"row mx-4 gy-3\">\r\n      <script>\r\n                 function copyDivToClipboard() {\r\n                     let textoCopiado = document.getElementById(\"qrcode\");\r\n                            textoCopiado.select();\r\n                            textoCopiado.setSelectionRange(0, 99999)\r\n                            document.execCommand(\"copy\");\r\n                            alert(\"Copiado com Sucesso!\");\r\n                     \r\n                    }\r\n                    </script>\r\n        <script>\r\n            //se for desktop definir width: 18rem; nessa classe card border shadow-none\r\n\r\n            if (window.innerWidth > 768) {\r\n                document.write(\"<style>.card {width: 30rem;}</style>\");\r\n            }\r\n        </script>\r\n    \r\n        <!-- Starter -->\r\n        <div class=\"col-xl mb-lg-0 lg-4\">\r\n            <center>\r\n          <div class=\"card border shadow-none\">\r\n            <div class=\"card-body\">\r\n              <h5 class=\"text-start text-uppercase\">N° Pedido: ";
+echo $_SESSION["payment_id"];
+echo "</h5>\r\n              <div class=\"divider divider-success\">\r\n                                                            \r\n                                                        <strong class=\"divider-text\" style=\"font-size: 20px;\">INFORMAÇÕES</strong>\r\n                                                        </div>\r\n                                                        <p>Valor a Pagar: ";
+echo $valor;
+echo " R\$</p>\r\n                                                        <p>Após Efetuar o Pagamento Aguarde o Pagamento ser Concluido</p>\r\n                                                        \r\n\r\n                                                        <img style=\"width: 160px;\" class=\"qr_code\" id='imgqr' src=\"data:image/png;base64,";
+echo $_SESSION["qr_code_base64"];
+echo "\">\r\n                                                        <hr>\r\n                                                        <input type=\"text\" name=\"texto\" id=\"qrcode\" class=\"form-control\" value=\"";
+echo $_SESSION["qr_code"];
+echo "\">\r\n                                                        <br>\r\n                                                        <div id=\"tempo-restante\" style=\"text-align: center; font-size: 18px;\"></div>\r\n                                                        <br>\r\n                                                        <button type=\"button\" class=\"btn btn-primary\" onclick=\"copyDivToClipboard()\">Copiar</button>\r\n             \r\n            </div>\r\n          </div>\r\n        </div>\r\n        </div>\r\n\r\n\r\n          \r\n        \r\n        \r\n    </div>\r\n  </div>\r\n  <!--/ Pricing Plans -->\r\n  </div>\r\n  </body>\r\n\r\n    <script src=\"../../../app-assets/vendors/js/vendors.min.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.tools.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.defaults.js\"></script>\r\n    <script src=\"../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/forms/spinner/jquery.bootstrap-touchspin.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/configs/vertical-menu-dark.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app-menu.js\"></script>\r\n    <script src=\"../../../app-assets/js/core/app.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/components.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/footer.js\"></script>\r\n    <script src=\"../../../app-assets/js/scripts/forms/number-input.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/datatables.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/dataTables.bootstrap4.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/dataTables.buttons.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/buttons.html5.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/buttons.print.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/buttons.bootstrap.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/pdfmake.min.js\"></script>\r\n    <script src=\"../../../app-assets/vendors/js/tables/datatable/vfs_fonts.js\"></script>\r\n    <script src=\"https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js\" integrity=\"sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==\" crossorigin=\"anonymous\" referrerpolicy=\"no-referrer\"></script>\r\n\r\n<script type=\"text/javascript\">\r\n\r\n//Calling function\r\nrepeatAjax();\r\n\r\n\r\nfunction repeatAjax(){\r\njQuery.ajax({\r\n          type: \"POST\",\r\n          url: 'verifica.php',\r\n          dataType: 'text',\r\n          success: function(resp) {\r\n          \tif(resp == 'Aprovado')\r\n          \t{\r\n              \$(\".qr_code\").attr('src','https://www.pngplay.com/wp-content/uploads/2/Approved-PNG-Photos.png');\r\n          \t  window.location.replace(\"aprovado.php\");\r\n\r\n                    jQuery('.teste').html(resp);\r\n                    }\r\n\r\n          },\r\n          complete: function() {\r\n                setTimeout(repeatAjax,1000); //After completion of request, time to redo it after a second\r\n             }\r\n        });\r\n}\r\n</script>\r\n</body>\r\n</html>";
+
 ?>
-
-<!DOCTYPE html>
-<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=0">
-    <title> Pagamento</title>
-    <link rel="apple-touch-icon" href="<?php echo $icon; ?>">
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo $icon; ?>">
-    <link href="https://fonts.googleapis.com/css?family=Rubik:300,400,500,600%7CIBM+Plex+Sans:300,400,500,600,700" rel="stylesheet">
-
-    <!-- BEGIN: Vendor CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/vendors/css/vendors.min.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/vendors/css/charts/apexcharts.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/vendors/css/extensions/dragula.min.css">
-    <!-- END: Vendor CSS-->
-
-    <!-- BEGIN: Theme CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/bootstrap.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/bootstrap-extended.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/colors.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/components.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/themes/dark-layout.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/themes/semi-dark-layout.css">
-    <!-- END: Theme CSS-->
-
-    <!-- BEGIN: Page CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/core/menu/menu-types/vertical-menu.css">
-    <link rel="stylesheet" type="text/css" href="../../../app-assets/css/pages/dashboard-analytics.css">
-    <!-- END: Page CSS-->
-
-    <!-- BEGIN: Custom CSS-->
-    <link rel="stylesheet" type="text/css" href="../../../atlas-assets/css/style.css">
-    <!-- END: Custom CSS-->
-
-</head>
-<style>
-        <?php echo $csspersonali; ?>
-    </style>     
-<body class="vertical-layout vertical-menu-modern dark-layout 2-columns  navbar-sticky footer-static  " data-open="click" data-menu="vertical-menu-modern" data-col="2-columns" data-layout="dark-layout" >
-   
-      <h2 class="text-center mb-3 mt-0 mt-md-4">Pagamento</h2>
-      <p class="text-center">Faça o Pagamento via pix Qrcode ou Copia e Cola.</p>
-
-      <form action='formulariocompra.php' method='post'>
-      <div class="row mx-4 gy-3">
-      <script>
-                 function copyDivToClipboard() {
-                     let textoCopiado = document.getElementById("qrcode");
-                            textoCopiado.select();
-                            textoCopiado.setSelectionRange(0, 99999)
-                            document.execCommand("copy");
-                            alert("Copiado com Sucesso!");
-                     
-                    }
-                    </script>
-        <script>
-            //se for desktop definir width: 18rem; nessa classe card border shadow-none
-
-            if (window.innerWidth > 768) {
-                document.write("<style>.card {width: 30rem;}</style>");
-            }
-        </script>
-    
-        <!-- Starter -->
-        <div class="col-xl mb-lg-0 lg-4">
-            <center>
-          <div class="card border shadow-none">
-            <div class="card-body">
-              <h5 class="text-start text-uppercase">N° Pedido: <?= $_SESSION['payment_id']?></h5>
-              <div class="divider divider-success">
-                                                            
-                                                        <strong class="divider-text" style="font-size: 20px;">INFORMAÇÕES</strong>
-                                                        </div>
-                                                        <p>Valor a Pagar: <?= $valor ?> R$</p>
-                                                        <p>Após Efetuar o Pagamento Aguarde o Pagamento ser Concluido</p>
-                                                        
-
-                                                        <img style="width: 160px;" class="qr_code" id='imgqr' src="data:image/png;base64,<?= $_SESSION['qr_code_base64']?>">
-                                                        <hr>
-                                                        <input type="text" name="texto" id="qrcode" class="form-control" value="<?= $_SESSION['qr_code']?>">
-                                                        <br>
-                                                        <div id="tempo-restante" style="text-align: center; font-size: 18px;"></div>
-                                                        <br>
-                                                        <button type="button" class="btn btn-primary" onclick="copyDivToClipboard()">Copiar</button>
-             
-            </div>
-          </div>
-        </div>
-        </div>
-
-
-          
-        
-        
-    </div>
-  </div>
-  <!--/ Pricing Plans -->
-  </div>
-  </body>
-
-    <script src="../../../app-assets/vendors/js/vendors.min.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.tools.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.defaults.js"></script>
-    <script src="../../../app-assets/fonts/LivIconsEvo/js/LivIconsEvo.min.js"></script>
-    <script src="../../../app-assets/vendors/js/forms/spinner/jquery.bootstrap-touchspin.js"></script>
-    <script src="../../../app-assets/js/scripts/configs/vertical-menu-dark.js"></script>
-    <script src="../../../app-assets/js/core/app-menu.js"></script>
-    <script src="../../../app-assets/js/core/app.js"></script>
-    <script src="../../../app-assets/js/scripts/components.js"></script>
-    <script src="../../../app-assets/js/scripts/footer.js"></script>
-    <script src="../../../app-assets/js/scripts/forms/number-input.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/datatables.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/dataTables.bootstrap4.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/dataTables.buttons.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/buttons.html5.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/buttons.print.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/buttons.bootstrap.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/pdfmake.min.js"></script>
-    <script src="../../../app-assets/vendors/js/tables/datatable/vfs_fonts.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-
-<script type="text/javascript">
-
-//Calling function
-repeatAjax();
-
-
-function repeatAjax(){
-jQuery.ajax({
-          type: "POST",
-          url: 'verifica.php',
-          dataType: 'text',
-          success: function(resp) {
-          	if(resp == 'Aprovado')
-          	{
-              $(".qr_code").attr('src','https://www.pngplay.com/wp-content/uploads/2/Approved-PNG-Photos.png');
-          	  window.location.replace("aprovado.php");
-
-                    jQuery('.teste').html(resp);
-                    }
-
-          },
-          complete: function() {
-                setTimeout(repeatAjax,1000); //After completion of request, time to redo it after a second
-             }
-        });
-}
-</script>
-</body>
-</html>

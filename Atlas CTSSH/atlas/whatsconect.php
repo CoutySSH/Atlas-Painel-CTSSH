@@ -34,7 +34,6 @@
           $row1 = mysqli_fetch_assoc($result1);
           $chaveapiatual = $row1['sessao'];
           $tokenapiatual = $row1['token'];
-          include_once '../admin/suspenderrev.php';
     ?>
     <!-- plugins:css -->
     <!-- endinject -->
